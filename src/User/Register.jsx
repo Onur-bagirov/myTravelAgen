@@ -54,16 +54,15 @@ export default function Register() {
           {/* Şifrə və Təsdiqi */}
           <div className="input-row">
             <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-            <input type="password" name="confirmPassword" placeholder="Confirm" onChange={handleChange} required />
           </div>
 
           {/* Pin və Doğum Tarixi */}
           <div className="input-row">
-            <input type="text" name="pin" placeholder="PIN ( 7 digits )" maxLength="7" onChange={handleChange} required />
+            <input type="text" name="pin" placeholder="FIN ( 7 digits )" maxLength="7" onChange={handleChange} required />
             <input type="date" name="birthDate" className="date-input" onChange={handleChange} required />
           </div>
 
-          <button type="submit" className="birdie-btn">Create Account</button>
+          <button onClick={() => navigate("/email")} type="submit" className="birdie-btn">Create Account</button>
         </form>
 
         <div className="register-footer">

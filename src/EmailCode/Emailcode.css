@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
+
+.verify-body {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65)), 
+                url("/MainScreen.png") no-repeat center center/cover;
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.verify-card {
+    /* Glassmorphism: Arxa fonu göstərən şəffaf qutu */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    
+    /* İncə kənar xətti və parıltı */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 60px 40px;
+    border-radius: 40px;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
+    animation: birdiePop 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+.mail-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 77, 77, 0.1);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 20px;
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    box-shadow: 0 0 20px rgba(255, 77, 77, 0.2);
+}
+
+.mail-icon {
+    font-size: 2.5rem;
+}
+
+.verify-header h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.verify-header h2 span {
+    background: linear-gradient(90deg, #ff4d4d, #f9cb28);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.verify-header p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-bottom: 40px;
+}
+
+.code-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+.code-inputs input {
+    width: 55px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    color: #f9cb28;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.code-inputs input:focus {
+    border-color: #f9cb28;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 20px rgba(249, 203, 40, 0.4);
+    transform: translateY(-5px);
+}
+
+.confirm-btn {
+    width: 100%;
+    background: linear-gradient(45deg, #ff4d4d, #f9cb28);
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 20px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.4s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.confirm-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 15px 30px rgba(255, 77, 77, 0.5);
+}
+
+.status-msg {
+    margin-top: 25px;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-msg.error { background: rgba(255, 77, 77, 0.15); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3); }
+.status-msg.success { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
+
+.resend-section {
+    margin-top: 30px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+}
+
+.resend-link {
+    background: none;
+    border: none;
+    color: #f9cb28;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 5px;
+}
+
+@keyframes birdiePop {
+    0% { opacity: 0; transform: scale(0.9) translateY(30px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .code-inputs input { width: 45px; height: 60px; font-size: 1.5rem; }
+}
