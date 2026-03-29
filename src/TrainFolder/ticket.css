@@ -1,0 +1,238 @@
+/* =========================================
+   GLOBAL WRAPPER (Arxa plana toxunulmur)
+   ========================================= */
+   .ticket-page-wrapper {
+    width: 100%;
+    margin: 2;;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    color: #ffffff;
+}
+
+.ios-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+}
+
+/* Back Button & Title */
+.ios-back-btn {
+    background: transparent;
+    border: none;
+    color: #ff4d4d;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 15px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.2s;
+}
+
+.ios-back-btn:hover { opacity: 0.7; }
+
+.main-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    letter-spacing: -0.5px;
+}
+
+/* =========================================
+   CARDS (Apple Style)
+   ========================================= */
+.ios-card {
+    background: #1c1c1e; /* Apple Secondary Background */
+    border-radius: 22px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Rows & Inputs */
+.ios-row, .single-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+}
+
+.label-tiny {
+    display: block;
+    font-size: 11px;
+    color: #8e8e93;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.premium-select, .ios-date-input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 17px;
+    font-weight: 500;
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+    appearance: none; /* Standart oxu ləğv edir */
+}
+
+/* Station Icons & Badges */
+.code-badge {
+    font-size: 20px;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
+}
+
+.icon-box {
+    font-size: 18px;
+    color: #8e8e93;
+}
+
+/* Divider & Swap Button */
+.ios-divider {
+    height: 1px;
+    background: #2c2c2e;
+    margin-left: 20px;
+    position: relative;
+}
+
+.ios-swap-btn {
+    position: absolute;
+    right: 20px;
+    top: -15px;
+    background: #1c1c1e;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #2c2c2e;
+    color: #ff4d4d;
+    cursor: pointer;
+    font-size: 16px;
+    z-index: 2;
+    transition: transform 0.3s ease;
+}
+
+.ios-swap-btn:active { transform: rotate(180deg); }
+
+/* Grid for Date & Class */
+.ios-grid-row {
+    display: flex;
+    gap: 12px;
+}
+
+.half-card {
+    flex: 1;
+    padding: 12px 18px !important;
+}
+
+/* =========================================
+   PASSENGERS SECTION
+   ========================================= */
+.passenger-card {
+    padding: 15px 0 !important;
+}
+
+.padding-left { padding-left: 20px; }
+
+.passenger-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.p-type {
+    display: block;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.p-desc {
+    font-size: 12px;
+    color: #636366;
+}
+
+.inner-divider {
+    height: 1px;
+    background: #2c2c2e;
+    margin: 5px 20px;
+}
+
+/* Stepper Control */
+.stepper {
+    display: flex;
+    align-items: center;
+    background: #2c2c2e;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 12px;
+}
+
+.stepper button {
+    background: #3a3a3c;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.stepper button:active { background: #48484a; }
+
+.stepper span {
+    color: white;
+    font-weight: 600;
+    min-width: 15px;
+    text-align: center;
+}
+
+/* =========================================
+   ACTION BUTTON
+   ========================================= */
+.ios-main-btn {
+    width: 100%;
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 15px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(255, 77, 77, 0.25);
+    transition: all 0.3s ease;
+}
+
+.ios-main-btn:active {
+    transform: scale(0.97);
+    filter: brightness(0.9);
+}
+
+/* Train specific color tweak if needed */
+.train-btn {
+    background: linear-gradient(135deg, #ff4d4d, #d63030);
+}
+
+/* Date Input Customization (Chrome/Safari) */
+.ios-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.5;
+    cursor: pointer;
+}

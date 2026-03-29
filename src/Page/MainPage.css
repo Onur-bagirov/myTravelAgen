@@ -1,0 +1,186 @@
+/* MainPage ana konteyner */
+.main-page {
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* 1. Hero Section - Giriş hissəsi */
+.hero-section {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: transparent; /* Arxa fon body-dən gəlir */
+    padding: 20px;
+}
+
+
+.main-content {
+    max-width: 900px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: white;
+    text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.hero-title span {
+    background: linear-gradient(90deg, #ff4d4d, #f9cb28);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 35px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+}
+
+/* Düymələr */
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero-buttons button {
+    padding: 15px 40px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.explore-btn {
+    background: #ff4d4d;
+    color: white;
+    box-shadow: 0 10px 20px rgba(255, 77, 77, 0.3);
+}
+
+.explore-btn:hover {
+    background: #e63939;
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(255, 77, 77, 0.4);
+}
+
+.details-btn { 
+    background: rgba(255, 255, 255, 0.1); 
+    color: white; 
+    border: 1px solid rgba(255, 255, 255, 0.4) !important; 
+    backdrop-filter: blur(10px);
+}
+
+.details-btn:hover { 
+    background: white; 
+    color: black; 
+    transform: translateY(-5px);
+}
+
+/* 2. Trending Section (Kartlar bölməsi) */
+.trending-section {
+    padding: 100px 10%;
+    /* Kartların altındakı fonu bir az tündləşdiririk ki, yazılar oxunsun */
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+}
+
+.section-title {
+    font-size: 2.8rem;
+    margin-bottom: 50px;
+    color: white;
+    text-align: center;
+    font-weight: 800;
+}
+
+.destinations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 35px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Kart Dizaynı - Glassmorphism */
+.dest-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    overflow: hidden;
+    backdrop-filter: blur(15px);
+    transition: all 0.4s ease;
+}
+
+.dest-card:hover { 
+    transform: translateY(-10px); 
+    border-color: #ff4d4d;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.card-image {
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+}
+
+.card-info {
+    padding: 25px;
+    color: white;
+}
+
+.card-info h3 { 
+    margin-bottom: 12px; 
+    font-size: 1.4rem;
+    color: white; 
+}
+
+.card-info p { 
+    color: rgba(255, 255, 255, 0.7); 
+    font-size: 0.95rem; 
+    margin-bottom: 15px;
+}
+
+.card-info span { 
+    color: #f9cb28; 
+    font-weight: 800; 
+    font-size: 1.3rem; 
+}
+
+.book-now-btn {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ff4d4d;
+    background: transparent;
+    color: #ff4d4d;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.book-now-btn:hover {
+    background: #ff4d4d;
+    color: white;
+}
+
+/* Animasiya */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobil tənzimləmə */
+@media (max-width: 768px) {
+    .hero-title { font-size: 2.8rem; }
+    .trending-section { padding: 60px 5%; }
+}
