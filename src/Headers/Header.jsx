@@ -28,6 +28,11 @@ const Header = () => {
 
       <nav className={`navbar ${isOpen ? "active" : ""}`}>
         {/* Naviqasiya Linkləri */}
+        {/* Düzəldilmiş Marşrut: /create-ticket */}
+        <span onClick={() => handleNavigation("/create-ticket")} className="nav-link create-ticket-link">
+          Create Ticket
+        </span>
+        
         <span onClick={() => handleNavigation("/")} className="nav-link">
           Home
         </span>

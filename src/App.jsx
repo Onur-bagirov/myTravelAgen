@@ -9,6 +9,7 @@ import TrainTicket from "./TrainFolder/ticket";
 import About from "./AboutPage/about"; 
 import SignIn  from "./SiginInPage/sign"; // Artıq burdadır
 import Emailcode from "./EmailCode/Emailcode";
+import CreateTicket from "./CreateTicket/ticket";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         {/* --- ƏLAVƏ EDİLDİ --- */}
         <Route path="/login" element={<SignIn />} /> 
         <Route path="/email" element={<Emailcode />}/>
+        <Route path="/create-ticket" element={<CreateTicket/>} />
         {/* --------------------- */}
 
         <Route path="/register" element={<Register />} />
