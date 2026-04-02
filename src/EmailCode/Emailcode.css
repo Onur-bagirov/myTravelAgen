@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
 
+/* Ümumi Reset və Body tənzimləmələri */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 .verify-body {
     width: 100%;
     min-height: 100vh;
@@ -8,18 +15,18 @@
     align-items: center;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65)), 
                 url("/MainScreen.png") no-repeat center center/cover;
+    /* Mobil cihazlarda kartın ekranın kənarlarına yapışmaması üçün padding */
     padding: 20px;
     font-family: 'Poppins', sans-serif;
 }
 
 .verify-card {
-    /* Glassmorphism: Arxa fonu göstərən şəffaf qutu */
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    
-    /* İncə kənar xətti və parıltı */
     border: 1px solid rgba(255, 255, 255, 0.15);
+    
+    /* Desktop üçün padding */
     padding: 60px 40px;
     border-radius: 40px;
     width: 100%;
@@ -31,6 +38,7 @@
     animation: birdiePop 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67);
 }
 
+/* İkon və Başlıq */
 .mail-icon-wrapper {
     width: 80px;
     height: 80px;
@@ -44,12 +52,10 @@
     box-shadow: 0 0 20px rgba(255, 77, 77, 0.2);
 }
 
-.mail-icon {
-    font-size: 2.5rem;
-}
+.mail-icon { font-size: 2.5rem; }
 
 .verify-header h2 {
-    font-size: 2.5rem;
+    font-size: clamp(1.8rem, 5vw, 2.5rem); /* Ekran ölçüsünə görə avtomatik kiçilən başlıq */
     font-weight: 800;
     margin-bottom: 12px;
 }
@@ -66,20 +72,23 @@
     margin-bottom: 40px;
 }
 
+/* Kod Giriş Sahələri - Responsive Flexbox */
 .code-inputs {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    /* Kiçik telefonlarda inputların sığması üçün gap-i azaldırıq */
+    gap: clamp(5px, 2vw, 15px); 
     margin-bottom: 40px;
 }
 
 .code-inputs input {
-    width: 55px;
-    height: 70px;
+    /* Kod qutularının ölçüsü */
+    width: clamp(40px, 12vw, 60px);
+    height: clamp(55px, 15vw, 75px);
     background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 18px;
-    font-size: 2rem;
+    border-radius: clamp(10px, 3vw, 18px);
+    font-size: clamp(1.2rem, 4vw, 2rem);
     font-weight: 700;
     text-align: center;
     color: #f9cb28;
@@ -94,6 +103,7 @@
     transform: translateY(-5px);
 }
 
+/* Təsdiq Düyməsi */
 .confirm-btn {
     width: 100%;
     background: linear-gradient(45deg, #ff4d4d, #f9cb28);
@@ -114,38 +124,49 @@
     box-shadow: 0 15px 30px rgba(255, 77, 77, 0.5);
 }
 
+/* Status Mesajları */
 .status-msg {
     margin-top: 25px;
     padding: 12px;
     border-radius: 12px;
     font-size: 0.9rem;
-    font-weight: 500;
+    word-wrap: break-word; /* Uzun mesajlar qutunu partlatmasın */
 }
 
-.status-msg.error { background: rgba(255, 77, 77, 0.15); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.3); }
-.status-msg.success { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
+/* Media Query - Planşet və Mobil üçün xüsusi düzəlişlər */
 
-.resend-section {
-    margin-top: 30px;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.85rem;
+@media (max-width: 600px) {
+    .verify-card {
+        padding: 40px 20px; /* Daxili boşluqları azaltdıq */
+        border-radius: 30px;
+    }
+
+    .mail-icon-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .mail-icon { font-size: 1.8rem; }
 }
 
-.resend-link {
-    background: none;
-    border: none;
-    color: #f9cb28;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: underline;
-    margin-left: 5px;
+@media (max-width: 400px) {
+    .code-inputs {
+        gap: 5px; /* Çox kiçik ekranlarda qutuları bir-birinə yaxınlaşdırırıq */
+    }
+
+    .code-inputs input {
+        border-radius: 8px;
+    }
+
+    .confirm-btn {
+        padding: 15px;
+        font-size: 1rem;
+        letter-spacing: 1px;
+    }
 }
 
+/* Animasiya */
 @keyframes birdiePop {
     0% { opacity: 0; transform: scale(0.9) translateY(30px); }
     100% { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-@media (max-width: 480px) {
-    .code-inputs input { width: 45px; height: 60px; font-size: 1.5rem; }
 }

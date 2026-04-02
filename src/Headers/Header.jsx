@@ -5,17 +5,19 @@ import "./Header.css";
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null); // Role-u saxlamaq üçün state
   const [userData, setUserData] = useState({ firstName: "", lastName: "" });
   const navigate = useNavigate();
 
-  // Giriş vəziyyətini və istifadəçi məlumatlarını yoxlayırıq
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const role = localStorage.getItem("userRole"); // Role-u götürürük
     const firstName = localStorage.getItem("userFirstName");
     const lastName = localStorage.getItem("userLastName");
 
     if (token) {
       setIsLoggedIn(true);
+      setUserRole(role); // State-ə yazırıq
       setUserData({
         firstName: firstName || "User",
         lastName: lastName || ""
@@ -29,12 +31,9 @@ const Header = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userFirstName");
-    localStorage.removeItem("userLastName");
-    localStorage.removeItem("userEmail");
+    localStorage.clear(); // Bütün datanı təmizləmək daha rahatdır
     setIsLoggedIn(false);
+    setUserRole(null);
     navigate("/");
     window.location.reload();
   };
@@ -53,7 +52,8 @@ const Header = () => {
 
       <nav className={`navbar ${isOpen ? "active" : ""}`}>
         
-        {!isLoggedIn && (
+        {/* 🔥 YALNIZ ADMİN VƏ ŞİRKƏTLƏR GÖRSÜN */}
+        {isLoggedIn && (userRole === "Admin" || userRole === "Company") && (
           <span onClick={() => handleNavigation("/create-ticket")} className="nav-link create-ticket-link">
             Create Ticket
           </span>
@@ -70,7 +70,6 @@ const Header = () => {
         <div className="nav-buttons">
           {isLoggedIn ? (
             <>
-              {/* 🔥 BURADA "Profile" yerinə Ad və Soyad yazılır */}
               <button className="user-profile-btn" onClick={() => handleNavigation("/User-Profile")}>
                 My Profile
               </button>

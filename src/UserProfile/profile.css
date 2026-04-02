@@ -1,17 +1,19 @@
+/* Ana konteyner - Mobil cihazlarda padding-i azaldırıq ki, kənarlardan çox yer itməsin */
 .profile-page-wrapper {
   min-height: 100vh;
   width: 100%;
-     background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), 
-                url("/MainScreen.png") no-repeat center center/cover;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), 
+              url("/MainScreen.png") no-repeat center center/cover;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 100px 20px 40px;
+  padding: 80px 15px 40px; /* Üst hissəni Header-ə görə tənzimlədik */
 }
 
 .glass-container {
   background: rgba(15, 15, 15, 0.7);
   backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px); /* Safari dəstəyi */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 30px;
   width: 100%;
@@ -25,22 +27,26 @@
 /* Sidebar */
 .profile-side-bar {
   background: rgba(255, 255, 255, 0.03);
-  padding: 40px;
+  padding: 40px 20px;
   text-align: center;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .avatar-wrapper {
   position: relative;
   width: 120px;
   height: 120px;
-  margin: 0 auto 20px;
+  margin-bottom: 20px;
 }
 
 .avatar-wrapper img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
   border-radius: 50%;
   border: 4px solid #ff4d4d;
   padding: 5px;
@@ -61,28 +67,21 @@
   font-size: 0.85rem;
   opacity: 0.6;
   margin: 5px 0 15px;
+  word-break: break-all; /* Uzun email-lər sidebar-ı partlatmasın */
 }
 
-.badge-premium {
-  background: linear-gradient(90deg, #ff4d4d, #f9cb28);
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 6px 20px;
-  border-radius: 50px;
-  display: inline-block;
-  letter-spacing: 1px;
-}
-
+/* Sidebar Statları */
 .sidebar-stats {
   display: flex;
+  width: 100%;
   justify-content: space-around;
   margin-top: 40px;
   padding-top: 20px;
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 
-.stat-box span { font-size: 1.2rem; font-weight: bold; color: #f9cb28; }
-.stat-box p { font-size: 0.7rem; opacity: 0.5; text-transform: uppercase; }
+.stat-box span { font-size: 1.2rem; font-weight: bold; color: #f9cb28; display: block; }
+.stat-box p { font-size: 0.7rem; opacity: 0.5; text-transform: uppercase; margin: 0; }
 
 /* Details Area */
 .profile-details-area {
@@ -95,29 +94,19 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
+  flex-wrap: wrap; /* Başlıq və düymə sığmasa alt-alta düşsün */
+  gap: 15px;
 }
-
-.edit-icon-btn {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  padding: 8px 20px;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.edit-icon-btn:hover { background: white; color: black; }
 
 .details-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 30px;
 }
 
 .detail-item label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #ff4d4d;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -125,40 +114,96 @@
 }
 
 .detail-item p {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 500;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   padding-bottom: 10px;
+  margin: 0;
+  word-wrap: break-word;
 }
 
+/* Edit Inputs (Öncəki mesajda soruşduğun hissə üçün) */
+.edit-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 0.95rem;
+  outline: none;
+  transition: 0.3s;
+}
+
+.edit-input:focus { border-color: #ff4d4d; background: rgba(255, 255, 255, 0.1); }
+
+/* Buttons */
 .action-buttons-group {
   margin-top: 50px;
   display: flex;
-  gap: 20px;
+  gap: 15px;
 }
 
-.btn-main-action {
-  background: white;
-  color: black;
-  border: none;
-  padding: 15px 35px;
+.btn-main-action, .btn-secondary-action {
+  padding: 14px 28px;
   border-radius: 50px;
   font-weight: 700;
   cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1; /* Düymələr bərabər genişlikdə olsun */
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
+
+.btn-main-action { background: white; color: black; border: none; }
+.btn-main-action:hover { background: #f0f0f0; transform: translateY(-2px); }
 
 .btn-secondary-action {
   background: rgba(255,255,255,0.05);
   color: white;
   border: 1px solid rgba(255,255,255,0.2);
-  padding: 15px 35px;
-  border-radius: 50px;
-  cursor: pointer;
+}
+.btn-secondary-action:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+
+/* --- RESPONSIVE DIZAYN (PLANŞET VƏ MOBİL) --- */
+
+@media (max-width: 900px) {
+  .glass-container {
+    grid-template-columns: 1fr; /* Sidebar yuxarıya çıxır */
+    max-width: 600px;
+  }
+  
+  .profile-side-bar {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 30px;
+  }
+
+  .profile-details-area {
+    padding: 30px;
+  }
 }
 
-/* Mobil Uyğunluq */
-@media (max-width: 850px) {
-  .glass-container { grid-template-columns: 1fr; }
-  .profile-side-bar { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
-  .details-grid { grid-template-columns: 1fr; }
+@media (max-width: 600px) {
+  .profile-page-wrapper {
+    padding: 60px 10px 20px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr; /* İnputlar alt-alta düzülür */
+    gap: 20px;
+  }
+
+  .action-buttons-group {
+    flex-direction: column; /* Düymələr alt-alta */
+    width: 100%;
+  }
+
+  .btn-main-action, .btn-secondary-action {
+    width: 100%;
+  }
+
+  .details-header h2 {
+    font-size: 1.4rem;
+  }
 }
