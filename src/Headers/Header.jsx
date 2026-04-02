@@ -1,25 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState({ firstName: "", lastName: "" });
   const navigate = useNavigate();
 
-  // Marşrutlar arası keçid üçün funksiya
+  // Giriş vəziyyətini və istifadəçi məlumatlarını yoxlayırıq
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const firstName = localStorage.getItem("userFirstName");
+    const lastName = localStorage.getItem("userLastName");
+
+    if (token) {
+      setIsLoggedIn(true);
+      setUserData({
+        firstName: firstName || "User",
+        lastName: lastName || ""
+      });
+    }
+  }, []);
+
   const handleNavigation = (path) => {
     navigate(path);
-    setIsOpen(false); // Mobil menyunu klikdən sonra bağlayır
+    setIsOpen(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userFirstName");
+    localStorage.removeItem("userLastName");
+    localStorage.removeItem("userEmail");
+    setIsLoggedIn(false);
+    navigate("/");
+    window.location.reload();
   };
 
   return (
     <header className="header">
-      {/* Logo-ya basanda Ana Səhifəyə ("/") gedir */}
-      <div className="logo" onClick={() => navigate("/")} style={{cursor: "pointer"}}>
+      <div className="logo" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
         <h1>Travel<span>Agen</span></h1>
       </div>
 
-      {/* Hamburger İkonu (Mobil üçün) */}
       <div className="menu-icon" onClick={() => setIsOpen(!isOpen)}>
         <div className={`bar ${isOpen ? "open" : ""}`}></div>
         <div className={`bar ${isOpen ? "open" : ""}`}></div>
@@ -27,11 +52,12 @@ const Header = () => {
       </div>
 
       <nav className={`navbar ${isOpen ? "active" : ""}`}>
-        {/* Naviqasiya Linkləri */}
-        {/* Düzəldilmiş Marşrut: /create-ticket */}
-        <span onClick={() => handleNavigation("/create-ticket")} className="nav-link create-ticket-link">
-          Create Ticket
-        </span>
+        
+        {!isLoggedIn && (
+          <span onClick={() => handleNavigation("/create-ticket")} className="nav-link create-ticket-link">
+            Create Ticket
+          </span>
+        )}
         
         <span onClick={() => handleNavigation("/")} className="nav-link">
           Home
@@ -42,15 +68,25 @@ const Header = () => {
         </span>
         
         <div className="nav-buttons">
-          {/* Sign In düyməsi qeydiyyata aparır */}
-          <button 
-            className="signin-btn" 
-            onClick={() => handleNavigation("/register")}
-          >
-            Sign Up
-          </button>
+          {isLoggedIn ? (
+            <>
+              {/* 🔥 BURADA "Profile" yerinə Ad və Soyad yazılır */}
+              <button className="user-profile-btn" onClick={() => handleNavigation("/User-Profile")}>
+                My Profile
+              </button>
+              <button className="signin-btn logout-color" onClick={handleLogout}>
+                Log Out
+              </button>
+            </>
+          ) : (
+            <button 
+              className="signin-btn" 
+              onClick={() => handleNavigation("/register")}
+            >
+              Sign Up
+            </button>
+          )}
 
-          {/* Buy Now düyməsi bilet seçiminə (/buy) aparır */}
           <button 
             className="buy-btn"
             onClick={() => handleNavigation("/buy")}

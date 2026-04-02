@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; 
 import "./Register.css";
-// SignIn importunu sildik, çünki navigate ilə keçid edirik
 
 export default function Register() {
   const navigate = useNavigate();
@@ -10,28 +10,47 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
     pin: "",
     birthDate: ""
   });
 
   const handleChange = (e) => {
-    // [e.target.name] sayəsində bütün inputlar tək funksiya ilə idarə olunur
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Şifrələr uyğun gəlmir!");
-      return;
+
+    try {
+      // Backend-in gözlədiyi format
+      const payload = {
+        name: formData.firstName,   
+        surname: formData.lastName, 
+        email: formData.email,
+        password: formData.password,
+        birthday: formData.birthDate,
+        fin: formData.pin
+      };
+
+      const response = await axios.post("http://localhost:5251/api/Auth/register", payload);
+
+      if (response.data.isSuccess || response.status === 200 || response.status === 201) {
+        
+        // 🔥 PROFİL ÜÇÜN MÜTLƏQ OLAN HİSSƏ:
+        // Buradakı adlar (məs: "firstName") Profile.jsx-dəki getItem ilə eyni olmalıdır.
+        localStorage.setItem("userEmail", formData.email); 
+        localStorage.setItem("firstName", formData.firstName); 
+        localStorage.setItem("lastName", formData.lastName);
+        localStorage.setItem("userPin", formData.pin);
+        localStorage.setItem("userBirthDate", formData.birthDate);
+        
+        alert("Registration successful!");
+        navigate("/email"); 
+      }
+    } catch (error) {
+      console.error("Backend Error:", error.response?.data);
+      alert("Registration failed. Please try again.");
     }
-    
-    // Backend üçün hazır obyekt
-    console.log("Qeydiyyat məlumatları:", formData);
-    
-    // Uğurlu qeydiyyatdan sonra yönləndirmə
-    navigate("/login");
   };
 
   return (
@@ -39,30 +58,69 @@ export default function Register() {
       <div className="birdie-register-box">
         <div className="birdie-icon">🌍</div>
         <h2>Join <span>TravelAgen</span></h2>
-        <p>Enter your details to start</p>
+        <p>Enter your details to start your luxury journey</p>
         
         <form className="birdie-form" onSubmit={handleSubmit}>
-          {/* Ad və Soyad */}
           <div className="input-row">
-            <input type="text" name="firstName" placeholder="First Name" onChange={handleChange} required />
-            <input type="text" name="lastName" placeholder="Last Name" onChange={handleChange} required />
+            <input 
+              type="text" 
+              name="firstName" 
+              placeholder="First Name" 
+              value={formData.firstName}
+              onChange={handleChange} 
+              required 
+            />
+            <input 
+              type="text" 
+              name="lastName" 
+              placeholder="Last Name" 
+              value={formData.lastName}
+              onChange={handleChange} 
+              required 
+            />
           </div>
 
-          {/* Email */}
-          <input type="email" name="email" placeholder="Email Address" onChange={handleChange} required />
+          <input 
+            type="email" 
+            name="email" 
+            placeholder="Email Address" 
+            value={formData.email}
+            onChange={handleChange} 
+            required 
+          />
 
-          {/* Şifrə və Təsdiqi */}
           <div className="input-row">
-            <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+            <input 
+              type="password" 
+              name="password" 
+              placeholder="Password" 
+              value={formData.password}
+              onChange={handleChange} 
+              required 
+            />
           </div>
 
-          {/* Pin və Doğum Tarixi */}
           <div className="input-row">
-            <input type="text" name="pin" placeholder="FIN ( 7 digits )" maxLength="7" onChange={handleChange} required />
-            <input type="date" name="birthDate" className="date-input" onChange={handleChange} required />
+            <input 
+              type="text" 
+              name="pin" 
+              placeholder="FIN (7 characters)" 
+              maxLength="7" 
+              value={formData.pin}
+              onChange={handleChange} 
+              required 
+            />
+            <input 
+              type="date" 
+              name="birthDate" 
+              className="date-input" 
+              value={formData.birthDate}
+              onChange={handleChange} 
+              required 
+            />
           </div>
 
-          <button onClick={() => navigate("/email")} type="submit" className="birdie-btn">Create Account</button>
+          <button type="submit" className="birdie-btn">Create Account</button>
         </form>
 
         <div className="register-footer">

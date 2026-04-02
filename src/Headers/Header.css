@@ -162,6 +162,69 @@ span:hover {
     transition: 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
 }
 
+/* İstifadəçi Düyməsi Ana Stil */
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.08); /* Şəffaf fon */
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 16px 6px 8px; /* Sol tərəf avatar üçün azaldıldı */
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-right: 10px;
+}
+
+/* Kiçik Avatar Dairəsi */
+.user-avatar-mini {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ff4d4d, #f9cb28);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(255, 77, 77, 0.3);
+}
+
+/* Ad və Soyad Mətni */
+.user-name-text {
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: capitalize;
+}
+
+/* Hover Effekti (Üstünə gələndə) */
+.user-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #f9cb28; /* Qızılı haşiyə */
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.user-profile-btn:hover .user-avatar-mini {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(249, 203, 40, 0.5);
+}
+
+/* Mobil cihazlar üçün optimizasiya */
+@media (max-width: 768px) {
+  .user-name-text {
+    display: none; /* Mobildə yalnız avatar görünsün (yer qazanmaq üçün) */
+  }
+  .user-profile-btn {
+    padding: 6px;
+  }
+}
+
 /* Mobil Versiya (Max 768px) */
 @media (max-width: 768px) {
     .menu-icon { display: flex; }

@@ -11,7 +11,6 @@ export default function CreateTicket() {
         gate: "",
         plane: "",
         meal: "",
-        hasCheckedIn: false,
         luggageKg: 0,
         passengerName: "ONUR BAGIROV", // Default name
         from: "BAKU (GYD)",
@@ -97,18 +96,6 @@ export default function CreateTicket() {
                                     onChange={handleChange} 
                                     min="0" 
                                 />
-                            </div>
-                            <div className="checkbox-group">
-                                <label className="custom-checkbox">
-                                    <input 
-                                        type="checkbox" 
-                                        name="hasCheckedIn" 
-                                        checked={ticket.hasCheckedIn} 
-                                        onChange={handleChange} 
-                                    />
-                                    <span className="checkmark"></span>
-                                    Confirmed Check-In
-                                </label>
                             </div>
                         </div>
 

@@ -7,9 +7,10 @@ import Buy from "./Buy/buy";
 import PlaneTicket from "./PlainTicket/ticket"; 
 import TrainTicket from "./TrainFolder/ticket";
 import About from "./AboutPage/about"; 
-import SignIn  from "./SiginInPage/sign"; // Artıq burdadır
+import SignIn from "./SiginInPage/sign"; 
 import Emailcode from "./EmailCode/Emailcode";
 import CreateTicket from "./CreateTicket/ticket";
+import Profile from "./UserProfile/profile";
 
 function App() {
   return (
@@ -18,12 +19,15 @@ function App() {
       <Routes>
         <Route path="/" element={<MainPage />} />
         
-        {/* --- ƏLAVƏ EDİLDİ --- */}
+        {/* Giriş və Təsdiqləmə */}
         <Route path="/login" element={<SignIn />} /> 
-        <Route path="/email" element={<Emailcode />}/>
+        {/* Marşrut adını digər komponentlərlə eyniləşdirdik */}
+        <Route path="/email" element={<Emailcode />}/> 
         <Route path="/create-ticket" element={<CreateTicket/>} />
-        {/* --------------------- */}
+        <Route path="/User-Profile" element={<Profile/>} />
 
+
+        {/* Qeydiyyat və Digər Səhifələr */}
         <Route path="/register" element={<Register />} />
         <Route path="/buy" element={<Buy />} />
         

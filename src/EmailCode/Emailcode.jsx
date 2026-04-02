@@ -1,89 +1,81 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Emailcode.css";
 
 export default function Emailcode() {
     const [code, setCode] = useState(new Array(6).fill(""));
-    const [message, setMessage] = useState("");
+    const [status, setStatus] = useState({ type: "", message: "" });
     const inputs = useRef([]);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const userEmail = localStorage.getItem("userEmail");
+        if (!userEmail) {
+            setStatus({ type: "error", message: "Email not found in storage!" });
+        }
+    }, []);
 
     const handleChange = (e, index) => {
         const value = e.target.value;
         if (isNaN(value)) return;
-
         let newCode = [...code];
         newCode[index] = value.substring(value.length - 1);
         setCode(newCode);
-
-        // Növbəti inputa keçid
-        if (value && index < 5) {
-            inputs.current[index + 1].focus();
-        }
+        if (value && index < 5) inputs.current[index + 1].focus();
     };
 
     const handleKeyDown = (e, index) => {
-        // Backspace basıldıqda əvvəlki inputa qayıtmaq
-        if (e.key === "Backspace" && !code[index] && index > 0) {
-            inputs.current[index - 1].focus();
-        }
+        if (e.key === "Backspace" && !code[index] && index > 0) inputs.current[index - 1].focus();
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        if (e) e.preventDefault();
         const fullCode = code.join("");
+        const userEmail = localStorage.getItem("userEmail");
+
+        if (!userEmail || fullCode.length < 6) {
+            setStatus({ type: "error", message: "Please enter the full 6-digit code." });
+            return;
+        }
+
         try {
-            const res = await fetch("http://localhost:5000/verify-email", {
+            setStatus({ type: "loading", message: "Verifying..." });
+            const response = await fetch("http://localhost:5251/api/Auth/confirm-email", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code: fullCode })
+                body: JSON.stringify({ email: userEmail, confirmCode: fullCode })
             });
 
-            const data = await res.json();
-            if (res.ok) {
-                setMessage("Təsdiqləndi! Giriş səhifəsinə yönləndirilirsiniz...");
+            const data = await response.json();
+            if (response.ok && data === true) {
+                setStatus({ type: "success", message: "Verified! Redirecting..." });
+                localStorage.removeItem("userEmail");
                 setTimeout(() => navigate("/login"), 2000);
             } else {
-                setMessage(data.message || "Kod yanlışdır.");
+                setStatus({ type: "error", message: "Invalid code." });
             }
         } catch (err) {
-            setMessage("Server xətası: " + err.message);
+            setStatus({ type: "error", message: "Server connection failed." });
         }
     };
 
     return (
         <div className="verify-body">
             <div className="verify-card">
-                <div className="verify-header">
-                    <div className="mail-icon">✉️</div>
-                    <h2>Kodu daxil edin</h2>
-                    <p>E-poçt ünvanınıza göndərilən 6 rəqəmli təsdiq kodunu yazın.</p>
-                </div>
-
+                <h2>Verify Your Email</h2>
                 <div className="code-inputs">
                     {code.map((digit, index) => (
-                        <input
-                            key={index}
-                            type="text"
-                            maxLength="1"
-                            value={digit}
+                        <input key={index} type="text" maxLength="1" value={digit}
                             ref={(el) => (inputs.current[index] = el)}
                             onChange={(e) => handleChange(e, index)}
                             onKeyDown={(e) => handleKeyDown(e, index)}
                         />
                     ))}
                 </div>
-
-                <button className="confirm-btn" onClick={handleSubmit}>
-                    Təsdiqlə
+                <button className="confirm-btn" onClick={handleSubmit} disabled={status.type === "loading"}>
+                    {status.type === "loading" ? "Checking..." : "VERIFY CODE"}
                 </button>
-
-                {message && <p className={`msg ${message.includes("Təsdiqləndi") ? "success" : "error"}`}>
-                    {message}
-                </p>}
-
-                <div className="resend-section">
-                    Kod gəlməyib? <button className="resend-link">Yenidən göndər</button>
-                </div>
+                {status.message && <p className={`msg ${status.type}`}>{status.message}</p>}
             </div>
         </div>
     );

@@ -1,36 +1,50 @@
-/* MainPage ana konteyner */
+/* Ana Səhifə */
 .main-page {
     width: 100%;
-    min-height: 100vh;
+    background-color: #0a0a0a;
 }
 
-/* 1. Hero Section - Giriş hissəsi */
+/* 1. Hero Section - Arxa fon şəkli burada təyin olunur */
 .hero-section {
     width: 100%;
     height: 100vh;
+    /* Şəkildəki fon */
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), 
+                url("/MainScreen.png") no-repeat center center/cover;;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Kaydırarkən fonun sabit qalması üçün */
     display: flex;
     justify-content: center;
     align-items: center;
-    text-align: center;
-    background: transparent; /* Arxa fon body-dən gəlir */
-    padding: 20px;
+    position: relative;
 }
 
+.hero-overlay {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
 .main-content {
     max-width: 900px;
-    animation: fadeIn 1s ease-in-out;
+    text-align: center;
+    padding: 20px;
+    animation: fadeInContent 1.2s ease-out;
 }
 
+/* Başlıq Dizaynı */
 .hero-title {
     font-size: clamp(2.5rem, 8vw, 4.5rem);
     font-weight: 800;
-    margin-bottom: 20px;
     color: white;
-    text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-.hero-title span {
+.gradient-text {
     background: linear-gradient(90deg, #ff4d4d, #f9cb28);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -38,98 +52,111 @@
 
 .hero-subtitle {
     font-size: 1.2rem;
-    margin-bottom: 35px;
     color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 40px;
     line-height: 1.6;
+    max-width: 750px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* Düymələr */
+/* Düymələrin Dizaynı */
 .hero-buttons {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     justify-content: center;
     flex-wrap: wrap;
-}
-
-.hero-buttons button {
-    padding: 15px 40px;
-    border-radius: 50px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    border: none;
-    transition: all 0.3s ease;
 }
 
 .explore-btn {
     background: #ff4d4d;
     color: white;
-    box-shadow: 0 10px 20px rgba(255, 77, 77, 0.3);
+    padding: 16px 45px;
+    border-radius: 50px;
+    border: none;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(255, 77, 77, 0.3);
 }
 
 .explore-btn:hover {
-    background: #e63939;
     transform: translateY(-5px);
     box-shadow: 0 15px 30px rgba(255, 77, 77, 0.4);
 }
 
-.details-btn { 
-    background: rgba(255, 255, 255, 0.1); 
-    color: white; 
-    border: 1px solid rgba(255, 255, 255, 0.4) !important; 
-    backdrop-filter: blur(10px);
+.details-btn {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    color: white;
+    padding: 16px 45px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.details-btn:hover { 
-    background: white; 
-    color: black; 
+.details-btn:hover {
+    background: white;
+    color: black;
     transform: translateY(-5px);
 }
 
-/* 2. Trending Section (Kartlar bölməsi) */
+/* 2. Trending Destinations Section */
 .trending-section {
-    padding: 100px 10%;
-    /* Kartların altındakı fonu bir az tündləşdiririk ki, yazılar oxunsun */
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(5px);
+    padding: 100px 8%;
+    background: #0a0a0a;
 }
 
 .section-title {
-    font-size: 2.8rem;
-    margin-bottom: 50px;
     color: white;
+    font-size: 2.8rem;
     text-align: center;
+    margin-bottom: 60px;
     font-weight: 800;
 }
 
 .destinations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 35px;
-    max-width: 1200px;
-    margin: 0 auto;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
 }
 
 /* Kart Dizaynı - Glassmorphism */
 .dest-card {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 25px;
     overflow: hidden;
-    backdrop-filter: blur(15px);
-    transition: all 0.4s ease;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.dest-card:hover { 
-    transform: translateY(-10px); 
+.dest-card:hover {
+    transform: translateY(-12px);
     border-color: #ff4d4d;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .card-image {
-    height: 220px;
+    height: 250px;
     background-size: cover;
     background-position: center;
+    position: relative;
+}
+
+.card-tag {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    color: #f9cb28;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
 }
 
 .card-info {
@@ -137,50 +164,26 @@
     color: white;
 }
 
-.card-info h3 { 
-    margin-bottom: 12px; 
-    font-size: 1.4rem;
-    color: white; 
-}
-
-.card-info p { 
-    color: rgba(255, 255, 255, 0.7); 
-    font-size: 0.95rem; 
-    margin-bottom: 15px;
-}
-
-.card-info span { 
-    color: #f9cb28; 
-    font-weight: 800; 
-    font-size: 1.3rem; 
-}
+.card-info h3 { font-size: 1.5rem; margin-bottom: 10px; }
+.card-info span { color: #f9cb28; font-weight: 800; font-size: 1.3rem; }
 
 .book-now-btn {
-    margin-top: 15px;
     width: 100%;
+    margin-top: 20px;
     padding: 12px;
-    border: 1px solid #ff4d4d;
     background: transparent;
+    border: 1px solid #ff4d4d;
     color: #ff4d4d;
     border-radius: 12px;
+    font-weight: bold;
     cursor: pointer;
-    font-weight: 700;
     transition: 0.3s;
 }
 
-.book-now-btn:hover {
-    background: #ff4d4d;
-    color: white;
-}
+.book-now-btn:hover { background: #ff4d4d; color: white; }
 
 /* Animasiya */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
+@keyframes fadeInContent {
+    from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-/* Mobil tənzimləmə */
-@media (max-width: 768px) {
-    .hero-title { font-size: 2.8rem; }
-    .trending-section { padding: 60px 5%; }
 }
