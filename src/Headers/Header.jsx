@@ -85,7 +85,14 @@ const Header = () => {
               Sign Up
             </button>
           )}
-
+          <button 
+            className="seatmap-btn"
+            onClick={() => handleNavigation("/buy-seats")}
+          >
+            Test Seat Map
+          </button>
+          <button></button>
+            
           <button 
             className="buy-btn"
             onClick={() => handleNavigation("/buy")}

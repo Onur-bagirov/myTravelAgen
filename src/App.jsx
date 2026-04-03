@@ -11,6 +11,7 @@ import SignIn from "./SiginInPage/sign";
 import Emailcode from "./EmailCode/Emailcode";
 import CreateTicket from "./CreateTicket/ticket";
 import Profile from "./UserProfile/profile";
+import BuySeats from "./BuySeats/SeatMap";
 
 function App() {
   return (
@@ -33,7 +34,9 @@ function App() {
         
         <Route path="/ticket/train" element={<TrainTicket />} />
         <Route path="/ticket/plane" element={<PlaneTicket />} />
-        
+
+        {/* Oturacaq alma */}
+        <Route path="/buy-seats" element={<BuySeats />} />
         <Route path="/about" element={<About />} /> 
         
         <Route path="*" element={<div style={{color: 'white', textAlign: 'center', marginTop: '100px'}}>Səhifə tapılmadı!</div>} />
