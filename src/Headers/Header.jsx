@@ -91,8 +91,12 @@ const Header = () => {
           >
             Test Seat Map
           </button>
-          <button></button>
-            
+          <button
+            className="MyTickets-btn"
+            onClick={() => handleNavigation("/MyTickets")}
+          >
+            My Tickets
+          </button>
           <button 
             className="buy-btn"
             onClick={() => handleNavigation("/buy")}

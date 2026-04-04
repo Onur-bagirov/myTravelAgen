@@ -12,6 +12,7 @@ import Emailcode from "./EmailCode/Emailcode";
 import CreateTicket from "./CreateTicket/ticket";
 import Profile from "./UserProfile/profile";
 import BuySeats from "./BuySeats/SeatMap";
+import MyTickets from "./MyTickets/MyTickets";
 
 function App() {
   return (
@@ -37,6 +38,9 @@ function App() {
 
         {/* Oturacaq alma */}
         <Route path="/buy-seats" element={<BuySeats />} />
+        <Route path="/MyTickets" element={<MyTickets />} />
+
+        {/* Haqqımızda səhifəsi */}
         <Route path="/about" element={<About />} /> 
         
         <Route path="*" element={<div style={{color: 'white', textAlign: 'center', marginTop: '100px'}}>Səhifə tapılmadı!</div>} />

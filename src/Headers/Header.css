@@ -79,12 +79,13 @@ span {
     color: #ff4d4d;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     font-size: large;
+    transition: transform 0.3s ease;
 }
 
-span:hover {
-    color: white;
-    cursor: pointer;
 
+span:hover {
+    cursor: pointer;
+    transform: scale(1.1);
 }
 
 .navbar a:hover {
