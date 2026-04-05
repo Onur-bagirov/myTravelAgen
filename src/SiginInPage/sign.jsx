@@ -21,20 +21,18 @@ const SignIn = () => {
       const result = await response.json();
 
       if (response.ok && result.data) {
-        // --- BU HİSSƏDƏ DƏYİŞİKLİK EDİLDİ ---
-        // Backend-dən gələn real istifadəçi məlumatlarını yaddaşa yazırıq
-        localStorage.setItem("token", result.data.token);
+        // ✅ DÜZƏLDİLDİ: token adı Profile ilə uyğunlaşdırıldı
+        localStorage.setItem("userToken", result.data.token);
         localStorage.setItem("userRole", result.data.role || "User");
         localStorage.setItem("userEmail", result.data.email); 
         localStorage.setItem("userFirstName", result.data.firstName); 
         localStorage.setItem("userLastName", result.data.lastName);  
         
-        // Girişdən sonra birbaşa Profil səhifəsinə yönləndiririk
+        // Login sonrası Profile səhifəsinə yönləndir
         navigate("/User-Profile"); 
-        
-        // Header-in dərhal dəyişməsi (Sign In -> Log Out) üçün səhifəni yeniləyirik
+
+        // Header/MainPage dərhal yenilənsin
         window.location.reload(); 
-        // ------------------------------------
       } 
       else if (result.message === "EMAIL_NOT_CONFIRMED") {
         localStorage.setItem("userEmail", formData.email); 

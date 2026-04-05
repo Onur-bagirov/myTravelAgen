@@ -1,209 +1,225 @@
-/* Ana konteyner - Mobil cihazlarda padding-i azaldırıq ki, kənarlardan çox yer itməsin */
-.profile-page-wrapper {
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  /* Daha dərin və zəngin arxa fon */
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #05050a;
   min-height: 100vh;
-  width: 100%;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), 
-              url("/MainScreen.png") no-repeat center center/cover;
+  position: relative;
+  overflow-x: hidden;
+  color: #fff;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 10%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
+  z-index: 0;
+}
+
+/* ─── Wrapper ─── */
+.profile-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+/* ─── Card ─── */
+.profile-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  padding: 2.5rem;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  transition: all 0.4s ease;
+}
+
+.profile-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+}
+
+/* ─── Header Card ─── */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* ─── Avatar (Premium Look) ─── */
+.profile-avatar {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 80px 15px 40px; /* Üst hissəni Header-ə görə tənzimlədik */
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-.glass-container {
-  background: rgba(15, 15, 15, 0.7);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px); /* Safari dəstəyi */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 30px;
-  width: 100%;
-  max-width: 950px;
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  overflow: hidden;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+.profile-fullname {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
 }
 
-/* Sidebar */
-.profile-side-bar {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 40px 20px;
-  text-align: center;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.profile-email-text {
+  color: #94a3b8;
+  font-size: 14px;
+  margin-top: 4px;
 }
 
-.avatar-wrapper {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.avatar-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 4px solid #ff4d4d;
-  padding: 5px;
-}
-
-.online-indicator {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
-  background: #4caf50;
-  border-radius: 50%;
-  border: 3px solid #1a1a1a;
-}
-
-.user-email-text {
-  font-size: 0.85rem;
-  opacity: 0.6;
-  margin: 5px 0 15px;
-  word-break: break-all; /* Uzun email-lər sidebar-ı partlatmasın */
-}
-
-/* Sidebar Statları */
-.sidebar-stats {
-  display: flex;
-  width: 100%;
-  justify-content: space-around;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-.stat-box span { font-size: 1.2rem; font-weight: bold; color: #f9cb28; display: block; }
-.stat-box p { font-size: 0.7rem; opacity: 0.5; text-transform: uppercase; margin: 0; }
-
-/* Details Area */
-.profile-details-area {
-  padding: 50px;
-  color: white;
-}
-
-.details-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  flex-wrap: wrap; /* Başlıq və düymə sığmasa alt-alta düşsün */
-  gap: 15px;
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 30px;
-}
-
-.detail-item label {
-  display: block;
-  font-size: 0.7rem;
-  color: #ff4d4d;
+/* ─── Fields Grid ─── */
+.section-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 8px;
+  letter-spacing: 2px;
+  color: #6366f1;
+  margin-bottom: 2rem;
+  font-weight: 700;
 }
 
-.detail-item p {
-  font-size: 1rem;
+.fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.field-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.field-value {
+  font-size: 16px;
+  color: #f1f5f9;
   font-weight: 500;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  padding-bottom: 10px;
-  margin: 0;
-  word-wrap: break-word;
 }
 
-/* Edit Inputs (Öncəki mesajda soruşduğun hissə üçün) */
-.edit-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
+/* ─── Inputs ─── */
+.field-input {
   width: 100%;
-  font-size: 0.95rem;
-  outline: none;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: #fff;
   transition: 0.3s;
 }
 
-.edit-input:focus { border-color: #ff4d4d; background: rgba(255, 255, 255, 0.1); }
+.field-input:focus {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
 
-/* Buttons */
-.action-buttons-group {
-  margin-top: 50px;
+/* ─── Action Buttons ─── */
+.actions-row {
   display: flex;
-  gap: 15px;
+  gap: 12px;
+  margin-top: 1rem;
 }
 
-.btn-main-action, .btn-secondary-action {
-  padding: 14px 28px;
-  border-radius: 50px;
-  font-weight: 700;
+button {
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
   cursor: pointer;
-  transition: all 0.3s ease;
-  flex: 1; /* Düymələr bərabər genişlikdə olsun */
-  font-size: 0.9rem;
-  white-space: nowrap;
 }
 
-.btn-main-action { background: white; color: black; border: none; }
-.btn-main-action:hover { background: #f0f0f0; transform: translateY(-2px); }
-
-.btn-secondary-action {
-  background: rgba(255,255,255,0.05);
-  color: white;
-  border: 1px solid rgba(255,255,255,0.2);
-}
-.btn-secondary-action:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
-
-/* --- RESPONSIVE DIZAYN (PLANŞET VƏ MOBİL) --- */
-
-@media (max-width: 900px) {
-  .glass-container {
-    grid-template-columns: 1fr; /* Sidebar yuxarıya çıxır */
-    max-width: 600px;
-  }
-  
-  .profile-side-bar {
-    border-right: none;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 30px;
-  }
-
-  .profile-details-area {
-    padding: 30px;
-  }
+.btn-edit, .btn-pw {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.btn-edit:hover, .btn-pw:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-save {
+  background: #6366f1;
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+}
+
+.btn-save:hover {
+  background: #4f46e5;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 25px rgba(99, 102, 241, 0.3);
+}
+
+.btn-logout {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  margin-left: auto;
+}
+
+.btn-logout:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ─── Toast (Floating Style) ─── */
+.toast {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  padding: 1rem 2rem;
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10000;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  animation: toastSlide 0.5s ease forwards;
+}
+
+@keyframes toastSlide {
+  from { transform: translateX(50px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ─── Responsive ─── */
 @media (max-width: 600px) {
-  .profile-page-wrapper {
-    padding: 60px 10px 20px;
-  }
-
-  .details-grid {
-    grid-template-columns: 1fr; /* İnputlar alt-alta düzülür */
-    gap: 20px;
-  }
-
-  .action-buttons-group {
-    flex-direction: column; /* Düymələr alt-alta */
-    width: 100%;
-  }
-
-  .btn-main-action, .btn-secondary-action {
-    width: 100%;
-  }
-
-  .details-header h2 {
-    font-size: 1.4rem;
-  }
+  .fields-grid { grid-template-columns: 1fr; }
+  .profile-header { flex-direction: column; text-align: center; }
+  .actions-row { flex-direction: column; }
+  .btn-logout { margin-left: 0; }
 }

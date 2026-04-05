@@ -13,35 +13,42 @@ export default function MainPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+  const checkUser = () => {
+    const token = localStorage.getItem("userToken"); // SignIn-də token adı ilə uyğun
     const firstName = localStorage.getItem("userFirstName");
+    const lastName = localStorage.getItem("userLastName");
     if (token && firstName) {
-      setUser({ firstName });
+      setUser({ firstName, lastName });
+    } else {
+      setUser(null);
     }
+  };
+
+  useEffect(() => {
+    checkUser();
+
+    // 🔥 Başqa tab-da login/logout dəyişikliklərini də dərhal görmək üçün
+    window.addEventListener("storage", checkUser);
+    return () => window.removeEventListener("storage", checkUser);
   }, []);
 
   return (
     <div className="main-page">
-      {/* Hero Section - Background stays fixed */}
+      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-overlay">
           <div className="main-content">
-            
-            {/* Dynamic Title */}
             <h1 className="hero-title">
               {user ? "Welcome Back," : "Explore the World"} 
               <span className="gradient-text"> {user ? user.firstName : "With Us"}</span>
             </h1>
 
-            {/* Dynamic Subtitle */}
             <p className="hero-subtitle">
               {user 
                 ? "Your luxury adventure continues here. Are you ready to plan your next journey?" 
                 : "Join TravelAgen for a premium travel experience and benefit from exclusive tours."}
             </p>
 
-            {/* Dynamic Buttons */}
             <div className="hero-buttons">
               {user ? (
                 <>
@@ -63,7 +70,6 @@ export default function MainPage() {
                 </>
               )}
             </div>
-
           </div>
         </div>
       </section>
