@@ -9,9 +9,8 @@ const Header = () => {
   const [userData, setUserData] = useState({ firstName: "", lastName: "" });
   const navigate = useNavigate();
 
-  // 🔥 Token və user məlumatlarını yoxlama funksiyası
   const checkUser = () => {
-    const token = localStorage.getItem("userToken"); 
+    const token = localStorage.getItem("userToken");
     const role = localStorage.getItem("userRole");
     const firstName = localStorage.getItem("userFirstName");
     const lastName = localStorage.getItem("userLastName");
@@ -50,6 +49,7 @@ const Header = () => {
     localStorage.clear();
     setIsLoggedIn(false);
     setUserRole(null);
+    window.dispatchEvent(new Event("storage")); // ← düzəliş bu sətirdir
     navigate("/");
   };
 
@@ -71,8 +71,8 @@ const Header = () => {
       <nav className={`navbar ${isOpen ? "active" : ""}`}>
         {/* Admin / Company link */}
         {isLoggedIn && (userRole === "Admin" || userRole === "Company") && (
-          <span 
-            onClick={() => handleNavigation("/create-ticket")} 
+          <span
+            onClick={() => handleNavigation("/create-ticket")}
             className="nav-link create-ticket-link"
           >
             Create Ticket
@@ -92,8 +92,6 @@ const Header = () => {
               <button className="signin-btn logout-color" onClick={handleLogout}>
                 Log Out
               </button>
-
-              {/* Yalnız login olanlar üçün */}
               <button className="seatmap-btn" onClick={() => handleNavigation("/buy-seats")}>
                 Test Seat Map
               </button>

@@ -13,22 +13,15 @@ export default function MainPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
-  // 🔥 İstifadəçi yoxlama funksiyası
   const checkUser = () => {
     const token = localStorage.getItem("userToken");
     const firstName = localStorage.getItem("userFirstName");
     const lastName = localStorage.getItem("userLastName");
-    if (token && firstName) {
-      setUser({ firstName, lastName });
-    } else {
-      setUser(null);
-    }
+    setUser(token && firstName ? { firstName, lastName } : null);
   };
 
   useEffect(() => {
     checkUser();
-
-    // Başqa tablarda login/logout dəyişikliklərini dərhal görmək üçün
     window.addEventListener("storage", checkUser);
     return () => window.removeEventListener("storage", checkUser);
   }, []);
@@ -53,21 +46,13 @@ export default function MainPage() {
             <div className="hero-buttons">
               {user ? (
                 <>
-                  <button className="explore-btn" onClick={() => navigate("/buy")}>
-                    Explore Tours
-                  </button>
-                  <button className="details-btn" onClick={() => navigate("/User-Profile")}>
-                    My Profile
-                  </button>
+                  <button className="explore-btn" onClick={() => navigate("/buy")}>Explore Tours</button>
+                  <button className="details-btn" onClick={() => navigate("/User-Profile")}>My Profile</button>
                 </>
               ) : (
                 <>
-                  <button className="explore-btn" onClick={() => navigate("/register")}>
-                    Get Started
-                  </button>
-                  <button className="details-btn" onClick={() => navigate('/about')}>
-                    Learn More
-                  </button>
+                  <button className="explore-btn" onClick={() => navigate("/register")}>Get Started</button>
+                  <button className="details-btn" onClick={() => navigate('/about')}>Learn More</button>
                 </>
               )}
             </div>
@@ -81,20 +66,15 @@ export default function MainPage() {
         <div className="destinations-grid">
           {destinations.map((place) => (
             <div key={place.id} className="dest-card">
-              <div 
-                className="card-image" 
-                style={{ backgroundImage: `url(${place.img})` }}
-              >
+              <div className="card-image" style={{ backgroundImage: `url(${place.img})` }}>
                 <div className="card-tag">{place.tag}</div>
               </div>
               <div className="card-info">
                 <h3>{place.name}</h3>
                 <p>Starting from <span>{place.price}</span></p>
-                {/* 🔥 Login olmayanlar üçün düymə gizlədilir */}
+                {/* 🔥 Book Now yalnız login olanlarda görünür */}
                 {user && (
-                  <button className="book-now-btn" onClick={() => navigate("/buy")}>
-                    Book Now
-                  </button>
+                  <button className="book-now-btn" onClick={() => navigate("/buy")}>Book Now</button>
                 )}
               </div>
             </div>
