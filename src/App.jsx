@@ -13,6 +13,7 @@ import CreateTicket from "./CreateTicket/ticket";
 import Profile from "./UserProfile/profile";
 import BuySeats from "./BuySeats/SeatMap";
 import MyTickets from "./MyTickets/MyTickets";
+import ForgotPassword from "./ForgotPassword/password";
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
         <Route path="/email" element={<Emailcode />}/> 
         <Route path="/create-ticket" element={<CreateTicket/>} />
         <Route path="/User-Profile" element={<Profile/>} />
-
+        <Route path="/Forgot-Pass" element={<ForgotPassword/>} />
 
         {/* Qeydiyyat və Digər Səhifələr */}
         <Route path="/register" element={<Register />} />

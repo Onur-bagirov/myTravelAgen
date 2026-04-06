@@ -21,17 +21,13 @@ const SignIn = () => {
       const result = await response.json();
 
       if (response.ok && result.data) {
-        // ✅ DÜZƏLDİLDİ: token adı Profile ilə uyğunlaşdırıldı
         localStorage.setItem("userToken", result.data.token);
         localStorage.setItem("userRole", result.data.role || "User");
         localStorage.setItem("userEmail", result.data.email); 
         localStorage.setItem("userFirstName", result.data.firstName); 
         localStorage.setItem("userLastName", result.data.lastName);  
         
-        // Login sonrası Profile səhifəsinə yönləndir
         navigate("/User-Profile"); 
-
-        // Header/MainPage dərhal yenilənsin
         window.location.reload(); 
       } 
       else if (result.message === "EMAIL_NOT_CONFIRMED") {
@@ -54,7 +50,9 @@ const SignIn = () => {
           <div className="logo-small">Travel<span>Agen</span></div>
           <h1>Welcome Back</h1>
         </div>
+        
         {error && <div style={{color: '#ff4d4d', textAlign: 'center', marginBottom: '10px'}}>{error}</div>}
+        
         <form onSubmit={handleSubmit} className="signin-form">
           <div className="input-group">
             <label>Email Address</label>
@@ -65,6 +63,7 @@ const SignIn = () => {
               required 
             />
           </div>
+          
           <div className="input-group">
             <label>Password</label>
             <input 
@@ -74,8 +73,20 @@ const SignIn = () => {
               required 
             />
           </div>
+
+          {/* 🔥 FORGOT PASSWORD LİNKİ ƏLAVƏ EDİLDİ */}
+          <div className="forgot-password-container">
+            <span 
+              className="forgot-password-link" 
+              onClick={() => navigate('/Forgot-Pass')}
+            >
+              Forgot Password?
+            </span>
+          </div>
+
           <button type="submit" className="signin-main-btn">Sign In</button>
         </form>
+        
         <div className="signin-footer">
           Don't have an account? <span onClick={() => navigate('/register')} style={{cursor: 'pointer', color: '#ffa500'}}>Sign Up</span>
         </div>

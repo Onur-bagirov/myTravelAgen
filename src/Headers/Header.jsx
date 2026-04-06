@@ -84,7 +84,7 @@ const Header = () => {
         <div className="nav-buttons">
           {isLoggedIn ? (
             <>
-              <button className="user-profile-btn" onClick={() => handleNavigation("/User-Profile")}>
+              <button className="signin-btn logout-color" onClick={() => handleNavigation("/User-Profile")}>
                 My Profile
               </button>
               <button className="signin-btn logout-color" onClick={handleLogout}>Log Out</button>
