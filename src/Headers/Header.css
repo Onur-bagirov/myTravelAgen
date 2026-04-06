@@ -93,16 +93,13 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     overflow: hidden;
     transition: color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
-.signin-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: white;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-    z-index: 0;
-    border-radius: 25px;
+/* Yalnız Sign Up hover ::before effekti */
+.signin-btn:not(.logout-color)::before {
+    background: rgba(200, 200, 200, 0.2); /* Açıq boz/fuzlet */
+}
+
+.signin-btn:not(.logout-color):hover::before {
+    transform: scaleX(1);
 }
 .signin-btn span { position: relative; z-index: 1; color: inherit; font-family: inherit; font-size: inherit; }
 .signin-btn span:hover { color: inherit; transform: none; }

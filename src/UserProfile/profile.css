@@ -1,225 +1,266 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
 
+/* ─── Global Styles ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  /* Daha dərin və zəngin arxa fon */
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  background: #05050a;
-  min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
-  color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") center/cover no-repeat;
+    background-attachment: fixed; /* Səhifə scroll olsa da fon sabit qalır */
+    background-color: #05050a; /* fallback color */
+    color: #fff;
+    min-height: 100vh;
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: 
-    radial-gradient(circle at 20% 10%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 90%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
-  z-index: 0;
-}
-
-/* ─── Wrapper ─── */
+/* Profile / card wrapper blur efekti */
 .profile-wrapper {
-  position: relative;
-  z-index: 1;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 4rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    position: relative;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 6rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    background: rgba(255, 255, 255, 0.03); /* Glassmorphism */
+    border-radius: 35px;
+    backdrop-filter: blur(25px); /* Həmişə blur */
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.5s ease forwards; /* Daha axıcı görünüş */
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(40px); filter: blur(10px); }
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    from { opacity: 0.7; transform: translateY(20px); filter: blur(5px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
-/* ─── Card ─── */
+/* ─── Cards (Glassmorphism) ─── */
 .profile-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  padding: 2.5rem;
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  transition: all 0.4s ease;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 35px;
+    padding: 2.5rem;
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s ease;
 }
 
-.profile-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(99, 102, 241, 0.3);
-  transform: translateY(-2px);
-}
-
-/* ─── Header Card ─── */
+/* ─── Avatar & Header (DÜZƏLDİLDİ) ─── */
 .profile-header {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
 }
 
-/* ─── Avatar (Premium Look) ─── */
 .profile-avatar {
-  flex-shrink: 0;
-  width: 100px;
-  height: 100px;
-  border-radius: 30px;
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Syne', sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
-  color: #fff;
-  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+    width: 110px;
+    height: 110px;
+    border-radius: 35px; /* Squircle kənarlar */
+    background: conic-gradient(#f09433, #dc2743, #bc1888, #f09433);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 5px; /* Halqa qalınlığı */
+    box-shadow: 0 15px 35px rgba(220, 39, 67, 0.25);
+    z-index: 1;
+}
+
+/* Avatarın daxili tünd qutusu */
+.profile-avatar::after {
+    content: '';
+    position: absolute;
+    inset: 5px; /* Gradientin görünməsi üçün məsafə */
+    background: #0f0f1a;
+    border-radius: 30px;
+    z-index: -1; /* Yazının altında qalması üçün */
+}
+
+/* Baş hərflərin tünd fon üzərində tam ağ görünməsi */
+.profile-avatar {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .profile-fullname {
-  font-family: 'Syne', sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -1px;
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
 }
 
 .profile-email-text {
-  color: #94a3b8;
-  font-size: 14px;
-  margin-top: 4px;
+    color: #94a3b8;
+    font-size: 15px;
+    margin-top: 6px;
+    font-weight: 400;
 }
 
 /* ─── Fields Grid ─── */
 .section-label {
-  font-family: 'Syne', sans-serif;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #6366f1;
-  margin-bottom: 2rem;
-  font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #6366f1;
+    margin-bottom: 2rem;
+    font-weight: 700;
 }
 
 .fields-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
 }
 
 .field-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #64748b;
-  margin-bottom: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .field-value {
-  font-size: 16px;
-  color: #f1f5f9;
-  font-weight: 500;
+    font-size: 17px;
+    color: #f1f5f9;
+    font-weight: 500;
 }
+
+.field-dash { color: #475569; }
 
 /* ─── Inputs ─── */
 .field-input {
-  width: 100%;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  color: #fff;
-  transition: 0.3s;
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    color: #fff;
+    font-family: inherit;
+    transition: 0.3s;
 }
 
 .field-input:focus {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.05);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
-  outline: none;
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
 }
 
-/* ─── Action Buttons ─── */
-.actions-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 1rem;
+/* ─── Actions Row & Buttons ─── */
+.actions-row, .pw-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 2rem;
 }
 
 button {
-  padding: 12px 24px;
-  border-radius: 16px;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
-  cursor: pointer;
+    padding: 14px 28px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
 }
 
-.btn-edit, .btn-pw {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.btn-edit, .btn-pw, .btn-secondary, .btn-cancel {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.btn-edit:hover, .btn-pw:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+.btn-edit:hover, .btn-pw:hover, .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
 }
 
-.btn-save {
-  background: #6366f1;
-  color: #fff;
-  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+.btn-primary, .btn-save {
+    background: #ffffff; /* Ağ düymə */
+    color: #000;
+    font-weight: 700;
 }
 
-.btn-save:hover {
-  background: #4f46e5;
-  transform: translateY(-2px);
-  box-shadow: 0 15px 25px rgba(99, 102, 241, 0.3);
+.btn-primary:hover, .btn-save:hover {
+    background: #f8f8f8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
 }
 
 .btn-logout {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  margin-left: auto;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    margin-left: auto;
 }
 
-.btn-logout:hover {
-  background: rgba(239, 68, 68, 0.2);
+.btn-logout:hover { background: rgba(239, 68, 68, 0.2); }
+
+/* ─── Password Panel (DÜZƏLDİLDİ) ─── */
+.pw-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
 }
 
-/* ─── Toast (Floating Style) ─── */
+.pw-panel-title {
+    font-size: 26px;
+    font-weight: 600;
+}
+
+.pw-close-btn {
+    width: 55px;
+    height: 55px;
+    background: #fff;
+    color: #000;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.pw-field { margin-bottom: 1.5rem; }
+
+.divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 2.5rem 0;
+}
+
+/* ─── Toast Notifications ─── */
 .toast {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
-  padding: 1rem 2rem;
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 10000;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-  animation: toastSlide 0.5s ease forwards;
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 1.2rem 2.2rem;
+    border-radius: 22px;
+    backdrop-filter: blur(20px);
+    z-index: 10000;
+    box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+    animation: toastSlide 0.5s ease forwards;
 }
+
+.toast-success { background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; }
+.toast-error { background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; }
 
 @keyframes toastSlide {
-  from { transform: translateX(50px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+    from { transform: translateX(50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
 }
 
 /* ─── Responsive ─── */
-@media (max-width: 600px) {
-  .fields-grid { grid-template-columns: 1fr; }
-  .profile-header { flex-direction: column; text-align: center; }
-  .actions-row { flex-direction: column; }
-  .btn-logout { margin-left: 0; }
+@media (max-width: 700px) {
+    .fields-grid { grid-template-columns: 1fr; }
+    .profile-header { flex-direction: column; text-align: center; }
+    .actions-row { flex-direction: column; }
+    .btn-logout { margin-left: 0; }
+    .profile-fullname { font-size: 1.8rem; }
 }

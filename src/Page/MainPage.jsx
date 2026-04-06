@@ -13,8 +13,9 @@ export default function MainPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
+  // 🔥 İstifadəçi yoxlama funksiyası
   const checkUser = () => {
-    const token = localStorage.getItem("userToken"); // SignIn-də token adı ilə uyğun
+    const token = localStorage.getItem("userToken");
     const firstName = localStorage.getItem("userFirstName");
     const lastName = localStorage.getItem("userLastName");
     if (token && firstName) {
@@ -27,7 +28,7 @@ export default function MainPage() {
   useEffect(() => {
     checkUser();
 
-    // 🔥 Başqa tab-da login/logout dəyişikliklərini də dərhal görmək üçün
+    // Başqa tablarda login/logout dəyişikliklərini dərhal görmək üçün
     window.addEventListener("storage", checkUser);
     return () => window.removeEventListener("storage", checkUser);
   }, []);
@@ -89,9 +90,12 @@ export default function MainPage() {
               <div className="card-info">
                 <h3>{place.name}</h3>
                 <p>Starting from <span>{place.price}</span></p>
-                <button className="book-now-btn" onClick={() => navigate("/buy")}>
-                  Book Now
-                </button>
+                {/* 🔥 Login olmayanlar üçün düymə gizlədilir */}
+                {user && (
+                  <button className="book-now-btn" onClick={() => navigate("/buy")}>
+                    Book Now
+                  </button>
+                )}
               </div>
             </div>
           ))}
