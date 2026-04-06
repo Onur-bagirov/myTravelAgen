@@ -13,10 +13,8 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Validation xətasını düzgün oxuyan helper
   const extractError = (result) => {
     if (!result) return "Server error occurred.";
-    // FluentValidation xətaları errors[] içində gəlir
     if (result.errors && Array.isArray(result.errors)) {
       return result.errors.map((e) => e.description || e.message || e).join(" ");
     }
@@ -43,12 +41,16 @@ const ForgotPassword = () => {
       try { result = await response.json(); } catch { result = null; }
 
       if (response.ok) {
+        if (result?.data?.success === false) {
+          setError(result.data.message);
+          return;
+        }
         setInfoMessage("Reset code has been sent to your email.");
         setStep(2);
       } else {
         setError(extractError(result));
       }
-    } catch {
+    } catch (err) {
       setError("Cannot connect to server.");
     } finally {
       setLoading(false);
@@ -64,7 +66,6 @@ const ForgotPassword = () => {
       return;
     }
 
-    // Frontend-də şifrə formatını yoxla — backend-lə eyni qaydalar
     const pwRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
     if (!pwRegex.test(newPassword)) {
       setError("Password needs uppercase, lowercase, digit and special character (@$!%*?&).");
@@ -77,12 +78,7 @@ const ForgotPassword = () => {
       const response = await fetch("http://localhost:5251/api/Auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          code,
-          newPassword,
-          confirmPassword,
-        }),
+        body: JSON.stringify({ email, code, newPassword, confirmPassword }),
       });
 
       let result = null;
@@ -117,16 +113,15 @@ const ForgotPassword = () => {
         {infoMessage && <div className="pass-info-box">{infoMessage}</div>}
         {error && <div className="pass-error-box">{error}</div>}
 
-        <form className="pass-form" onSubmit={step === 1 ? handleSendEmail : handleResetPassword}>
+        <form className="pass-form" noValidate onSubmit={step === 1 ? handleSendEmail : handleResetPassword}>
           {step === 1 ? (
             <div className="pass-group">
               <label>Email Address</label>
               <input
-                type="email"
+                type="text"
                 placeholder="mail@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
               />
               <button type="submit" disabled={loading} className="pass-main-btn">
                 {loading ? "Sending..." : "Get Reset Code"}
@@ -142,7 +137,6 @@ const ForgotPassword = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 maxLength="6"
-                required
               />
               <label>New Password</label>
               <input
@@ -150,7 +144,6 @@ const ForgotPassword = () => {
                 placeholder="Min 6 chars, A-z, 0-9, @$!%*?&"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                required
               />
               <label>Confirm New Password</label>
               <input
@@ -158,7 +151,6 @@ const ForgotPassword = () => {
                 placeholder="Repeat new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required
               />
               <p className="pass-hint">
                 Password must contain uppercase, lowercase, digit and a special character (@$!%*?&)
