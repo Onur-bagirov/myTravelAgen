@@ -4,7 +4,7 @@ import MainPage from "./Page/MainPage";
 import Header from "./Headers/Header";
 import Register from "./User/Register";
 import Buy from "./Buy/buy";
-import PlaneTicket from "./PlainTicket/ticket"; 
+import PlaneTicket from "./PlaneTicket/ticket"; 
 import TrainTicket from "./TrainFolder/ticket";
 import About from "./AboutPage/about"; 
 import SignIn from "./SiginInPage/sign"; 
