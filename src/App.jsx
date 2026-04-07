@@ -16,6 +16,7 @@ import MyTickets from "./MyTickets/MyTickets";
 import ForgotPassword from "./ForgotPassword/password";
 import CreateExecutive from "./CreateExecutive/CreateExecutive";
 import SelectTicket from "./TicketSection/selectTicket";
+import ShowTicket from "./ShowTicket/showTicket";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/User-Profile" element={<Profile/>} />
         <Route path="/Forgot-Pass" element={<ForgotPassword/>} />
         <Route path="/Select-Ticket" element={<SelectTicket/>} />
+        <Route path="/Show-Ticket" element={<ShowTicket/>} />
 
         {/* Qeydiyyat və Digər Səhifələr */}
         <Route path="/register" element={<Register />} />

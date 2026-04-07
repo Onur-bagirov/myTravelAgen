@@ -91,6 +91,12 @@ const Header = () => {
                 Seat Map
               </button>
 
+              {(isAdmin || isCompany) && (
+                <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/Show-Ticket")}>
+                  Show Tickets
+                </button>
+              )}
+
               {/* Company üçün nav link */}
               {isLoggedIn && isCompany && (
                 <button className="seatmap-btn" onClick={() => handleNavigation("/Select-Ticket")}>
