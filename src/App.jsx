@@ -14,6 +14,7 @@ import Profile from "./UserProfile/profile";
 import BuySeats from "./BuySeats/SeatMap";
 import MyTickets from "./MyTickets/MyTickets";
 import ForgotPassword from "./ForgotPassword/password";
+import CreateExecutive from "./CreateExecutive/CreateExecutive";
 
 function App() {
   return (
@@ -40,6 +41,8 @@ function App() {
         {/* Oturacaq alma */}
         <Route path="/buy-seats" element={<BuySeats />} />
         <Route path="/MyTickets" element={<MyTickets />} />
+
+        <Route path="/CreateExecutive" element={<CreateExecutive/>}/>
 
         {/* Haqqımızda səhifəsi */}
         <Route path="/about" element={<About />} /> 

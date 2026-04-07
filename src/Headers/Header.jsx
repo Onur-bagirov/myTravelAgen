@@ -38,20 +38,22 @@ const Header = () => {
   };
 
   const handleBuyNow = () => {
-    if (isLoggedIn) {
-      navigate("/buy");
-    } else {
-      navigate("/register");
-    }
+    if (isLoggedIn) navigate("/buy");
+    else navigate("/register");
   };
 
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
     setUserRole(null);
-    window.dispatchEvent(new Event("storage")); // ← düzəliş bu sətirdir
+    window.dispatchEvent(new Event("storage"));
     navigate("/");
   };
+
+  // Backend "Admin", "Company", "Customer" string qaytarır
+  const isCustomer = userRole === "Customer";
+  const isCompany  = userRole === "Company";
+  const isAdmin    = userRole === "Admin";
 
   return (
     <header className="header">
@@ -69,41 +71,60 @@ const Header = () => {
 
       {/* Navbar */}
       <nav className={`navbar ${isOpen ? "active" : ""}`}>
-        {/* Admin / Company link */}
-        {isLoggedIn && (userRole === "Admin" || userRole === "Company") && (
-          <span
-            onClick={() => handleNavigation("/create-ticket")}
-            className="nav-link create-ticket-link"
-          >
-            Create Ticket
-          </span>
-        )}
+
 
         <span onClick={() => handleNavigation("/")} className="nav-link">Home</span>
         <span onClick={() => handleNavigation("/about")} className="nav-link">About</span>
 
-        {/* Buttons */}
         <div className="nav-buttons">
           {isLoggedIn ? (
             <>
-              <button className="signin-btn logout-color" onClick={() => handleNavigation("/User-Profile")}>
+              <button className="myprofile-btn myprofile-color" onClick={() => handleNavigation("/User-Profile")}>
                 My Profile
               </button>
+              
               <button className="signin-btn logout-color" onClick={handleLogout}>
                 Log Out
               </button>
+
               <button className="seatmap-btn" onClick={() => handleNavigation("/buy-seats")}>
-                Test Seat Map
+                Seat Map
               </button>
-              <button className="MyTickets-btn" onClick={() => handleNavigation("/MyTickets")}>
-                My Tickets
-              </button>
-              <button className="buy-btn" onClick={handleBuyNow}>Buy Now</button>
+
+              {/* Company üçün nav link */}
+              {isLoggedIn && isCompany && (
+                <button className="seatmap-btn" onClick={() => handleNavigation("/create-ticket")}>
+                  Create Ticket
+                </button>
+              )}
+
+              {/* Customer */}
+              {isCustomer && (
+                <>
+                  <button className="MyTickets-btn" onClick={() => handleNavigation("/MyTickets")}>
+                    My Tickets
+                  </button>
+                  <button className="buy-btn" onClick={handleBuyNow}>
+                    Buy Now
+                  </button>
+                </>
+              )}
+
+              {/* Admin */}
+              {isAdmin && (
+                <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/CreateExecutive")}>
+                  Create Company
+                </button>
+              )}
             </>
           ) : (
             <>
-              <button className="signin-btn" onClick={() => handleNavigation("/register")}>Sign Up</button>
-              <button className="buy-btn" onClick={handleBuyNow}>Buy Now</button>
+              <button className="myprofile-btn myprofile-color" onClick={() => handleNavigation("/register")}>
+                Sign Up
+              </button>
+              <button className="buy-btn" onClick={handleBuyNow}>
+                Buy Now
+              </button>
             </>
           )}
         </div>

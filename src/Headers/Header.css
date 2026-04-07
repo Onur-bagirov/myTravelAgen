@@ -66,8 +66,8 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     color: #fcd34d !important;
     font-size: 14px !important;
     font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 10px 20px;
+    border-radius: 25px;
     border: 1px solid rgba(252,211,77,0.3);
     background: rgba(252,211,77,0.07);
     transition: all 0.3s ease;
@@ -112,6 +112,65 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .logout-color::before { background: rgba(255,77,77,0.15) !important; }
 .logout-color:hover { color: #ff6b6b !important; }
 .logout-color:hover::before { transform: scaleX(1); }
+
+
+.myprofile-btn span { position: relative; z-index: 1; color: inherit; font-family: inherit; font-size: inherit; }
+.myprofile-btn span:hover { color: inherit; transform: none; }
+.myprofile-btn:hover::before { transform: scaleX(1); }
+.myprofile-btn:hover { color: black; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
+.myprofile-btn:active { transform: translateY(0) scale(0.97); }
+
+.myprofile-color { 
+    border-color: rgba(16, 185, 129, 0.4) !important; 
+}
+
+.myprofile-color::before { 
+    background: rgba(16, 185, 129, 0.15) !important; 
+}
+
+/* ── Create Company (Admin Düyməsi) ── */
+.create-exec-color { 
+    border-color: rgba(252, 211, 77, 0.4) !important; 
+    background: rgba(252, 211, 77, 0.05) !important;
+}
+
+.create-exec-color::before { 
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(252, 211, 77, 0.15) !important; 
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+    z-index: 0;
+}
+
+.create-exec-color:hover { 
+    color: #fcd34d !important; 
+    border-color: #fcd34d !important;
+    box-shadow: 0 6px 20px rgba(252, 211, 77, 0.2) !important;
+}
+
+.create-exec-color:hover::before { 
+    transform: scaleX(1); 
+}
+
+/* Yazının digər qırmızı span-larla qarışmaması üçün */
+.create-exec-color span {
+    color: inherit !important;
+    position: relative;
+    z-index: 1;
+    transform: none !important;
+    text-shadow: none !important;
+}
+
+.myprofile-color:hover { 
+    color: #10b981 !important; 
+}
+
+.myprofile-color:hover::before { 
+    transform: scaleX(1); 
+}
 
 /* ── Buy Now ── */
 .buy-btn {
@@ -197,92 +256,28 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 /* ══════════════════════════════════════
    ── user-profile-container (YENİ)
    ══════════════════════════════════════ */
-.user-profile-container {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 5px 18px 5px 6px; /* Sol tərəf avatar üçün dar, sağ tərəf yazı üçün geniş */
-    border-radius: 30px;
+.myprofile-btn {
+    background: rgba(255,255,255,0.05);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-weight: 600;
     cursor: pointer;
-    gap: 10px;
     position: relative;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Arxa fonu Log Out kimi rəngləmək üçün ::before effekti */
-.user-profile-container::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, #f09433, #dc2743);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s ease;
-    z-index: 0;
+
+.myprofile-btn:not(.myprofile-color)::before {
+    background: rgba(200, 200, 200, 0.2); /* Açıq boz/fuzlet */
 }
 
-.user-profile-container:hover::before {
+.myprofile-btn:not(.myprofile-color):hover::before {
     transform: scaleX(1);
 }
 
-.user-profile-container:hover {
-    transform: translateY(-2px);
-    border-color: transparent;
-    box-shadow: 0 6px 20px rgba(220, 39, 67, 0.3);
-}
-
-/* Avatar Halqası */
-.avatar-ring {
-    width: 34px; /* Header-ə uyğun kiçildildi */
-    height: 34px;
-    border-radius: 50%;
-    background: conic-gradient(#f09433, #dc2743, #bc1888, #f09433);
-    padding: 2px;
-    position: relative;
-    z-index: 1;
-    animation: avatarSpin 4s linear infinite;
-    transition: transform 0.3s ease;
-}
-
-.avatar-inner {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: #0f0f1a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.avatar-initials {
-    color: white;
-    font-size: 12px;
-    font-weight: 800;
-    position: relative;
-    z-index: 2;
-}
-
-/* "My Profile" mətni */
-.profile-text {
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    position: relative;
-    z-index: 1;
-    transition: color 0.3s ease;
-}
-
-/* Hover zamanı elementlərin vəziyyəti */
-.user-profile-container:hover .avatar-ring {
-    transform: rotate(15deg);
-}
-
-.user-profile-container:hover .profile-text {
-    color: white;
-    text-shadow: 0 0 8px rgba(255,255,255,0.5);
-}
 
 /* Animasiyalar */
 @keyframes avatarSpin {

@@ -1,45 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
 
+/* ════════════════════════════════
+   PAGE WRAPPER
+════════════════════════════════ */
 .ticket-page-body {
     width: 100%;
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start; 
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), 
-                url("/MainScreen.png") no-repeat center center/cover;
+    align-items: flex-start;
+    background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.2)),
+                url("/MainScreen.png") no-repeat center center / cover;
     padding: 20px;
     font-family: 'Poppins', sans-serif;
 }
 
+/* ════════════════════════════════
+   FORM CARD
+════════════════════════════════ */
 .ticket-card {
     width: 100%;
-    max-width: 550px;
-
-    margin-top: 100px; 
+    max-width: 720px;
+    margin-top: 100px;
     margin-bottom: 50px;
-
-    /* Glassmorphism effekti */
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(15px) saturate(180%);
     -webkit-backdrop-filter: blur(15px) saturate(180%);
-    
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 60px 40px;
+    padding: 60px 48px;
     border-radius: 40px;
     box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
     animation: fadeInSlide 0.8s ease-out;
 }
 
+/* ════════════════════════════════
+   HEADER
+════════════════════════════════ */
 .ticket-header {
     text-align: center;
-    margin-bottom: 35px;
+    margin-bottom: 40px;
 }
 
 .ticket-header h2 {
     font-size: 2.5rem;
     font-weight: 800;
     color: white;
+    margin-bottom: 8px;
 }
 
 .ticket-header h2 span {
@@ -53,26 +59,51 @@
     font-size: 0.9rem;
 }
 
+/* ════════════════════════════════
+   SECTION TITLE
+════════════════════════════════ */
+.form-section-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 28px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ticket-form .form-section-title:first-child {
+    margin-top: 0;
+}
+
+/* ════════════════════════════════
+   GRIDS
+════════════════════════════════ */
 .form-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    display: grid;
+    gap: 18px;
 }
 
-.input-row {
-    display: flex;
-    gap: 15px;
+.form-grid-2 {
+    grid-template-columns: 1fr 1fr;
 }
 
+.form-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* ════════════════════════════════
+   INPUT GROUP
+════════════════════════════════ */
 .input-group {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
 }
 
 .input-group label {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: #f9cb28;
     font-weight: 600;
     text-transform: uppercase;
@@ -81,101 +112,401 @@
 
 .input-group input {
     width: 100%;
-    padding: 14px 18px;
+    padding: 13px 16px;
     background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
     color: white;
-    font-size: 0.95rem;
+    font-size: 0.93rem;
+    font-family: 'Poppins', sans-serif;
     outline: none;
-    transition: 0.3s;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+    box-sizing: border-box;
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.28);
+}
+
+.input-group input::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.5);
+    cursor: pointer;
 }
 
 .input-group input:focus {
     border-color: #f9cb28;
-    background: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 0 15px rgba(249, 203, 40, 0.2);
+    background: rgba(255, 255, 255, 0.11);
+    box-shadow: 0 0 14px rgba(249, 203, 40, 0.18);
 }
 
-.checkbox-group {
-    margin: 10px 0;
+/* ── Error state ── */
+.input-group.input-error input {
+    border-color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.07);
 }
 
-.custom-checkbox {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    font-size: 0.9rem;
-    color: white;
-    gap: 12px;
+.input-group.input-error input:focus {
+    box-shadow: 0 0 14px rgba(255, 77, 77, 0.2);
 }
 
-.custom-checkbox input {
-    display: none;
+.input-group.input-error label {
+    color: #ff7070;
 }
 
-.checkmark {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ff4d4d;
-    border-radius: 6px;
-    position: relative;
-    transition: 0.3s;
+.field-error-msg {
+    font-size: 0.72rem;
+    color: #ff6b6b;
+    font-weight: 500;
+    margin-top: 2px;
+    animation: errorSlide 0.2s ease-out;
 }
 
-.custom-checkbox input:checked + .checkmark {
-    background: #ff4d4d;
+@keyframes errorSlide {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.custom-checkbox input:checked + .checkmark::after {
-    content: "✓";
-    position: absolute;
-    color: white;
-    font-size: 14px;
-    left: 3px;
-    top: -2px;
+/* ════════════════════════════════
+   SERVER ERROR BOX
+════════════════════════════════ */
+.server-error-box {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: rgba(255, 77, 77, 0.1);
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    border-radius: 12px;
+    color: #ff8080;
+    font-size: 0.88rem;
+    font-weight: 500;
+    animation: fadeInSlide 0.3s ease-out;
 }
 
+/* ════════════════════════════════
+   GENERATE BUTTON
+════════════════════════════════ */
 .generate-btn {
-    padding: 18px;
+    display: block;
+    width: 100%;
+    margin-top: 28px;
+    padding: 17px;
     background: linear-gradient(45deg, #ff4d4d, #f9cb28);
     border: none;
     border-radius: 15px;
     color: white;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
+    font-family: 'Poppins', sans-serif;
     cursor: pointer;
-    transition: 0.4s;
+    transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-.generate-btn:hover {
+.generate-btn:hover:not(:disabled) {
     transform: translateY(-3px);
-    box-shadow: 0 15px 30px rgba(255, 77, 77, 0.5);
+    box-shadow: 0 14px 30px rgba(255, 77, 77, 0.45);
 }
 
-.status-message {
+.generate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── Loading spinner inside button ── */
+.btn-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ════════════════════════════════
+   BOARDING PASS
+════════════════════════════════ */
+.boarding-pass-container {
+    width: 100%;
+    max-width: 760px;
+    margin-top: 100px;
+    margin-bottom: 50px;
+}
+
+.boarding-pass {
+    display: flex;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pass-left {
+    flex: 2;
+    padding: 36px 32px;
+    border-right: 2px dashed rgba(255, 255, 255, 0.15);
+}
+
+.pass-right {
+    flex: 0 0 180px;
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.pass-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.airline-brand {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.pass-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.pass-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 12px;
+}
+
+.city h1 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    margin: 0;
+}
+
+.city p {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+    margin: 4px 0 0;
+}
+
+.plane-fly {
+    font-size: 1.6rem;
+    flex: 1;
     text-align: center;
+}
+
+.pass-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.info-box span {
+    display: block;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+}
+
+.info-box strong {
+    font-size: 0.88rem;
+    color: white;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+/* Stub (right strip) */
+.stub-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.stub-route {
+    font-size: 0.85rem;
     color: #f9cb28;
-    font-weight: 500;
+    font-weight: 600;
+    text-align: center;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 768px) {
-    .ticket-card {
-        margin-top: 60px; 
-        padding: 40px 25px;
-    }
-    .input-row {
-        flex-direction: column;
-    }
-    .ticket-header h2 {
-        font-size: 1.8rem;
-    }
+.stub-details {
+    text-align: center;
 }
 
+.stub-details p {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.5);
+    margin: 4px 0;
+}
+
+.barcode-area {
+    flex: 1;
+    width: 6px;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.6) 0px,
+        rgba(255,255,255,0.6) 3px,
+        transparent 3px,
+        transparent 7px
+    );
+    border-radius: 3px;
+    margin-top: 8px;
+}
+
+/* ── Action buttons ── */
+.action-buttons {
+    display: flex;
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.back-btn,
+.home-btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.back-btn {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.back-btn:hover {
+    background: rgba(255,255,255,0.14);
+    transform: translateY(-2px);
+}
+
+.home-btn {
+    background: linear-gradient(45deg, #ff4d4d, #f9cb28);
+    color: white;
+}
+
+.home-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(255,77,77,0.4);
+}
+
+/* ════════════════════════════════
+   ANIMATIONS
+════════════════════════════════ */
 @keyframes fadeInSlide {
     from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.95) translateY(20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-pop {
+    animation: popIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ════════════════════════════════
+   RESPONSIVE
+════════════════════════════════ */
+@media (max-width: 768px) {
+    .ticket-card {
+        margin-top: 60px;
+        padding: 36px 22px;
+    }
+
+    .form-grid-2,
+    .form-grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .ticket-header h2 {
+        font-size: 1.9rem;
+    }
+
+    .boarding-pass {
+        flex-direction: column;
+    }
+
+    .pass-left {
+        border-right: none;
+        border-bottom: 2px dashed rgba(255,255,255,0.15);
+        padding: 26px 22px;
+    }
+
+    .pass-right {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding: 18px 22px;
+    }
+
+    .barcode-area {
+        display: none;
+    }
+
+    .pass-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .city h1 {
+        font-size: 1.8rem;
+    }
+
+    .boarding-pass-container {
+        margin-top: 60px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 420px) {
+    .pass-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ticket-header h2 {
+        font-size: 1.5rem;
+    }
 }
