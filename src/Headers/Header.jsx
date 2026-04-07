@@ -93,7 +93,7 @@ const Header = () => {
 
               {/* Company üçün nav link */}
               {isLoggedIn && isCompany && (
-                <button className="seatmap-btn" onClick={() => handleNavigation("/create-ticket")}>
+                <button className="seatmap-btn" onClick={() => handleNavigation("/Select-Ticket")}>
                   Create Ticket
                 </button>
               )}
