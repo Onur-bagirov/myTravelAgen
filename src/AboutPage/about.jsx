@@ -56,15 +56,6 @@ const About = () => {
             </div>
           </div>
         </section>
-
-        {/* CTA (Call to Action) */}
-        <div className="about-cta">
-          <p>Ready to explore the world?</p>
-          <button className="ios-main-btn" onClick={handleStartTrip}>
-            Start Your Trip
-          </button>
-        </div>
-
       </div>
     </div>
   );

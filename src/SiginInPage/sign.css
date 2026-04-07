@@ -98,6 +98,26 @@
     transition: 0.3s;
 }
 
+.forgot-password-container {
+    display: flex;
+    justify-content: flex-end; /* Sağa söykəyir */
+    margin-top: -10px; /* Şifrə qutusu ilə yaxınlaşdırır */
+    margin-bottom: 0px;
+}
+
+.forgot-password-link {
+    color: #8e8e93; /* Sənin About səhifəndəki boz rəng */
+    font-size: 13px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+.forgot-password-link:hover {
+    color: #ff4d4d; /* Brend qırmızı rənginə keçid */
+    text-decoration: underline;
+}
+
 .signin-main-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(255, 77, 77, 0.4);

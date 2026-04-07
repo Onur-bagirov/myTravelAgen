@@ -5,24 +5,32 @@ import "./Header.css";
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null); // Role-u saxlamaq üçün state
+  const [userRole, setUserRole] = useState(null);
   const [userData, setUserData] = useState({ firstName: "", lastName: "" });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("userRole"); // Role-u götürürük
+  // 🔥 Token və user məlumatlarını yoxlama funksiyası
+  const checkUser = () => {
+    const token = localStorage.getItem("userToken"); 
+    const role = localStorage.getItem("userRole");
     const firstName = localStorage.getItem("userFirstName");
     const lastName = localStorage.getItem("userLastName");
 
     if (token) {
       setIsLoggedIn(true);
-      setUserRole(role); // State-ə yazırıq
-      setUserData({
-        firstName: firstName || "User",
-        lastName: lastName || ""
-      });
+      setUserRole(role);
+      setUserData({ firstName: firstName || "User", lastName: lastName || "" });
+    } else {
+      setIsLoggedIn(false);
+      setUserRole(null);
+      setUserData({ firstName: "", lastName: "" });
     }
+  };
+
+  useEffect(() => {
+    checkUser();
+    window.addEventListener("storage", checkUser);
+    return () => window.removeEventListener("storage", checkUser);
   }, []);
 
   const handleNavigation = (path) => {
@@ -30,79 +38,76 @@ const Header = () => {
     setIsOpen(false);
   };
 
+  const handleBuyNow = () => {
+    if (isLoggedIn) {
+      navigate("/buy");
+    } else {
+      navigate("/register");
+    }
+  };
+
   const handleLogout = () => {
-    localStorage.clear(); // Bütün datanı təmizləmək daha rahatdır
+    localStorage.clear();
     setIsLoggedIn(false);
     setUserRole(null);
     navigate("/");
-    window.location.reload();
   };
 
   return (
     <header className="header">
+      {/* Logo */}
       <div className="logo" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
         <h1>Travel<span>Agen</span></h1>
       </div>
 
+      {/* Mobile Menu Icon */}
       <div className="menu-icon" onClick={() => setIsOpen(!isOpen)}>
         <div className={`bar ${isOpen ? "open" : ""}`}></div>
         <div className={`bar ${isOpen ? "open" : ""}`}></div>
         <div className={`bar ${isOpen ? "open" : ""}`}></div>
       </div>
 
+      {/* Navbar */}
       <nav className={`navbar ${isOpen ? "active" : ""}`}>
-        
-        {/* 🔥 YALNIZ ADMİN VƏ ŞİRKƏTLƏR GÖRSÜN */}
+        {/* Admin / Company link */}
         {isLoggedIn && (userRole === "Admin" || userRole === "Company") && (
-          <span onClick={() => handleNavigation("/create-ticket")} className="nav-link create-ticket-link">
+          <span 
+            onClick={() => handleNavigation("/create-ticket")} 
+            className="nav-link create-ticket-link"
+          >
             Create Ticket
           </span>
         )}
-        
-        <span onClick={() => handleNavigation("/")} className="nav-link">
-          Home
-        </span>
-        
-        <span onClick={() => handleNavigation("/about")} className="nav-link">
-          About
-        </span>
-        
+
+        <span onClick={() => handleNavigation("/")} className="nav-link">Home</span>
+        <span onClick={() => handleNavigation("/about")} className="nav-link">About</span>
+
+        {/* Buttons */}
         <div className="nav-buttons">
           {isLoggedIn ? (
             <>
-              <button className="user-profile-btn" onClick={() => handleNavigation("/User-Profile")}>
+              <button className="signin-btn logout-color" onClick={() => handleNavigation("/User-Profile")}>
                 My Profile
               </button>
               <button className="signin-btn logout-color" onClick={handleLogout}>
                 Log Out
               </button>
+
+              {/* Yalnız login olanlar üçün */}
+              <button className="seatmap-btn" onClick={() => handleNavigation("/buy-seats")}>
+                Test Seat Map
+              </button>
+              <button className="MyTickets-btn" onClick={() => handleNavigation("/MyTickets")}>
+                My Tickets
+              </button>
+              <button className="buy-btn" onClick={handleBuyNow}>Buy Now</button>
             </>
           ) : (
-            <button 
-              className="signin-btn" 
-              onClick={() => handleNavigation("/register")}
-            >
-              Sign Up
-            </button>
+            <>
+              <button className="signin-btn" onClick={() => handleNavigation("/register")}>Sign Up</button>
+              <button className="buy-btn" onClick={handleBuyNow}>Buy Now</button>
+            </>
           )}
-          <button 
-            className="seatmap-btn"
-            onClick={() => handleNavigation("/buy-seats")}
-          >
-            Test Seat Map
-          </button>
-          <button
-            className="MyTickets-btn"
-            onClick={() => handleNavigation("/MyTickets")}
-          >
-            My Tickets
-          </button>
-          <button 
-            className="buy-btn"
-            onClick={() => handleNavigation("/buy")}
-          >
-            Buy Now
-          </button>
         </div>
       </nav>
     </header>
