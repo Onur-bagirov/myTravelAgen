@@ -20,7 +20,7 @@ const BookingForm = () => {
   return (
     <div className="ticket-page-wrapper">
       <div className="ios-container">
-        <h1 className="main-title">Buy a Plain Ticket</h1>
+        <h1 className="main-title">Buy a Plane Ticket</h1>
 
         <div className="search-section">
           
