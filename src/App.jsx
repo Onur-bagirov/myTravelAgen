@@ -4,7 +4,7 @@ import MainPage from "./Page/MainPage";
 import Header from "./Headers/Header";
 import Register from "./User/Register";
 import Buy from "./Buy/buy";
-import PlaneTicket from "./PlaneTicket/ticket"; 
+import PlanetTicket from "./PlainTicket/ticket";
 import TrainTicket from "./TrainFolder/ticket";
 import About from "./AboutPage/about"; 
 import SignIn from "./SiginInPage/sign"; 
@@ -40,7 +40,7 @@ function App() {
         <Route path="/buy" element={<Buy />} />
         
         <Route path="/ticket/train" element={<TrainTicket />} />
-        <Route path="/ticket/plane" element={<PlaneTicket />} />
+        <Route path="/ticket/plane" element={<PlanetTicket />} />
 
         {/* Oturacaq alma */}
         <Route path="/buy-seats" element={<BuySeats />} />

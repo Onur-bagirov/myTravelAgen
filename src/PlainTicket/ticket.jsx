@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./ticket.css";
 
-const BookingForm = () => {
+const PlanetTicket = () => {
   const [searchData, setSearchData] = useState({
     from: "Baku, Azerbaijan", fromCode: "BAK",
     to: "Istanbul, Turkey", toCode: "IST",
@@ -116,4 +116,4 @@ const BookingForm = () => {
   );
 };
 
-export default BookingForm;
+export default PlanetTicket;
