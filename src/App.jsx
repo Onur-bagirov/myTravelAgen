@@ -15,7 +15,9 @@ import BuySeats from "./BuySeats/SeatMap";
 import MyTickets from "./MyTickets/MyTickets";
 import ForgotPassword from "./ForgotPassword/password";
 import CreateExecutive from "./CreateExecutive/CreateExecutive";
+import CreatePlaneTicket from "./CreateTicket/ticket";
 import SelectTicket from "./TicketSection/selectTicket";
+import ShowPlaneTicket from "./ShowPlaneTicket/showPlane";
 import ShowTicket from "./ShowTicket/showTicket";
 
 function App() {
@@ -34,6 +36,8 @@ function App() {
         <Route path="/Forgot-Pass" element={<ForgotPassword/>} />
         <Route path="/Select-Ticket" element={<SelectTicket/>} />
         <Route path="/Show-Ticket" element={<ShowTicket/>} />
+        <Route path="/Create-Plane-Ticket" element={<CreatePlaneTicket/>} />
+        <Route path="/Show-Plane-Ticket" element={<ShowPlaneTicket/>} />
 
         {/* Qeydiyyat və Digər Səhifələr */}
         <Route path="/register" element={<Register />} />

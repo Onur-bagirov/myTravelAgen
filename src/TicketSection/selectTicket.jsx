@@ -12,7 +12,7 @@ const SelectTicket = () => {
       desc: 'Lüks və sürətli uçuş təcrübəsi.',
       icon: '✈️',
       bgClass: 'plane-card',
-      path: '/create-ticket' // Kliklədikdə gedəcəyi ünvan
+      path: '/Create-Plane-Ticket' // Kliklədikdə gedəcəyi ünvan
     },
     { 
       id: 2, 

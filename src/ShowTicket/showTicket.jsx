@@ -11,7 +11,7 @@ const ShowTicket = () => {
       
       <div className="st-selection-wrapper">
         {/* Plane Section */}
-        <div className="st-choice-card plane-bg" onClick={() => navigate('/show-plane-tickets')}>
+        <div className="st-choice-card plane-bg" onClick={() => navigate('/Show-Plane-Ticket')}>
           <div className="st-overlay"></div>
           <div className="st-content-box">
             <div className="st-icon">✈️</div>
