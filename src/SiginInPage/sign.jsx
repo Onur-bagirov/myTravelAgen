@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-// Vite xətası almamaq üçün faylın adının sign.css olduğundan əmin ol
-import "./sign.css"; 
+import axios from "axios"; // Daha stabil olduğu üçün axios istifadə edirik
+import "./sign.css";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,32 +15,19 @@ const SignIn = () => {
     if (error) setError(""); 
   };
 
-  // 1. Frontend-də addım-addım yoxlama
-  const validateStepByStep = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) return "Email address is required";
-    if (!emailRegex.test(formData.email)) return "Please enter a valid email";
-    if (!formData.password.trim()) return "Password is required";
-    return null;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    // Öncə frontend yoxlaması
-    const frontendError = validateStepByStep();
-    if (frontendError) {
-      setError(frontendError);
-      return;
-    }
+    setLoading(true);
 
     try {
-      // Backend URL-i öz layihənə görə dəqiqləşdir
+      // SERVERƏ SORĞU GÖNDƏRİRİK
       const res = await axios.post("http://localhost:5251/api/Auth/login", formData);
 
-      if (res.status === 200 && res.data.data) {
+      // ƏGƏR CAVAB UĞURLUDURSA (200 OK)
+      if (res.data && res.data.data) {
         const { token, role, email, firstName, lastName } = res.data.data;
+        
         localStorage.setItem("userToken", token);
         localStorage.setItem("userRole", role || "User");
         localStorage.setItem("userEmail", email); 
@@ -51,29 +38,24 @@ const SignIn = () => {
         window.location.reload(); 
       }
     } catch (err) {
-      const data = err.response?.data;
-
-      // 2. ŞƏKİLDƏKİ UZUN MƏTNİ TƏMİZLƏYƏN "SMART" MƏNTİQ
-      if (typeof data === "string" && data.includes("Validation failed")) {
-        // Mətni "--" işarəsinə görə bölürük və ilk xətanı götürürük
-        const parts = data.split("--");
-        if (parts.length > 1) {
-          // "Name: Message" formatından ":" sonrasını alırıq
-          const rawMessage = parts[1].split("Severity")[0];
-          const cleanMsg = rawMessage.includes(":") ? rawMessage.split(":")[1] : rawMessage;
-          setError(cleanMsg.trim());
-        } else {
-          setError("Invalid input data.");
+      // SERVERDƏN XƏTA GƏLƏNDƏ (Şifrə/Email səhv olanda bura düşür)
+      if (err.response) {
+        // Backend status 401 (Unauthorized) və ya 400 (Bad Request) göndərirsə
+        if (err.response.status === 401 || err.response.status === 400) {
+          setError("Invalid email address or password.");
+        } 
+        else if (err.response.data && err.response.data.message) {
+          setError(err.response.data.message);
         }
-      } 
-      // 3. Əgər backend xətanı obyekt (FluentValidation) kimi göndərirsə
-      else if (data?.errors) {
-        const firstKey = Object.keys(data.errors)[0];
-        setError(data.errors[firstKey][0]);
-      } 
-      else {
-        setError(data?.message || "Invalid email or password.");
+        else {
+          setError("An error occurred on the server.");
+        }
+      } else {
+        // Server ümumiyyətlə bağlıdırsa
+        setError("Server connection failed. Please try again later.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,21 +68,34 @@ const SignIn = () => {
           <p>Please enter your details to continue</p>
         </div>
         
-        {/* Səliqəli Xəta Paneli */}
-        <div className={`top-error-container ${error ? "visible" : ""}`}>
-          {error && <span className="top-error-msg">⚠️ {error}</span>}
-        </div>
+        {/* Xəta Paneli */}
+        {error && (
+          <div className="top-error-container visible" style={{
+            backgroundColor: "#fff0f0",
+            color: "#d32f2f",
+            padding: "10px",
+            borderRadius: "6px",
+            marginBottom: "15px",
+            border: "1px solid #ffcccc",
+            textAlign: "center",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}>
+            ⚠️ {error}
+          </div>
+        )}
         
-        <form onSubmit={handleSubmit} className="signin-form" noValidate>
+        <form onSubmit={handleSubmit} className="signin-form">
           <div className="input-group">
             <label>Email Address</label>
             <input 
               type="email" 
               name="email"
-              className={error.toLowerCase().includes("email") ? "input-error" : ""}
+              className={error ? "input-error" : ""}
               value={formData.email} 
               onChange={handleChange} 
               placeholder="example@mail.com"
+              required
             />
           </div>
           
@@ -109,10 +104,11 @@ const SignIn = () => {
             <input 
               type="password" 
               name="password"
-              className={error.toLowerCase().includes("password") ? "input-error" : ""}
+              className={error ? "input-error" : ""}
               value={formData.password} 
               onChange={handleChange} 
               placeholder="••••••••"
+              required
             />
           </div>
 
@@ -122,7 +118,13 @@ const SignIn = () => {
             </span>
           </div>
 
-          <button type="submit" className="signin-main-btn">Sign In</button>
+          <button 
+            type="submit" 
+            className="signin-main-btn"
+            disabled={loading}
+          >
+            {loading ? "Checking..." : "Sign In"}
+          </button>
         </form>
         
         <div className="signin-footer">
