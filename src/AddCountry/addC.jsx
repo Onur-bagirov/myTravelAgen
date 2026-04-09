@@ -47,10 +47,10 @@ export default function AddCountry() {
       );
       if (!res.ok) throw new Error("Ölkələr yüklənmədi");
       const data = await res.json();
-      // Pagination<T>: { items, totalDataCount, page, limit }
-      setCountries(data.data?.items ?? data.items ?? []);
-      setTotalCount(data.data?.totalDataCount ?? data.totalDataCount ?? 0);
-    } catch (err) {
+      // xeta burada idi
+      setCountries(Array.isArray(data.data) ? data.data : []);
+      setTotalCount(data.totalDataCount ?? 0);
+      } catch (err) {
       showAlert("error", err.message);
     } finally {
       setLoading(false);

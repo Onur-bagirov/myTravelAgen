@@ -31,10 +31,10 @@ function AddLocation() {
 
   const fetchCountries = async () => {
     try {
-      const res = await fetch(`${API_BASE}/Country?Page=1&Limit=200`, { headers: authHeaders() });
+      const res = await fetch(`${API_BASE}/Country?Page=1&Limit=20`, { headers: authHeaders() });
       if (!res.ok) return;
       const data = await res.json();
-      setCountries(data.data?.items ?? data.items ?? []);
+      setCountries(Array.isArray(data.data) ? data.data : []);
     } catch {}
   };
 
@@ -46,8 +46,8 @@ function AddLocation() {
       const res = await fetch(`${API_BASE}/Location?Page=${page}&Limit=${limit}`, { headers: authHeaders() });
       if (!res.ok) throw new Error("Lokasiyalar yuklenmedi");
       const data = await res.json();
-      setLocations(data.data?.items ?? data.items ?? []);
-      setTotalCount(data.data?.totalDataCount ?? data.totalDataCount ?? 0);
+      setLocations(Array.isArray(data.data) ? data.data : []);
+      setTotalCount(data.totalDataCount ?? 0);
     } catch (err) {
       showAlert("error", err.message);
     } finally {
