@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import MainPage from "./Page/MainPage";
 import Header from "./Headers/Header";
 import Register from "./User/Register";
@@ -15,47 +16,57 @@ import BuySeats from "./BuySeats/SeatMap";
 import MyTickets from "./MyTickets/MyTickets";
 import ForgotPassword from "./ForgotPassword/password";
 import CreateExecutive from "./CreateExecutive/CreateExecutive";
-import CreatePlaneTicket from "./CreateTicket/ticket";
 import SelectTicket from "./TicketSection/selectTicket";
 import ShowPlaneTicket from "./ShowPlaneTicket/showPlane";
 import ShowTicket from "./ShowTicket/showTicket";
+import AddCountryLocation from "./AddLocCon/addLC";
 
-function App() {
+function App() {    
   return (
     <Router>
       <Header />
       <Routes>
-        <Route path="/" element={<MainPage />} />
-        
-        {/* Giriş və Təsdiqləmə */}
-        <Route path="/login" element={<SignIn />} /> 
-        {/* Marşrut adını digər komponentlərlə eyniləşdirdik */}
-        <Route path="/email" element={<Emailcode />}/> 
-        <Route path="/create-ticket" element={<CreateTicket/>} />
-        <Route path="/User-Profile" element={<Profile/>} />
-        <Route path="/Forgot-Pass" element={<ForgotPassword/>} />
-        <Route path="/Select-Ticket" element={<SelectTicket/>} />
-        <Route path="/Show-Ticket" element={<ShowTicket/>} />
-        <Route path="/Create-Plane-Ticket" element={<CreatePlaneTicket/>} />
-        <Route path="/Show-Plane-Ticket" element={<ShowPlaneTicket/>} />
 
-        {/* Qeydiyyat və Digər Səhifələr */}
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<MainPage />} />
+
+        {/* Auth */}
+        <Route path="/login" element={<SignIn />} /> 
+        <Route path="/email" element={<Emailcode />}/> 
+        <Route path="/forgot-pass" element={<ForgotPassword/>} />
+
+        {/* Ticket */}
+        <Route path="/create-ticket" element={<CreateTicket/>} />
+        <Route path="/select-ticket" element={<SelectTicket/>} />
+        <Route path="/show-ticket" element={<ShowTicket/>} />
+        <Route path="/show-plane-ticket" element={<ShowPlaneTicket/>} />
+
+        {/* User */}
+        <Route path="/user-profile" element={<Profile/>} />
+        <Route path="/my-tickets" element={<MyTickets />} />
+
+        {/* Buy */}
         <Route path="/buy" element={<Buy />} />
-        
+        <Route path="/buy-seats" element={<BuySeats />} />
+
+        {/* Transport */}
         <Route path="/ticket/train" element={<TrainTicket />} />
         <Route path="/ticket/plane" element={<PlanetTicket />} />
 
-        {/* Oturacaq alma */}
-        <Route path="/buy-seats" element={<BuySeats />} />
-        <Route path="/MyTickets" element={<MyTickets />} />
+        {/* Admin */}
+        <Route path="/create-executive" element={<CreateExecutive/>}/>
+        <Route path="/Add-C-L" element={<AddCountryLocation/>}/>
 
-        <Route path="/CreateExecutive" element={<CreateExecutive/>}/>
-
-        {/* Haqqımızda səhifəsi */}
+        {/* Other */}
+        <Route path="/register" element={<Register />} />
         <Route path="/about" element={<About />} /> 
-        
-        <Route path="*" element={<div style={{color: 'white', textAlign: 'center', marginTop: '100px'}}>Səhifə tapılmadı!</div>} />
+
+        {/* 404 */}
+        <Route path="*" element={
+          <div style={{color: 'white', textAlign: 'center', marginTop: '100px'}}>
+            Səhifə tapılmadı!
+          </div>
+        } />
+
       </Routes>
     </Router>
   );

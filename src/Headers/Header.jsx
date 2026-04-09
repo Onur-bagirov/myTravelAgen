@@ -122,6 +122,12 @@ const Header = () => {
                   Create Company
                 </button>
               )}
+
+              {isAdmin && (
+                <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/Add-C-L")}>
+                  Add Location
+                </button>
+              )}
             </>
           ) : (
             <>
