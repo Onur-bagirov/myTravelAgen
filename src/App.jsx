@@ -20,6 +20,8 @@ import SelectTicket from "./TicketSection/selectTicket";
 import ShowPlaneTicket from "./ShowPlaneTicket/showPlane";
 import ShowTicket from "./ShowTicket/showTicket";
 import AddCountryLocation from "./AddLocCon/addLC";
+import AddCountry from "./AddCountry/addC";
+import AddLocation from "./AddLocation/addL";
 
 function App() {    
   return (
@@ -55,6 +57,9 @@ function App() {
         {/* Admin */}
         <Route path="/create-executive" element={<CreateExecutive/>}/>
         <Route path="/Add-C-L" element={<AddCountryLocation/>}/>
+        <Route path="/Add-C" element={<AddCountry/>}/>
+        <Route path="/Add-L" element={<AddLocation/>}/>
+        
 
         {/* Other */}
         <Route path="/register" element={<Register />} />

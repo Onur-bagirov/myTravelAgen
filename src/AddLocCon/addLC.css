@@ -1,86 +1,119 @@
-.lc-minimal-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 80px 20px;
+.addlc-wrapper {
+  min-height: 100vh;
+  background: #f8f9fb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.lc-minimal-title {
-    color: white;
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 40px;
-    letter-spacing: 1px;
+.addlc-header {
+  text-align: center;
+  margin-bottom: 40px;
 }
 
-.lc-minimal-title span {
-    color: #ff4d4d; /* Header dizaynına uyğun vurğu rəngi */
+.addlc-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 8px 0;
 }
 
-.lc-btn-group {
-    display: flex;
-    gap: 30px;
-    margin-bottom: 60px;
+.addlc-header p {
+  font-size: 15px;
+  color: #888;
+  margin: 0;
 }
 
-/* Əsas Oval Düymə Stili */
-.lc-oval-btn {
-    background: rgba(255, 255, 255, 0.02);
-    color: white;
-    font-size: 17px;
-    font-weight: 600;
-    padding: 16px 50px;
-    border-radius: 100px; /* Tam oval forma */
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    outline: none;
+.addlc-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 640px;
 }
 
-/* Country (Yaşıl - My Profile tərzi) */
-.country-theme:hover, .country-theme.active {
-    border-color: #2ecc71;
-    color: #2ecc71;
-    background: rgba(46, 204, 113, 0.08);
-    box-shadow: 0 0 30px rgba(46, 204, 113, 0.15);
-    transform: translateY(-2px);
+.addlc-card {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 20px;
+  background: #fff;
+  border: 1.5px solid #e0e4ef;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  text-align: left;
 }
 
-/* Location (Qırmızı - Log Out tərzi) */
-.location-theme:hover, .location-theme.active {
-    border-color: #ff4d4d;
-    color: #ff4d4d;
-    background: rgba(255, 77, 77, 0.08);
-    box-shadow: 0 0 30px rgba(255, 77, 77, 0.15);
-    transform: translateY(-2px);
+.addlc-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.lc-hint-text {
-    color: #505054;
-    font-size: 14px;
-    text-align: center;
+.addlc-card:active {
+  transform: scale(0.98);
 }
 
-.lc-display-content {
-    width: 100%;
-    max-width: 900px;
-    animation: slideUpFade 0.6s ease-out;
+.addlc-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-@keyframes slideUpFade {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.addlc-card--country .addlc-card__icon {
+  background: #e6f1fb;
+  color: #185fa5;
+  border-color: #b5d4f4;
 }
 
-/* Mobil uyğunluq */
-@media (max-width: 600px) {
-    .lc-btn-group {
-        flex-direction: column;
-        width: 100%;
-        align-items: center;
-    }
-    .lc-oval-btn {
-        width: 250px;
-    }
+.addlc-card--country:hover {
+  border-color: #378add;
+}
+
+.addlc-card--location .addlc-card__icon {
+  background: #eaf3de;
+  color: #3b6d11;
+}
+
+.addlc-card--location:hover {
+  border-color: #639922;
+}
+
+.addlc-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.addlc-card__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.addlc-card__desc {
+  font-size: 13px;
+  color: #888;
+}
+
+.addlc-card__arrow {
+  font-size: 20px;
+  color: #ccc;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.addlc-card:hover .addlc-card__arrow {
+  color: #888;
+  transform: translateX(4px);
 }

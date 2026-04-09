@@ -1,0 +1,378 @@
+.country-panel {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8f9fb;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.country-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.country-panel__header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+.country-panel__icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3a7bd5, #5a9ef8);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+}
+
+/* Form Card */
+.country-form-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  margin-bottom: 28px;
+}
+
+.country-form-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #444;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.country-form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.form-input {
+  border: 1.5px solid #e0e4ef;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #222;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fafafa;
+}
+
+.form-input:focus {
+  border-color: #3a7bd5;
+  box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.12);
+  background: #fff;
+}
+
+.form-input.error {
+  border-color: #e53935;
+}
+
+.form-error {
+  font-size: 12px;
+  color: #e53935;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3a7bd5, #5a9ef8);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2d6bc4, #4a8de7);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(58, 123, 213, 0.3);
+}
+
+.btn-secondary {
+  background: #f0f3fa;
+  color: #555;
+  border: 1.5px solid #e0e4ef;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e5eaf5;
+}
+
+.btn-danger {
+  background: #fff0f0;
+  color: #e53935;
+  border: 1.5px solid #ffd6d6;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #ffe0e0;
+  border-color: #e53935;
+}
+
+.btn-edit {
+  background: #f0f7ff;
+  color: #3a7bd5;
+  border: 1.5px solid #c8defa;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background: #e0efff;
+}
+
+.btn-del {
+  background: #fff0f0;
+  color: #e53935;
+  border: 1.5px solid #ffd6d6;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+.btn-del:hover:not(:disabled) {
+  background: #ffe0e0;
+}
+
+/* Alert messages */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alert-success {
+  background: #f0fff4;
+  color: #1a7340;
+  border: 1px solid #b7ebd0;
+}
+
+.alert-error {
+  background: #fff0f0;
+  color: #c62828;
+  border: 1px solid #ffd6d6;
+}
+
+/* Table */
+.country-table-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+
+.country-table-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.country-table-card__header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #444;
+  margin: 0;
+}
+
+.badge {
+  background: #eef3ff;
+  color: #3a7bd5;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.country-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.country-table th {
+  background: #f6f8fc;
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 20px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.country-table td {
+  padding: 14px 20px;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #f3f4f8;
+  vertical-align: middle;
+}
+
+.country-table tr:last-child td {
+  border-bottom: none;
+}
+
+.country-table tr:hover td {
+  background: #f8faff;
+}
+
+.country-id {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 600;
+}
+
+.country-name {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+/* Inline edit */
+.inline-edit-input {
+  border: 1.5px solid #3a7bd5;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #222;
+  outline: none;
+  width: 180px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #aaa;
+}
+
+.empty-state svg {
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+/* Loading */
+.loading-row td {
+  text-align: center;
+  color: #aaa;
+  padding: 32px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e0e4ef;
+  border-top-color: #3a7bd5;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.pagination span {
+  font-size: 13px;
+  color: #888;
+}
+
+/* Locations sub-list (shown under country row) */
+.sub-locations {
+  background: #f6f8fc;
+  padding: 10px 20px 10px 40px;
+}
+
+.sub-locations-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.sub-location-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 13px;
+  color: #555;
+  border-bottom: 1px dashed #e5e8f0;
+}
+
+.sub-location-item:last-child {
+  border-bottom: none;
+}
+
+.sub-location-dot {
+  width: 7px;
+  height: 7px;
+  background: #3a7bd5;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
