@@ -12,7 +12,7 @@ const SelectTicket = () => {
       desc: 'Lüks və sürətli uçuş təcrübəsi.',
       icon: '✈️',
       bgClass: 'plane-card',
-      path: '/Create-Plane-Ticket' // Kliklədikdə gedəcəyi ünvan
+      path: '/create-ticket' // Kliklədikdə gedəcəyi ünvan
     },
     { 
       id: 2, 
@@ -20,7 +20,7 @@ const SelectTicket = () => {
       desc: 'Komfortlu qatar səyahəti.',
       icon: '🚄',
       bgClass: 'train-card',
-      path: '/book-train' // Kliklədikdə gedəcəyi ünvan
+      path: '/create-train-ticket' // Kliklədikdə gedəcəyi ünvan
     },
   ];
 

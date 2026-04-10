@@ -21,7 +21,7 @@ const ShowTicket = () => {
         </div>
 
         {/* Train Section */}
-        <div className="st-choice-card train-bg" onClick={() => navigate('/show-train-tickets')}>
+        <div className="st-choice-card train-bg" onClick={() => navigate('/Show-Train-T')}>
           <div className="st-overlay"></div>
           <div className="st-content-box">
             <div className="st-icon">🚄</div>

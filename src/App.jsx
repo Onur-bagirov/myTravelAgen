@@ -22,6 +22,9 @@ import ShowTicket from "./ShowTicket/showTicket";
 import AddCountryLocation from "./AddLocCon/addLC";
 import AddCountry from "./AddCountry/addC";
 import AddLocation from "./AddLocation/addL";
+import AddVariant from "./AddVariant/addV";
+import CreateTrainTicket from "./CreateTrainTicket/createTrain";
+import ShowTrainTickets from "./ShowTrainTicket/showTrain";
 
 function App() {    
   return (
@@ -38,9 +41,11 @@ function App() {
 
         {/* Ticket */}
         <Route path="/create-ticket" element={<CreateTicket/>} />
+        <Route path="/create-train-ticket" element={<CreateTrainTicket/>}/>
         <Route path="/select-ticket" element={<SelectTicket/>} />
         <Route path="/show-ticket" element={<ShowTicket/>} />
         <Route path="/show-plane-ticket" element={<ShowPlaneTicket/>} />
+        <Route path="/Show-Train-T" element={<ShowTrainTickets/>}/>
 
         {/* User */}
         <Route path="/user-profile" element={<Profile/>} />
@@ -59,6 +64,8 @@ function App() {
         <Route path="/Add-C-L" element={<AddCountryLocation/>}/>
         <Route path="/Add-C" element={<AddCountry/>}/>
         <Route path="/Add-L" element={<AddLocation/>}/>
+        <Route path="/Add-V" element={<AddVariant/>}/>
+
         
 
         {/* Other */}

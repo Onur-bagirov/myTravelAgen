@@ -118,8 +118,14 @@ const Header = () => {
 
               {/* Admin */}
               {isAdmin && (
-                <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/CreateExecutive")}>
+                <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/create-executive")}>
                   Create Company
+                </button>
+              )}
+
+              {isAdmin && (
+                <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/Add-V")}>
+                  Add Variant
                 </button>
               )}
 

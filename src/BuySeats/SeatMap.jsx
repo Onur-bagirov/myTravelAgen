@@ -21,7 +21,7 @@ async function fetchSeats() {
     rows: 6,
     cols: ["A", "B", "C", "", "D", "E", "F"],
     seats: [
-      // Row 1 – First Class
+      // Row 1 – First ClassA
       { name: "1A", variant: "First Class", isOccupied: false, occupiedBy: "" },
       { name: "1B", variant: "First Class", isOccupied: true,  occupiedBy: "James Harlow" },
       { name: "1C", variant: "First Class", isOccupied: false, occupiedBy: "" },

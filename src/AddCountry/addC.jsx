@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import "./addC.css";
 
-const API_BASE = "http://localhost:5170/api";
-
-// Token-i localStorage-dən al (login zamanı saxlanılmış olmalıdır)
-const getToken = () => localStorage.getItem("token");
+const API_BASE = "http://localhost:5251/api";
+const getToken = () => localStorage.getItem("userToken");
 
 const authHeaders = () => ({
   "Content-Type": "application/json",
+  Authorization: `Bearer ${getToken()}`,
+});
+
+const getHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
@@ -25,9 +27,8 @@ export default function AddCountry() {
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [alert, setAlert] = useState(null); // { type: 'success'|'error', msg }
+  const [alert, setAlert] = useState(null);
 
-  // Locations altında göstər
   const [expandedCountryId, setExpandedCountryId] = useState(null);
   const [subLocations, setSubLocations] = useState({});
   const [subLoading, setSubLoading] = useState(false);
@@ -47,32 +48,32 @@ export default function AddCountry() {
       );
       if (!res.ok) throw new Error("Ölkələr yüklənmədi");
       const data = await res.json();
-      // xeta burada idi
       setCountries(Array.isArray(data.data) ? data.data : []);
       setTotalCount(data.totalDataCount ?? 0);
-      } catch (err) {
+    } catch (err) {
       showAlert("error", err.message);
     } finally {
       setLoading(false);
     }
   }, [page]);
 
-  useEffect(() => {
-    fetchCountries();
-  }, [fetchCountries]);
+  useEffect(() => { fetchCountries(); }, [fetchCountries]);
 
-  // ─── Fetch Locations of a Country ─────────────────────────────────
+  // ─── Fetch Sub-Locations ───────────────────────────────────────────
   const fetchSubLocations = async (countryId) => {
-    if (subLocations[countryId]) return; // cache
+    // Cache: artıq yüklənibsə yenidən fetch etmə
+    if (subLocations[countryId]) return;
     setSubLoading(true);
     try {
       const res = await fetch(
         `${API_BASE}/Location?Page=1&Limit=100`,
-        { headers: authHeaders() }
+        { headers: getHeaders() } // ✅ GET üçün getHeaders
       );
       if (!res.ok) throw new Error();
       const data = await res.json();
-      const allLocs = data.data?.items ?? data.items ?? [];
+
+      // ✅ Düzgün parse: Pagination<T> → { data: [...], totalDataCount }
+      const allLocs = Array.isArray(data.data) ? data.data : [];
       const filtered = allLocs.filter((l) => l.countryId === countryId);
       setSubLocations((prev) => ({ ...prev, [countryId]: filtered }));
     } catch {
@@ -116,7 +117,7 @@ export default function AddCountry() {
         body: JSON.stringify({ name: name.trim() }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err?.message ?? "Xəta baş verdi");
       }
       showAlert("success", `"${name.trim()}" uğurla əlavə edildi!`);
@@ -129,7 +130,7 @@ export default function AddCountry() {
     }
   };
 
-  // ─── Start Edit ────────────────────────────────────────────────────
+  // ─── Edit ──────────────────────────────────────────────────────────
   const startEdit = (country) => {
     setEditingId(country.id);
     setEditName(country.name);
@@ -151,7 +152,7 @@ export default function AddCountry() {
         body: JSON.stringify({ id, name: editName.trim() }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err?.message ?? "Yenilənmədi");
       }
       showAlert("success", "Ölkə uğurla yeniləndi!");
@@ -176,11 +177,10 @@ export default function AddCountry() {
         body: JSON.stringify({ id }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err?.message ?? "Silinmədi");
       }
       showAlert("success", `"${countryName}" silindi!`);
-      // expanded-i təmizlə
       if (expandedCountryId === id) setExpandedCountryId(null);
       setSubLocations((prev) => {
         const copy = { ...prev };
@@ -199,13 +199,11 @@ export default function AddCountry() {
 
   return (
     <div className="country-panel">
-      {/* Header */}
       <div className="country-panel__header">
         <div className="country-panel__icon">🌍</div>
         <h2>Ölkə İdarəetməsi</h2>
       </div>
 
-      {/* Alert */}
       {alert && (
         <div className={`alert alert-${alert.type}`}>
           {alert.type === "success" ? "✅" : "❌"} {alert.msg}
@@ -223,20 +221,13 @@ export default function AddCountry() {
               className={`form-input ${nameError ? "error" : ""}`}
               type="text"
               value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (nameError) setNameError("");
-              }}
+              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               placeholder="Məs: Azərbaycan"
             />
             {nameError && <span className="form-error">{nameError}</span>}
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={handleCreate}
-            disabled={submitting}
-          >
+          <button className="btn btn-primary" onClick={handleCreate} disabled={submitting}>
             {submitting ? <><span className="spinner" />Gözləyin...</> : "➕ Əlavə Et"}
           </button>
         </div>
@@ -261,16 +252,12 @@ export default function AddCountry() {
           <tbody>
             {loading ? (
               <tr className="loading-row">
-                <td colSpan={4}>
-                  <span className="spinner" /> Yüklənir...
-                </td>
+                <td colSpan={4}><span className="spinner" /> Yüklənir...</td>
               </tr>
             ) : countries.length === 0 ? (
               <tr>
                 <td colSpan={4}>
-                  <div className="empty-state">
-                    <p>Hələ heç bir ölkə əlavə edilməyib.</p>
-                  </div>
+                  <div className="empty-state"><p>Hələ heç bir ölkə əlavə edilməyib.</p></div>
                 </td>
               </tr>
             ) : (
@@ -325,10 +312,7 @@ export default function AddCountry() {
                           </>
                         ) : (
                           <>
-                            <button
-                              className="btn btn-edit"
-                              onClick={() => startEdit(country)}
-                            >
+                            <button className="btn btn-edit" onClick={() => startEdit(country)}>
                               ✏️ Düzəlt
                             </button>
                             <button
@@ -381,7 +365,6 @@ export default function AddCountry() {
           </tbody>
         </table>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="pagination">
             <button
@@ -392,9 +375,7 @@ export default function AddCountry() {
             >
               ← Əvvəl
             </button>
-            <span>
-              {page} / {totalPages}
-            </span>
+            <span>{page} / {totalPages}</span>
             <button
               className="btn btn-secondary"
               style={{ padding: "6px 14px" }}

@@ -12,7 +12,7 @@ function AddCountryLocation() {
       </div>
 
       <div className="addlc-cards">
-        <button className="addlc-card addlc-card--country" onClick={() => navigate("/admin/country")}>
+        <button className="addlc-card addlc-card--country" onClick={() => navigate("/Add-C")}>
           <div className="addlc-card__icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -28,7 +28,7 @@ function AddCountryLocation() {
           <div className="addlc-card__arrow">→</div>
         </button>
 
-        <button className="addlc-card addlc-card--location" onClick={() => navigate("/admin/location")}>
+        <button className="addlc-card addlc-card--location" onClick={() => navigate("/Add-L")}>
           <div className="addlc-card__icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">

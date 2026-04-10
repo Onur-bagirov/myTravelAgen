@@ -1,10 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import "./addL.css";
 
-const API_BASE = "http://localhost:5170/api";
-const getToken = () => localStorage.getItem("token");
+const API_BASE = "http://localhost:5251/api";
+const getToken = () => localStorage.getItem("userToken");
+
 const authHeaders = () => ({
   "Content-Type": "application/json",
+  Authorization: `Bearer ${getToken()}`,
+});
+
+const getHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
@@ -31,7 +36,9 @@ function AddLocation() {
 
   const fetchCountries = async () => {
     try {
-      const res = await fetch(`${API_BASE}/Country?Page=1&Limit=20`, { headers: authHeaders() });
+      const res = await fetch(`${API_BASE}/Country?page=1&size=100`, {
+        headers: getHeaders(),
+      });
       if (!res.ok) return;
       const data = await res.json();
       setCountries(Array.isArray(data.data) ? data.data : []);
@@ -43,8 +50,14 @@ function AddLocation() {
   const fetchLocations = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/Location?Page=${page}&Limit=${limit}`, { headers: authHeaders() });
-      if (!res.ok) throw new Error("Lokasiyalar yuklenmedi");
+      const res = await fetch(
+        `${API_BASE}/Location?Page=${page}&Limit=${limit}`,
+        { headers: getHeaders() }
+      );
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Xeta ${res.status}: ${errText}`);
+      }
       const data = await res.json();
       setLocations(Array.isArray(data.data) ? data.data : []);
       setTotalCount(data.totalDataCount ?? 0);
@@ -59,13 +72,22 @@ function AddLocation() {
 
   const validate = () => {
     const errors = {};
-    if (!form.name.trim()) errors.name = "Ad bos ola bilmez";
-    if (!form.countryId) errors.countryId = "Olke secin";
-    if (form.distanceToken === "" || isNaN(Number(form.distanceToken))) errors.distanceToken = "Token daxil edin";
+    if (!form.name.trim()) {
+      errors.name = "Ad bos ola bilmez";
+    } else if (form.name.trim().length < 2) {
+      errors.name = "Ad en az 2 simvol olmalidir";
+    }
+    if (!form.countryId) {
+      errors.countryId = "Olke secin";
+    }
+    if (form.distanceToken === "" || isNaN(Number(form.distanceToken))) {
+      errors.distanceToken = "Token daxil edin";
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  // ✅ POST Düzəldildi: country obyekti əlavə edildi
   const handleCreate = async () => {
     if (!validate()) return;
     setSubmitting(true);
@@ -73,24 +95,40 @@ function AddLocation() {
       const res = await fetch(`${API_BASE}/Location`, {
         method: "POST",
         headers: authHeaders(),
-        body: JSON.stringify({ name: form.name.trim(), countryId: Number(form.countryId), distanceToken: Number(form.distanceToken) }),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          countryId: Number(form.countryId),
+          distanceToken: Number(form.distanceToken),
+          country: null // Backend-dəki obyekt gözləntisini qarşılamaq üçün
+        }),
       });
-      if (!res.ok) { const e = await res.json(); throw new Error(e?.message ?? "Xeta"); }
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e?.message ?? `Xeta ${res.status}`);
+      }
       showAlert("success", "Lokasiya elave edildi!");
       setForm({ name: "", countryId: "", distanceToken: "" });
       setFormErrors({});
       fetchLocations();
-    } catch (err) { showAlert("error", err.message); }
-    finally { setSubmitting(false); }
+    } catch (err) {
+      showAlert("error", err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const startEdit = (loc) => {
     setEditingId(loc.id);
-    setEditForm({ name: loc.name, countryId: String(loc.countryId), distanceToken: String(loc.distanceToken) });
+    setEditForm({
+      name: loc.name,
+      countryId: String(loc.countryId),
+      distanceToken: String(loc.distanceToken),
+    });
   };
 
-  const cancelEdit = () => { setEditingId(null); };
+  const cancelEdit = () => setEditingId(null);
 
+  // ✅ PUT Düzəldildi: country obyekti əlavə edildi
   const handleUpdate = async (id) => {
     if (!editForm.name.trim() || !editForm.countryId) return;
     setSubmitting(true);
@@ -98,16 +136,29 @@ function AddLocation() {
       const res = await fetch(`${API_BASE}/Location`, {
         method: "PUT",
         headers: authHeaders(),
-        body: JSON.stringify({ id, name: editForm.name.trim(), countryId: Number(editForm.countryId), distanceToken: Number(editForm.distanceToken) || 0 }),
+        body: JSON.stringify({
+          id: Number(id),
+          name: editForm.name.trim(),
+          countryId: Number(editForm.countryId),
+          distanceToken: Number(editForm.distanceToken),
+          country: null 
+        }),
       });
-      if (!res.ok) { const e = await res.json(); throw new Error(e?.message ?? "Yenilenmedi"); }
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e?.message ?? "Yenilenmedi");
+      }
       showAlert("success", "Lokasiya yenilendi!");
       cancelEdit();
       fetchLocations();
-    } catch (err) { showAlert("error", err.message); }
-    finally { setSubmitting(false); }
+    } catch (err) {
+      showAlert("error", err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  // ✅ DELETE Düzəldildi: Backend-də [FromBody] mütləq olmalıdır
   const handleDelete = async (id, locName) => {
     if (!window.confirm(`"${locName}" silinsin?`)) return;
     setSubmitting(true);
@@ -115,19 +166,23 @@ function AddLocation() {
       const res = await fetch(`${API_BASE}/Location`, {
         method: "DELETE",
         headers: authHeaders(),
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: Number(id) }),
       });
-      if (!res.ok) { const e = await res.json(); throw new Error(e?.message ?? "Silinmedi"); }
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e?.message ?? "Silinmedi");
+      }
       showAlert("success", `"${locName}" silindi!`);
       fetchLocations();
-    } catch (err) { showAlert("error", err.message); }
-    finally { setSubmitting(false); }
+    } catch (err) {
+      showAlert("error", err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const getCountryName = (countryId) => {
-    const c = countries.find((c) => c.id === countryId);
-    return c ? c.name : String(countryId);
-  };
+  const getCountryName = (countryId) =>
+    countries.find((c) => c.id === countryId)?.name ?? String(countryId);
 
   const displayed = filterCountryId
     ? locations.filter((l) => String(l.countryId) === filterCountryId)
@@ -183,15 +238,19 @@ function AddLocation() {
             <input
               className={`form-input ${formErrors.distanceToken ? "error" : ""}`}
               type="number"
-              min="0"
               value={form.distanceToken}
               onChange={(e) => setForm((p) => ({ ...p, distanceToken: e.target.value }))}
-              placeholder="0"
+              placeholder="Mes: 120"
             />
             {formErrors.distanceToken && <span className="form-error">{formErrors.distanceToken}</span>}
           </div>
 
-          <button className="btn btn-primary" onClick={handleCreate} disabled={submitting} style={{ alignSelf: "flex-end" }}>
+          <button
+            className="btn btn-primary"
+            onClick={handleCreate}
+            disabled={submitting}
+            style={{ alignSelf: "flex-end" }}
+          >
             {submitting ? "Gozleyin..." : "Elave Et"}
           </button>
         </div>
@@ -201,7 +260,11 @@ function AddLocation() {
         <div className="location-table-card__header">
           <h3>Lokasiyalar Siyahisi</h3>
           <div className="header-right">
-            <select className="filter-select" value={filterCountryId} onChange={(e) => setFilterCountryId(e.target.value)}>
+            <select
+              className="filter-select"
+              value={filterCountryId}
+              onChange={(e) => setFilterCountryId(e.target.value)}
+            >
               <option value="">Butun Olkeler</option>
               {countries.map((c) => (
                 <option key={c.id} value={String(c.id)}>{c.name}</option>
@@ -225,41 +288,79 @@ function AddLocation() {
             {loading ? (
               <tr className="loading-row"><td colSpan={5}>Yuklenir...</td></tr>
             ) : displayed.length === 0 ? (
-              <tr><td colSpan={5}><div className="empty-state">Hec bir lokasiya tapilmadi.</div></td></tr>
+              <tr>
+                <td colSpan={5}>
+                  <div className="empty-state">Hec bir lokasiya tapilmadi.</div>
+                </td>
+              </tr>
             ) : (
               displayed.map((loc) => (
                 <tr key={loc.id}>
                   <td><span className="loc-id">#{loc.id}</span></td>
                   <td>
-                    {editingId === loc.id
-                      ? <input className="inline-edit-input" value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} autoFocus />
-                      : <span className="loc-name">{loc.name}</span>}
+                    {editingId === loc.id ? (
+                      <input
+                        className="inline-edit-input"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="loc-name">{loc.name}</span>
+                    )}
                   </td>
                   <td>
-                    {editingId === loc.id
-                      ? (
-                        <select className="inline-edit-select" value={editForm.countryId} onChange={(e) => setEditForm((p) => ({ ...p, countryId: e.target.value }))}>
-                          {countries.map((c) => (<option key={c.id} value={String(c.id)}>{c.name}</option>))}
-                        </select>
-                      )
-                      : <span className="country-tag">{loc.country ?? getCountryName(loc.countryId)}</span>}
+                    {editingId === loc.id ? (
+                      <select
+                        className="inline-edit-select"
+                        value={editForm.countryId}
+                        onChange={(e) => setEditForm((p) => ({ ...p, countryId: e.target.value }))}
+                      >
+                        {countries.map((c) => (
+                          <option key={c.id} value={String(c.id)}>{c.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="country-tag">{loc.country?.name ?? getCountryName(loc.countryId)}</span>
+                    )}
                   </td>
                   <td>
-                    {editingId === loc.id
-                      ? <input className="inline-edit-number" type="number" min="0" value={editForm.distanceToken} onChange={(e) => setEditForm((p) => ({ ...p, distanceToken: e.target.value }))} />
-                      : <span className="distance-badge">{loc.distanceToken}</span>}
+                    {editingId === loc.id ? (
+                      <input
+                        className="inline-edit-number"
+                        type="number"
+                        value={editForm.distanceToken}
+                        onChange={(e) => setEditForm((p) => ({ ...p, distanceToken: e.target.value }))}
+                      />
+                    ) : (
+                      <span className="distance-badge">{loc.distanceToken}</span>
+                    )}
                   </td>
                   <td>
                     <div className="actions-cell">
                       {editingId === loc.id ? (
                         <>
-                          <button className="btn btn-primary" style={{ padding: "7px 14px", fontSize: "13px" }} onClick={() => handleUpdate(loc.id)} disabled={submitting}>Saxla</button>
-                          <button className="btn btn-secondary" style={{ padding: "7px 14px", fontSize: "13px" }} onClick={cancelEdit}>Legv</button>
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => handleUpdate(loc.id)}
+                            disabled={submitting}
+                          >
+                            Saxla
+                          </button>
+                          <button className="btn btn-secondary" onClick={cancelEdit}>
+                            Legv
+                          </button>
                         </>
                       ) : (
                         <>
                           <button className="btn btn-edit" onClick={() => startEdit(loc)}>Duzel</button>
-                          <button className="btn btn-del" onClick={() => handleDelete(loc.id, loc.name)} disabled={submitting}>Sil</button>
+                          <button
+                            className="btn btn-del"
+                            onClick={() => handleDelete(loc.id, loc.name)}
+                            disabled={submitting}
+                          >
+                            Sil
+                          </button>
                         </>
                       )}
                     </div>
@@ -272,9 +373,21 @@ function AddLocation() {
 
         {totalPages > 1 && (
           <div className="pagination">
-            <button className="btn btn-secondary" style={{ padding: "6px 14px" }} onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>Evvel</button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Evvel
+            </button>
             <span>{page} / {totalPages}</span>
-            <button className="btn btn-secondary" style={{ padding: "6px 14px" }} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Novbeti</button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Novbeti
+            </button>
           </div>
         )}
       </div>
