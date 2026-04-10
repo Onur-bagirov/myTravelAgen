@@ -180,7 +180,6 @@ function BookingModal({ ticket, onClose, onBooked }) {
     hasChild: false,
     luggageCount: 0,
     totalLuggageKg: 0,
-    isRoundTrip: false,
     note: "",
   });
 
@@ -238,7 +237,6 @@ function BookingModal({ ticket, onClose, onBooked }) {
           hasChild: form.hasChild,
           luggageCount: Number(form.luggageCount),
           totalLuggageKg: Number(form.totalLuggageKg),
-          isRoundTrip: form.isRoundTrip,
           note: form.note.trim() || null,
         }),
       });
@@ -365,18 +363,6 @@ function BookingModal({ ticket, onClose, onBooked }) {
               />
               <span className="st-toggle-track" />
               <span>👶 Uşaq</span>
-            </label>
-
-            <label className="st-toggle">
-              <input
-                type="checkbox"
-                checked={form.isRoundTrip}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, isRoundTrip: e.target.checked }))
-                }
-              />
-              <span className="st-toggle-track" />
-              <span>🔄 Gedib-Gəlmə</span>
             </label>
 
             <div className="st-num-field">

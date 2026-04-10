@@ -13,7 +13,6 @@ import Emailcode from "./EmailCode/Emailcode";
 import CreateTicket from "./CreateTicket/ticket";
 import Profile from "./UserProfile/profile";
 import BuySeats from "./BuySeats/SeatMap";
-import MyTickets from "./MyTickets/MyTickets";
 import ForgotPassword from "./ForgotPassword/password";
 import CreateExecutive from "./CreateExecutive/CreateExecutive";
 import SelectTicket from "./TicketSection/selectTicket";
@@ -25,13 +24,15 @@ import AddLocation from "./AddLocation/addL";
 import AddVariant from "./AddVariant/addV";
 import CreateTrainTicket from "./CreateTrainTicket/createTrain";
 import ShowTrainTickets from "./ShowTrainTicket/showTrain";
+import AllMyTicket from "./AllMyTicket/allMyT";
+import AllMyP from "./MyPlainTicket/allMyP";
+import TrainBooking from "./BookTrainTicket/bookTrainT";
 
 function App() {    
   return (
     <Router>
       <Header />
       <Routes>
-
         <Route path="/" element={<MainPage />} />
 
         {/* Auth */}
@@ -46,10 +47,16 @@ function App() {
         <Route path="/show-ticket" element={<ShowTicket/>} />
         <Route path="/show-plane-ticket" element={<ShowPlaneTicket/>} />
         <Route path="/Show-Train-T" element={<ShowTrainTickets/>}/>
+        
+        {/* Seçim səhifəsi (2 düymə olan yer) */}
+        <Route path="/All-My-Tic" element={<AllMyTicket/>} />
 
         {/* User */}
         <Route path="/user-profile" element={<Profile/>} />
-        <Route path="/my-tickets" element={<MyTickets />} />
+        <Route path="/Book-Train-T" element={<TrainBooking/>} />
+        
+        {/* Real Bilet Siyahısı (Düzgün yol) */}
+        <Route path="/All-My-P" element={<AllMyP/>}/>
 
         {/* Buy */}
         <Route path="/buy" element={<Buy />} />
@@ -65,8 +72,6 @@ function App() {
         <Route path="/Add-C" element={<AddCountry/>}/>
         <Route path="/Add-L" element={<AddLocation/>}/>
         <Route path="/Add-V" element={<AddVariant/>}/>
-
-        
 
         {/* Other */}
         <Route path="/register" element={<Register />} />

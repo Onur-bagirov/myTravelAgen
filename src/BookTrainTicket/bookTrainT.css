@@ -1,0 +1,712 @@
+/* ===== bookTrain.css ===== */
+/* Qatar bilet alışı - bookT.css ilə eyni struktur, qatar teması */
+
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap");
+
+:root {
+  --tb-bg: #0f1117;
+  --tb-surface: #181c27;
+  --tb-surface2: #1e2335;
+  --tb-border: rgba(255, 255, 255, 0.07);
+  --tb-text: #e8eaf0;
+  --tb-muted: #7b8099;
+  --tb-accent: #f59e0b;
+  --tb-accent2: #fb923c;
+  --tb-green: #34d399;
+  --tb-red: #f87171;
+  --tb-blue: #60a5fa;
+  --tb-radius: 16px;
+  --tb-radius-sm: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Page ── */
+.tb-page {
+  min-height: 100vh;
+  background: var(--tb-bg);
+  font-family: "DM Sans", sans-serif;
+  color: var(--tb-text);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.tb-noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+.tb-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 16px 120px;
+}
+
+/* ── Back ── */
+.tb-back {
+  background: none;
+  border: 1px solid var(--tb-border);
+  color: var(--tb-muted);
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.tb-back:hover {
+  color: var(--tb-text);
+  border-color: var(--tb-accent);
+}
+
+/* ── Summary ── */
+.tb-summary {
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-border);
+  border-radius: var(--tb-radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tb-summary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--tb-accent), var(--tb-accent2));
+  border-radius: var(--tb-radius) var(--tb-radius) 0 0;
+}
+
+.tb-summary-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tb-eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tb-accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tb-train-badge {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--tb-accent);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 50px;
+  letter-spacing: 0.06em;
+}
+
+/* ── Route ── */
+.tb-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tb-route-block {
+  flex: 1;
+}
+
+.tb-route-block--right {
+  text-align: right;
+}
+
+.tb-route-time {
+  display: block;
+  font-family: "Syne", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--tb-text);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.tb-route-city {
+  display: block;
+  font-size: 13px;
+  color: var(--tb-muted);
+  font-weight: 500;
+}
+
+.tb-route-date {
+  display: block;
+  font-size: 12px;
+  color: var(--tb-muted);
+  margin-top: 2px;
+}
+
+.tb-route-mid {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tb-train-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tb-accent);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.tb-dash {
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--tb-accent), var(--tb-accent2));
+  display: inline-block;
+}
+
+.tb-train-icon {
+  font-size: 18px;
+  display: inline-block;
+}
+
+.tb-dur-tag {
+  font-size: 11px;
+  color: var(--tb-muted);
+  white-space: nowrap;
+}
+
+.tb-summary-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--tb-border);
+  font-size: 13px;
+  color: var(--tb-muted);
+}
+
+/* ── Section ── */
+.tb-section {
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-border);
+  border-radius: var(--tb-radius);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.tb-section-title {
+  font-family: "Syne", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tb-text);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tb-section-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--tb-accent);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 2px 8px;
+  border-radius: 50px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Seats Loading ── */
+.tb-seats-loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 8px;
+}
+
+.tb-seat-skeleton {
+  height: 64px;
+  border-radius: var(--tb-radius-sm);
+  background: linear-gradient(90deg, var(--tb-surface2) 25%, var(--tb-border) 50%, var(--tb-surface2) 75%);
+  background-size: 200% 100%;
+  animation: tb-shimmer 1.4s infinite;
+}
+
+@keyframes tb-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.tb-seats-empty {
+  text-align: center;
+  color: var(--tb-muted);
+  padding: 32px;
+  font-size: 14px;
+}
+
+/* ── Cabin ── */
+.tb-cabin {
+  background: var(--tb-surface2);
+  border: 1px solid var(--tb-border);
+  border-radius: var(--tb-radius-sm);
+  padding: 16px;
+}
+
+.tb-cabin-front {
+  text-align: center;
+  font-size: 12px;
+  color: var(--tb-muted);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--tb-border);
+  letter-spacing: 0.04em;
+}
+
+/* ── Variant Group ── */
+.tb-variant-group {
+  margin-bottom: 20px;
+}
+
+.tb-variant-group:last-child {
+  margin-bottom: 0;
+}
+
+.tb-variant-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tb-variant-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tb-text);
+}
+
+/* ✅ DÜZƏLİŞ: ₼ işarəsi düzgün görünür */
+.tb-variant-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tb-accent);
+}
+
+/* ── Seats Grid ── */
+.tb-seats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 8px;
+}
+
+/* ── Seat Button ── */
+.tb-seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: var(--tb-radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: "DM Sans", sans-serif;
+  background: transparent;
+}
+
+.tb-seat-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.tb-seat-num {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tb-seat--free {
+  background: rgba(52, 211, 153, 0.06);
+  border-color: rgba(52, 211, 153, 0.2);
+  color: var(--tb-green);
+}
+
+.tb-seat--free:hover {
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.15);
+}
+
+.tb-seat--occupied {
+  background: rgba(248, 113, 113, 0.05);
+  border-color: rgba(248, 113, 113, 0.12);
+  color: rgba(248, 113, 113, 0.3);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tb-seat--selected {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: var(--tb-accent);
+  color: var(--tb-accent);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ── Legend ── */
+.tb-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--tb-border);
+}
+
+.tb-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--tb-muted);
+}
+
+.tb-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.tb-legend-dot--free {
+  background: var(--tb-green);
+  opacity: 0.7;
+}
+
+.tb-legend-dot--occupied {
+  background: var(--tb-red);
+  opacity: 0.3;
+}
+
+.tb-legend-dot--selected {
+  background: var(--tb-accent);
+}
+
+/* ── Options ── */
+.tb-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+
+.tb-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--tb-surface2);
+  border-radius: var(--tb-radius-sm);
+  border: 1px solid var(--tb-border);
+}
+
+.tb-option-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tb-option-icon {
+  font-size: 18px;
+}
+
+.tb-option-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tb-text);
+}
+
+/* ── Toggle ── */
+.tb-toggle {
+  width: 42px;
+  height: 24px;
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-border);
+  border-radius: 50px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.tb-toggle--on {
+  background: var(--tb-accent);
+  border-color: var(--tb-accent);
+}
+
+.tb-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.tb-toggle--on .tb-toggle-knob {
+  transform: translateX(18px);
+}
+
+/* ── Counter ── */
+.tb-counter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tb-counter-btn {
+  width: 30px;
+  height: 30px;
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-border);
+  border-radius: 50%;
+  color: var(--tb-text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.tb-counter-btn:hover {
+  background: var(--tb-accent);
+  border-color: var(--tb-accent);
+  color: #000;
+}
+
+.tb-counter-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tb-text);
+  min-width: 48px;
+  text-align: center;
+}
+
+/* ── Note ── */
+.tb-note {
+  width: 100%;
+  background: var(--tb-surface2);
+  border: 1px solid var(--tb-border);
+  border-radius: var(--tb-radius-sm);
+  color: var(--tb-text);
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  padding: 12px 14px;
+  resize: none;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tb-note::placeholder {
+  color: var(--tb-muted);
+}
+
+.tb-note:focus {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* ── Order Summary ── */
+/* ✅ DÜZƏLİŞ: Hər sətirdə ₼ düzgün görünür */
+.tb-order-summary {
+  background: var(--tb-surface);
+  border: 1px solid var(--tb-border);
+  border-radius: var(--tb-radius);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.tb-order-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--tb-muted);
+  padding: 6px 0;
+}
+
+.tb-order-row span:last-child {
+  color: var(--tb-text);
+  font-weight: 600;
+}
+
+.tb-order-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--tb-border);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--tb-text);
+}
+
+.tb-order-total span:last-child {
+  color: var(--tb-accent);
+  font-family: "Syne", sans-serif;
+  font-size: 20px;
+}
+
+/* ── Error ── */
+.tb-error {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--tb-radius-sm);
+  padding: 12px 16px;
+  color: var(--tb-red);
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* ── Buy Button ── */
+.tb-buy-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--tb-accent), var(--tb-accent2));
+  border: none;
+  border-radius: var(--tb-radius);
+  color: #000;
+  font-family: "Syne", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+}
+
+.tb-buy-btn:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.4);
+}
+
+.tb-buy-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tb-buy-btn--disabled {
+  background: var(--tb-surface2);
+  color: var(--tb-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.tb-buy-btn--loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* ── Success Screen ── */
+.tb-success-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.tb-success-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--tb-accent), var(--tb-green));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: #000;
+  font-weight: 800;
+  box-shadow: 0 8px 32px rgba(52, 211, 153, 0.35);
+  animation: tb-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes tb-pop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.tb-success-title {
+  font-family: "Syne", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--tb-text);
+}
+
+.tb-success-sub {
+  font-size: 15px;
+  color: var(--tb-muted);
+}
+
+.tb-success-seat {
+  font-size: 15px;
+  color: var(--tb-muted);
+}
+
+.tb-success-seat strong {
+  color: var(--tb-accent);
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .tb-route-time {
+    font-size: 24px;
+  }
+
+  .tb-seats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  }
+
+  .tb-summary-meta {
+    gap: 10px;
+    font-size: 12px;
+  }
+}

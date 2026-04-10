@@ -87,10 +87,6 @@ const Header = () => {
                 Log Out
               </button>
 
-              <button className="seatmap-btn" onClick={() => handleNavigation("/buy-seats")}>
-                Seat Map
-              </button>
-
               {(isAdmin || isCompany) && (
                 <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/Show-Ticket")}>
                   Show Tickets
@@ -107,7 +103,7 @@ const Header = () => {
               {/* Customer */}
               {isCustomer && (
                 <>
-                  <button className="MyTickets-btn" onClick={() => handleNavigation("/MyTickets")}>
+                  <button className="MyTickets-btn" onClick={() => handleNavigation("/All-My-Tic")}>
                     My Tickets
                   </button>
                   <button className="buy-btn" onClick={handleBuyNow}>

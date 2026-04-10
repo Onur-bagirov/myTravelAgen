@@ -29,11 +29,32 @@ function parseLocations(data) {
   return [];
 }
 
-const formatDate = (iso) =>
-  !iso ? "—" : new Date(iso).toLocaleDateString("az-AZ", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
-const formatTime = (iso) =>
-  !iso ? "" : new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+// ✅ DÜZƏLDİLDİ: datetime-local string-i birbaşa oxuyuruq, timezone sürüşməsi olmur
+const formatDateFromLocal = (localStr) => {
+  if (!localStr) return "—";
+  const [datePart] = localStr.split("T");
+  if (!datePart) return "—";
+  const [year, month, day] = datePart.split("-");
+  const months = ["","YAN","FEV","MAR","APR","MAY","İYN","İYL","AVQ","SEP","OKT","NOY","DEK"];
+  return `${day} ${months[parseInt(month, 10)]} ${year}`;
+};
 
+const formatTimeFromLocal = (localStr) => {
+  if (!localStr) return "";
+  const parts = localStr.split("T");
+  if (parts.length < 2) return "";
+  // "HH:MM" və ya "HH:MM:SS" — ikisini də dəstəkləyirik
+  return parts[1].slice(0, 5);
+};
+
+// Server-ə göndərmək üçün ISO string — local vaxtı UTC kimi göndəririk
+const toISOFromLocal = (localStr) => {
+  if (!localStr) return "";
+  // "2025-04-11T13:00" → "2025-04-11T13:00:00.000Z"
+  return localStr.length === 16 
+    ? localStr + ":00.000Z" 
+    : localStr + ".000Z";
+};
 export default function CreatePlaneTicket() {
   const navigate = (path) => { window.location.href = path; };
 
@@ -144,7 +165,8 @@ export default function CreatePlaneTicket() {
       plane: form.plane.trim(),
       meal: form.meal.trim(),
       luggageKg: Number(form.luggageKg),
-      dueDate: new Date(form.dueDate).toISOString(),
+      // ✅ DÜZƏLDİLDİ: daxil edilən local string-i düzgün ISO-ya çeviririk
+      dueDate: toISOFromLocal(form.dueDate),
       fromId: Number(form.locationId),
       toId: Number(form.toLocationId),
       seatGroups: [{
@@ -171,7 +193,6 @@ export default function CreatePlaneTicket() {
         try {
           const errJson = JSON.parse(responseText);
           console.log("📥 Server xətası (JSON):", errJson);
-          // ASP.NET validation errors
           if (errJson?.errors) {
             const msgs = Object.entries(errJson.errors)
               .map(([field, errs]) => `${field}: ${Array.isArray(errs) ? errs.join(", ") : errs}`)
@@ -186,8 +207,10 @@ export default function CreatePlaneTicket() {
 
       const data = JSON.parse(responseText);
       const ticket = data?.data ?? data;
+      // ✅ DÜZƏLDİLDİ: orijinal local string-i saxlayırıq ki, göstərəndə timezone problemi olmasın
       ticket._fromName = fromLocationName;
       ticket._toName = toLocationName;
+      ticket._localDueDate = form.dueDate; // local string saxlanır
       setCreatedTicket(ticket);
       setIsGenerated(true);
     } catch (err) {
@@ -205,7 +228,13 @@ export default function CreatePlaneTicket() {
     setErrors({});
     setFromLocationName("");
     setToLocationName("");
-    setForm({ airline: "", gate: "", plane: "", meal: "", luggageKg: 23, dueDate: "", locationId: "", toLocationId: "", variantId: variants.length > 0 ? variants[0].id : "", rowCount: 10, seatsPerRow: 6 });
+    setForm({
+      airline: "", gate: "", plane: "", meal: "",
+      luggageKg: 23, dueDate: "",
+      locationId: "", toLocationId: "",
+      variantId: variants.length > 0 ? variants[0].id : "",
+      rowCount: 10, seatsPerRow: 6,
+    });
   };
 
   const Field = ({ label, name, type = "text", placeholder, min, step }) => (
@@ -227,8 +256,10 @@ export default function CreatePlaneTicket() {
           transition: "border 0.2s",
           width: "100%",
           boxSizing: "border-box",
+          colorScheme: "dark",
         }}
         onFocus={e => e.target.style.borderColor = "#a78bfa"}
+        onBlur={e => { handleBlur(e); e.target.style.borderColor = errors[name] && touched[name] ? "#ff5050" : "rgba(255,255,255,0.12)"; }}
       />
       {touched[name] && errors[name] && (
         <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {errors[name]}</span>
@@ -278,6 +309,11 @@ export default function CreatePlaneTicket() {
     </div>
   );
 
+  // ✅ Boarding pass-də göstərilən tarix/saat — həmişə _localDueDate-dən oxuyuruq
+  const displayDate = createdTicket?._localDueDate || form.dueDate;
+  const displayFrom = createdTicket?._fromName || fromLocationName;
+  const displayTo   = createdTicket?._toName   || toLocationName;
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -292,10 +328,11 @@ export default function CreatePlaneTicket() {
         @keyframes pop { from { opacity:0; transform: scale(0.88) translateY(30px); } to { opacity:1; transform: scale(1) translateY(0); } }
         @keyframes fly { 0%,100% { transform: translateX(0) rotate(-5deg); } 50% { transform: translateX(12px) rotate(5deg); } }
         @keyframes barcode-in { from { opacity:0; transform: scaleY(0); } to { opacity:1; transform: scaleY(1); } }
-        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
         input::placeholder { color: rgba(255,255,255,0.2); }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
         select option { background: #1a1528; color: #fff; }
       `}</style>
 
@@ -337,8 +374,25 @@ export default function CreatePlaneTicket() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
               <Field label="Bagaj (kg)" name="luggageKg" type="number" min="0" step="0.5" />
+              {/* ✅ DÜZƏLDİLDİ: datetime-local — daxil etdiyin kimi görünür */}
               <Field label="Uçuş Tarixi & Saatı" name="dueDate" type="datetime-local" />
             </div>
+
+            {/* ✅ Seçilmiş tarix/saat preview */}
+            {form.dueDate && (
+              <div style={{
+                marginTop: 10, padding: "10px 16px",
+                background: "rgba(167,139,250,0.1)",
+                border: "1px solid rgba(167,139,250,0.25)",
+                borderRadius: 10,
+                display: "flex", alignItems: "center", gap: 10,
+              }}>
+                <span style={{ fontSize: 16 }}>🗓️</span>
+                <span style={{ color: "#c4b5fd", fontSize: 13, fontWeight: 600 }}>
+                  {formatDateFromLocal(form.dueDate)} — saat {formatTimeFromLocal(form.dueDate)}
+                </span>
+              </div>
+            )}
 
             <SectionTitle icon="📍" text="Lokasiyalar" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -348,7 +402,6 @@ export default function CreatePlaneTicket() {
 
             <SectionTitle icon="💺" text="Oturacaq Konfiqurasiyası" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
-              {/* Variant Select */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>Variant (Sinif)</label>
                 <select
@@ -456,10 +509,10 @@ export default function CreatePlaneTicket() {
               <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
                 <div>
                   <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                    {(createdTicket?._fromName || fromLocationName || "—").slice(0, 3).toUpperCase()}
+                    {(displayFrom || "—").slice(0, 3).toUpperCase()}
                   </div>
                   <div style={{ fontSize: 10, color: "#666", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                    {createdTicket?._fromName || fromLocationName}
+                    {displayFrom}
                   </div>
                 </div>
                 <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6 }}>
@@ -469,10 +522,10 @@ export default function CreatePlaneTicket() {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                    {(createdTicket?._toName || toLocationName || "—").slice(0, 3).toUpperCase()}
+                    {(displayTo || "—").slice(0, 3).toUpperCase()}
                   </div>
                   <div style={{ fontSize: 10, color: "#666", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                    {createdTicket?._toName || toLocationName}
+                    {displayTo}
                   </div>
                 </div>
               </div>
@@ -480,14 +533,15 @@ export default function CreatePlaneTicket() {
               {/* Info grid */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
                 {[
-                  ["GATE", createdTicket?.gate || form.gate],
-                  ["PLANE", createdTicket?.plane || form.plane],
-                  ["MEAL", createdTicket?.meal || form.meal],
-                  ["BAGAJ", `${createdTicket?.luggageKg ?? form.luggageKg} kg`],
-                  ["TARİX", formatDate(createdTicket?.dueDate || form.dueDate)],
-                  ["SAAT", formatTime(createdTicket?.dueDate || form.dueDate)],
+                  ["GATE",    createdTicket?.gate || form.gate],
+                  ["PLANE",   createdTicket?.plane || form.plane],
+                  ["MEAL",    createdTicket?.meal || form.meal],
+                  ["BAGAJ",   `${createdTicket?.luggageKg ?? form.luggageKg} kg`],
+                  // ✅ DÜZƏLDİLDİ: local string-dən oxuyuruq
+                  ["TARİX",   formatDateFromLocal(displayDate)],
+                  ["SAAT",    formatTimeFromLocal(displayDate)],
                   ["OTURACAQ", createdTicket?.totalTicketsCreated ?? "—"],
-                  ["STATUS", "ACTIVE"],
+                  ["STATUS",  "ACTIVE"],
                 ].map(([label, val]) => (
                   <div key={label} style={{
                     background: "rgba(255,255,255,0.04)", borderRadius: 8,
@@ -525,16 +579,17 @@ export default function CreatePlaneTicket() {
                 <div style={{ fontSize: 9, color: "#555", marginTop: 2 }}>BOARDING PASS</div>
               </div>
               <div style={{ fontSize: 12, color: "#d1d5db", fontWeight: 600, lineHeight: 1.5 }}>
-                {(createdTicket?._fromName || fromLocationName || "—").slice(0,3).toUpperCase()}
+                {(displayFrom || "—").slice(0, 3).toUpperCase()}
                 &nbsp;→&nbsp;
-                {(createdTicket?._toName || toLocationName || "—").slice(0,3).toUpperCase()}
+                {(displayTo || "—").slice(0, 3).toUpperCase()}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {[
-                  ["Gate", createdTicket?.gate || form.gate],
+                  ["Gate",  createdTicket?.gate || form.gate],
                   ["Plane", createdTicket?.plane || form.plane],
-                  ["Date", formatDate(createdTicket?.dueDate || form.dueDate)],
-                  ["Time", formatTime(createdTicket?.dueDate || form.dueDate)],
+                  // ✅ DÜZƏLDİLDİ: local string-dən oxuyuruq
+                  ["Date",  formatDateFromLocal(displayDate)],
+                  ["Time",  formatTimeFromLocal(displayDate)],
                   ["Seats", createdTicket?.totalTicketsCreated ?? "—"],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between" }}>
@@ -583,10 +638,6 @@ export default function CreatePlaneTicket() {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }
