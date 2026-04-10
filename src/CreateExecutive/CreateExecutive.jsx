@@ -7,29 +7,37 @@ const API_BASE = "http://localhost:5251/api";
 const getToken = () => localStorage.getItem("auth_token") ?? "";
 
 // ─── Password Generator (mirrors your PasswordGenerator.cs exactly) ──────────
-const LOWER    = "abcdefghijklmnopqrstuvwxyz";
-const UPPER    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const DIGITS   = "0123456789";
-const SPECIALS = "@$!%*?&";
-const ALL      = LOWER + UPPER + DIGITS + SPECIALS;
-
-function generatePassword(length = 12) {
-  const rand = (str) => str[Math.floor(Math.random() * str.length)];
-  let password = "";
-  // Guarantee at least one of each required class (mirrors IsValid check)
-  const required = [
-    rand(LOWER),
-    rand(UPPER),
-    rand(DIGITS),
-    rand(SPECIALS),
+  const WORDS = [
+    "alma","arpa","atlas","azer","baki","bulud","burun","cavid",
+    "duman","elvan","emin","ekin","farid","feriz","gelin","gelmir",
+    "gizli","oglan","gubre","gumus","gunay","ilham","ilkin","istek","kamil",
+    "qanad","kerim","qazan","kenar","qiran","kotan","lacin",
+    "liman","metal","metin","misir","murad","nazim","nigar","misal",
+    "novruz","odlar","orman","temir","qalib","qaran","qazax","qizil",
+    "radar","ramin","rasim","sabit","sabir","safar","saman","sarvan",
+    "sevin","sultan","talin","talan","tamam","tarim",
+    "terlan","temir","tikan","togrul","turan","ulker","uzaq",
+    "veten","vuran","yanar","yarat","yasil","yataq","yavan","yazar",
+    "yelin","yolcu","yunis","zafar","zafer","zamin","zefer","zirek","zirve",
   ];
-  for (let i = required.length; i < length; i++) {
-    required.push(rand(ALL));
+  
+  const SPECIALS = "@$!%*?&";
+  
+  function generatePassword() {
+    const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  
+    const word1 = rand(WORDS);
+    const word2 = rand(WORDS.filter(w => w !== word1));
+    const word3 = rand(WORDS.filter(w => w !== word1 && w !== word2));
+  
+    // Capitalise first word to satisfy uppercase requirement
+    const w1 = word1.charAt(0).toUpperCase() + word1.slice(1);
+    const num = Math.floor(Math.random() * 90 + 10); // 10–99
+    const sep = rand(SPECIALS.split(""));
+  
+    // Pattern: Coral!storm42pine  — readable, typeable, valid
+    return `${w1}${sep}${word2}${num}${word3}`;
   }
-  // Shuffle
-  password = required.sort(() => Math.random() - 0.5).join("");
-  return password;
-}
 
 // ─── Password strength scorer ─────────────────────────────────────────────────
 function scorePassword(pw) {
