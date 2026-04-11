@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./showTrain.css";
+import PaymentModal from "../PymetModal/pyMod";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5251/api";
 const PAGE_SIZE = 9;
@@ -20,6 +21,17 @@ const isAdmin = () => {
     return role === "Admin";
   } catch {
     return false;
+  }
+};
+
+const getUserId = () => {
+  try {
+    const token = getToken();
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.uid || payload.sub || null;
+  } catch {
+    return null;
   }
 };
 
@@ -137,6 +149,15 @@ function BookingModal({ ticket, onClose }) {
   const [loadingSeats, setLoadingSeats] = useState(true);
   const [seatsError, setSeatsError] = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
+  const [buying, setBuying] = useState(false);
+  const [buyError, setBuyError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+
+  // ✅ Düzəldildi: price-ı etibarlı şəkildə hesabla
+  const basePrice = Number(ticket.price ?? ticket.minPrice ?? ticket.basePrice ?? 0);
+  const seatExtra = Number(selectedSeat?.variantPrice ?? 0);
+  const totalPrice = selectedSeat ? (basePrice + seatExtra).toFixed(2) : basePrice.toFixed(2);
 
   useEffect(() => {
     if (!ticket?.id) return;
@@ -150,46 +171,168 @@ function BookingModal({ ticket, onClose }) {
       .finally(() => setLoadingSeats(false));
   }, [ticket?.id]);
 
-  return (
-    <div className="st-modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="st-modal">
-        <div className="st-modal-header">
-          <div className="st-modal-route">
-            <span>{ticket.from?.split(",")[0]}</span>
-            <span className="st-modal-arrow">→</span>
-            <span>{ticket.to?.split(",")[0]}</span>
-          </div>
-          <button className="st-modal-close" onClick={onClose}>✕</button>
-        </div>
+  async function handleBuy() {
+    if (!selectedSeat) {
+      setBuyError("Zəhmət olmasa bir oturacaq seçin.");
+      return;
+    }
+    const userId = getUserId();
+    if (!userId) {
+      setBuyError("Sessiya vaxtı bitib. Zəhmət olmasa yenidən daxil olun.");
+      return;
+    }
 
-        <div className="st-modal-body">
-          <div className="st-modal-meta">
-            🚆 {ticket.trainCompany} | 🚃 Vaqon {ticket.vagonNumber} | 📅 {fmt(ticket.dueDate)}
-          </div>
+    setBuying(true);
+    setBuyError(null);
 
-          {loadingSeats ? (
-            <div className="st-spinner-wrap"><span className="st-spinner" /></div>
-          ) : seatsError ? (
-            <div className="st-error">{seatsError}</div>
-          ) : (
-            <SeatMap seats={seats} selectedSeatId={selectedSeat?.id} onSelect={setSelectedSeat} />
-          )}
+    try {
+      const body = {
+        id: Number(ticket.id),
+        userId: Number(userId),
+        dueDate: ticket.dueDate,
+        chosenSeatId: Number(selectedSeat.id),
+        state: 1,
+      };
 
-          {selectedSeat && (
-            <div className="st-selected-banner">
-              💺 Seçildi: <strong>{selectedSeat.name}</strong> | Qiymət: <strong>{selectedSeat.variantPrice} ₼</strong>
+      const res = await fetch(`${BASE_URL}/TrainTicket/fill`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+
+      const rawText = await res.text();
+      let result = null;
+      try { result = rawText ? JSON.parse(rawText) : null; } catch { result = null; }
+
+      if (!res.ok) {
+        let errMsg = result?.message || result?.title || `Server xətası: ${res.status}`;
+        if (result?.errors) errMsg = Object.values(result.errors).flat().join(", ");
+        // Seçilmiş oturacağı dolu kimi işarələ
+        setSeats((prev) =>
+          prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s)
+        );
+        setSelectedSeat(null);
+        throw new Error(errMsg);
+      }
+
+      if (!result?.data) {
+        setSeats((prev) =>
+          prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s)
+        );
+        setSelectedSeat(null);
+        throw new Error("Bu oturacaq artıq alınıb. Zəhmət olmasa başqa oturacaq seçin.");
+      }
+
+      setSuccess(true);
+    } catch (e) {
+      setBuyError(e.message);
+    } finally {
+      setBuying(false);
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="st-modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="st-modal">
+          <div className="st-modal-header">
+            <div className="st-modal-route">
+              <span>{ticket.from?.split(",")[0]}</span>
+              <span className="st-modal-arrow">→</span>
+              <span>{ticket.to?.split(",")[0]}</span>
             </div>
-          )}
-          
-
+            <button className="st-modal-close" onClick={onClose}>✕</button>
+          </div>
+          <div className="st-modal-body" style={{ textAlign: "center", padding: "48px 28px" }}>
+            <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+            <h2 style={{ color: "var(--green)", marginBottom: 8, fontSize: 22 }}>Bilet Alındı!</h2>
+            <p style={{ color: "var(--muted)", marginBottom: 4 }}>
+              {ticket.from?.split(",")[0]} → {ticket.to?.split(",")[0]}
+            </p>
+            <p style={{ color: "var(--muted)", fontSize: 14 }}>
+              Oturacaq: <strong style={{ color: "#fff" }}>{selectedSeat?.name}</strong>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="st-modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="st-modal">
+          <div className="st-modal-header">
+            <div className="st-modal-route">
+              <span>{ticket.from?.split(",")[0]}</span>
+              <span className="st-modal-arrow">→</span>
+              <span>{ticket.to?.split(",")[0]}</span>
+            </div>
+            <button className="st-modal-close" onClick={onClose}>✕</button>
+          </div>
+
+          <div className="st-modal-body">
+            <div className="st-modal-meta">
+              🚆 {ticket.trainCompany} | 🚃 Vaqon {ticket.vagonNumber} | 📅 {fmt(ticket.dueDate)}
+            </div>
+
+            {loadingSeats ? (
+              <div className="st-spinner-wrap"><span className="st-spinner" /></div>
+            ) : seatsError ? (
+              <div className="st-error">{seatsError}</div>
+            ) : (
+              <SeatMap seats={seats} selectedSeatId={selectedSeat?.id} onSelect={setSelectedSeat} />
+            )}
+
+            {selectedSeat && (
+              <div className="st-selected-banner">
+                💺 Seçildi: <strong>{selectedSeat.name}</strong>
+                &nbsp;|&nbsp;
+                Sinif: <strong>{selectedSeat.variantName}</strong>
+                &nbsp;|&nbsp;
+                Cəmi: <strong>{totalPrice} ₼</strong>
+              </div>
+            )}
+
+            {buyError && <div className="st-error">{buyError}</div>}
+
+            {/* ✅ "Bilet Al" düyməsi əlavə edildi */}
+            <button
+              className="st-book-btn"
+              disabled={!selectedSeat || buying}
+              onClick={() => selectedSeat && setShowPayment(true)}
+            >
+              {buying
+                ? "Emal edilir..."
+                : selectedSeat
+                ? `🎫 Bilet Al · ${totalPrice} ₼`
+                : "Oturacaq seçin"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ Ödəniş modalı inteqrasiyası */}
+      {showPayment && (
+        <PaymentModal
+          amount={totalPrice}
+          loading={buying}
+          onCancel={() => setShowPayment(false)}
+          onConfirm={() => {
+            setShowPayment(false);
+            handleBuy();
+          }}
+        />
+      )}
+    </>
   );
 }
 
 function TicketCard({ ticket, onClick, onDelete, adminMode }) {
   const urgency = ticket.availableSeats <= 5 ? "critical" : ticket.availableSeats <= 15 ? "low" : "ok";
+
+  // ✅ Düzəldildi: price mövcud deyilsə crash etmir
+  const price = Number(ticket.price ?? ticket.minPrice ?? ticket.basePrice ?? 0).toFixed(2);
 
   const handleDelete = (e) => {
     e.stopPropagation();
@@ -230,14 +373,13 @@ function TicketCard({ ticket, onClick, onDelete, adminMode }) {
           <div className={`st-seats-badge st-seats-badge--${urgency}`}>
             {ticket.availableSeats} yer
           </div>
-          <span className="st-card-price"><strong>{ticket.price.toFixed(2)} ₼</strong></span>
+
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Ana Komponent — ShowTrainTickets ─────────────────────────────────────────
 export default function ShowTrainTickets() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -307,13 +449,13 @@ export default function ShowTrainTickets() {
         </header>
 
         <form className="st-filters" onSubmit={(e) => { e.preventDefault(); setPage(1); fetchTickets(1); }}>
-          <input className="st-filter-input" placeholder="Şirkət..." value={filters.trainCompany} onChange={(e) => setFilters({...filters, trainCompany: e.target.value})} />
-          <input className="st-filter-input" type="date" value={filters.date} onChange={(e) => setFilters({...filters, date: e.target.value})} />
-          <select className="st-filter-select" value={filters.fromLocationId} onChange={(e) => setFilters({...filters, fromLocationId: e.target.value})}>
+          <input className="st-filter-input" placeholder="Şirkət..." value={filters.trainCompany} onChange={(e) => setFilters({ ...filters, trainCompany: e.target.value })} />
+          <input className="st-filter-input" type="date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
+          <select className="st-filter-select" value={filters.fromLocationId} onChange={(e) => setFilters({ ...filters, fromLocationId: e.target.value })}>
             <option value="">📍 Haradan...</option>
             {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
-          <select className="st-filter-select" value={filters.toLocationId} onChange={(e) => setFilters({...filters, toLocationId: e.target.value})}>
+          <select className="st-filter-select" value={filters.toLocationId} onChange={(e) => setFilters({ ...filters, toLocationId: e.target.value })}>
             <option value="">🏁 Haraya...</option>
             {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
           </select>
