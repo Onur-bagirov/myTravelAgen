@@ -9,7 +9,7 @@ const getHeaders = () => ({
 });
 
 function fmtDate(d) {
-  return new Date(d).toLocaleDateString("az-AZ", {
+  return new Date(d).toLocaleDateString("en-US", {
     day: "2-digit", month: "short", year: "numeric",
   });
 }
@@ -25,9 +25,9 @@ function fmtArrival(d) {
 function countdown(d) {
   const days = Math.ceil((new Date(d) - new Date()) / 86400000);
   if (days < 0) return null;
-  if (days === 0) return "Bu gün";
-  if (days === 1) return "Sabah";
-  return `${days} gün qaldı`;
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  return `${days} days left`;
 }
 function isExpired(t) {
   return new Date(t.dueDate) < new Date();
@@ -37,11 +37,11 @@ function finalPrice(t) {
 }
 
 const STATE_MAP = {
-  Booked:   { cls: "s-booked",   label: "Alınıb"       },
-  Pending:  { cls: "s-pending",  label: "Gözləyir"     },
-  Canceled: { cls: "s-canceled", label: "Ləğv edilib"  },
-  Expired:  { cls: "s-expired",  label: "Vaxtı bitib"  },
-  Delayed:  { cls: "s-delayed",  label: "Gecikir"      },
+  Booked:   { cls: "s-booked",   label: "Booked"    },
+  Pending:  { cls: "s-pending",  label: "Pending"   },
+  Canceled: { cls: "s-canceled", label: "Canceled"  },
+  Expired:  { cls: "s-expired",  label: "Expired"   },
+  Delayed:  { cls: "s-delayed",  label: "Delayed"   },
 };
 
 function TicketCard({ t, idx }) {
@@ -54,11 +54,9 @@ function TicketCard({ t, idx }) {
     <div className={`amp-card${exp ? " amp-card--exp" : ""}`}
          style={{ animationDelay: `${idx * 0.07}s` }}>
 
-      {/* left stripe */}
       <div className="amp-stripe" />
 
       <div className="amp-body">
-        {/* top row */}
         <div className="amp-top">
           <div className="amp-airline">
             <span className="amp-plane-ico">✈</span>
@@ -73,7 +71,6 @@ function TicketCard({ t, idx }) {
           </div>
         </div>
 
-        {/* route */}
         <div className="amp-route">
           <div className="amp-loc">
             <span className="amp-city">{t.from ?? "—"}</span>
@@ -89,7 +86,7 @@ function TicketCard({ t, idx }) {
               <span className="amp-dot" />
             </div>
             {cd && !exp && <span className="amp-cd">{cd}</span>}
-            {exp && <span className="amp-cd amp-cd--exp">Tamamlandı</span>}
+            {exp && <span className="amp-cd amp-cd--exp">Completed</span>}
           </div>
 
           <div className="amp-loc amp-loc--r">
@@ -98,22 +95,20 @@ function TicketCard({ t, idx }) {
           </div>
         </div>
 
-        {/* meta */}
         <div className="amp-meta">
           <span className="amp-meta-item">📅 {fmtDate(t.dueDate)}</span>
           {t.gate && <span className="amp-meta-item">🚪 Gate {t.gate}</span>}
           {t.meal && <span className="amp-meta-item">🍽 {t.meal}</span>}
           {t.seat?.name && <span className="amp-meta-item">💺 {t.seat.name}</span>}
           {t.variant?.name && <span className="amp-meta-item">🎫 {t.variant.name}</span>}
-          <span className="amp-meta-item">🧳 {t.luggageCount} çanta · {t.totalLuggageKg} kg</span>
-          {t.hasPet   && <span className="amp-meta-item">🐾 Heyvan</span>}
-          {t.hasChild && <span className="amp-meta-item">👶 Uşaq</span>}
+          <span className="amp-meta-item">🧳 {t.luggageCount} bags · {t.totalLuggageKg} kg</span>
+          {t.hasPet   && <span className="amp-meta-item">🐾 Pet</span>}
+          {t.hasChild && <span className="amp-meta-item">👶 Child</span>}
         </div>
 
-        {/* footer */}
         <div className="amp-footer">
           {t.broughtDate && (
-            <span className="amp-bought">Alış: {fmtDate(t.broughtDate)}</span>
+            <span className="amp-bought">Purchased: {fmtDate(t.broughtDate)}</span>
           )}
           <div className="amp-price-wrap">
             {hasDsc && (
@@ -138,7 +133,7 @@ export default function AllMyP() {
   useEffect(() => {
     fetch(`${API_BASE}/PlaneTicket/my-tickets`, { headers: getHeaders() })
       .then(r => {
-        if (!r.ok) throw new Error("Biletlər yüklənmədi.");
+        if (!r.ok) throw new Error("Tickets could not be loaded.");
         return r.json();
       })
       .then(data => {
@@ -163,19 +158,18 @@ export default function AllMyP() {
       <div className="amp-noise" />
 
       <div className="amp-inner">
-        {/* header */}
         <div className="amp-header">
           <div>
-            <h1 className="amp-title">Biletlərim</h1>
+            <h1 className="amp-title">My Tickets</h1>
             <p className="amp-sub">
-              {activeCount} aktiv · {tickets.length} ümumi
+              {activeCount} active · {tickets.length} total
             </p>
           </div>
           <div className="amp-filters">
             {[
-              { key: "all",     label: "Hamısı" },
-              { key: "active",  label: "Aktiv"  },
-              { key: "expired", label: "Keçmiş" },
+              { key: "all",     label: "All"     },
+              { key: "active",  label: "Active"  },
+              { key: "expired", label: "Past"    },
             ].map(f => (
               <button
                 key={f.key}
@@ -188,7 +182,6 @@ export default function AllMyP() {
           </div>
         </div>
 
-        {/* content */}
         {loading && (
           <div className="amp-list">
             {[...Array(3)].map((_, i) => (
@@ -208,9 +201,9 @@ export default function AllMyP() {
           <div className="amp-empty">
             <span className="amp-empty-ico">✈</span>
             <p>
-              {filter === "active"  ? "Aktiv bilet yoxdur." :
-               filter === "expired" ? "Keçmiş bilet yoxdur." :
-               "Hələ heç bir bilet almamısınız."}
+              {filter === "active"  ? "No active tickets." :
+               filter === "expired" ? "No past tickets." :
+               "You haven't purchased any tickets yet."}
             </p>
           </div>
         )}

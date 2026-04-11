@@ -9,7 +9,7 @@ const getHeaders = () => ({
 });
 
 function fmtDate(d) {
-  return new Date(d).toLocaleDateString("az-AZ", {
+  return new Date(d).toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -30,9 +30,9 @@ function fmtArrival(d) {
 function countdown(d) {
   const days = Math.ceil((new Date(d) - new Date()) / 86400000);
   if (days < 0) return null;
-  if (days === 0) return "Bu gün";
-  if (days === 1) return "Sabah";
-  return `${days} gün qaldı`;
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  return `${days} days left`;
 }
 
 function isExpired(t) {
@@ -40,17 +40,15 @@ function isExpired(t) {
 }
 
 function finalPrice(t) {
-  // Backend Fill handler artıq discount tətbiq edərək t.price-i DB-ə yazır.
-  // Biz yalnız göstəririk — əlavə əməliyyat lazım deyil.
   return Number(t.price || 0).toFixed(2);
 }
 
 const STATE_MAP = {
-  Booked:   { cls: "s-booked",   label: "Alınıb"      },
-  Pending:  { cls: "s-pending",  label: "Gözləyir"    },
-  Canceled: { cls: "s-canceled", label: "Ləğv edilib" },
-  Expired:  { cls: "s-expired",  label: "Vaxtı bitib" },
-  Delayed:  { cls: "s-delayed",  label: "Gecikir"     },
+  Booked:   { cls: "s-booked",   label: "Booked"    },
+  Pending:  { cls: "s-pending",  label: "Pending"   },
+  Canceled: { cls: "s-canceled", label: "Canceled"  },
+  Expired:  { cls: "s-expired",  label: "Expired"   },
+  Delayed:  { cls: "s-delayed",  label: "Delayed"   },
 };
 
 function TrainTicketCard({ t, idx }) {
@@ -69,14 +67,13 @@ function TrainTicketCard({ t, idx }) {
       <div className="amt-stripe" />
 
       <div className="amt-body">
-        {/* top row */}
         <div className="amt-top">
           <div className="amt-train-info">
-            <span className="amt-train-ico">🚂</span>
+            <span className="amt-train-ico">傳</span>
             <div>
               <span className="amt-train-name">{t.trainCompany}</span>
               <span className="amt-train-num">
-                №{t.trainNumber} · Vaqon {t.vagonNumber}
+                №{t.trainNumber} · Coach {t.vagonNumber}
               </span>
             </div>
           </div>
@@ -85,23 +82,22 @@ function TrainTicketCard({ t, idx }) {
           </div>
         </div>
 
-        {/* route */}
         <div className="amt-route">
           <div className="amt-loc">
             <span className="amt-city">{t.from ?? "—"}</span>
-            <span className="amt-time">{fmtTime(t.dueDate)}</span>
+            <span className="amp-time">{fmtTime(t.dueDate)}</span>
           </div>
 
           <div className="amt-mid">
             <div className="amt-track">
               <span className="amt-dot" />
               <span className="amt-dash" />
-              <span className="amt-loco">🚂</span>
+              <span className="amt-loco">傳</span>
               <span className="amt-dash" />
               <span className="amt-dot" />
             </div>
             {exp ? (
-              <span className="amt-cd amt-cd--done">Tamamlandı</span>
+              <span className="amt-cd amt-cd--done">Completed</span>
             ) : cd ? (
               <span className="amt-cd">{cd}</span>
             ) : null}
@@ -115,20 +111,18 @@ function TrainTicketCard({ t, idx }) {
           </div>
         </div>
 
-        {/* meta chips */}
         <div className="amt-meta">
           <span className="amt-meta-item">📅 {fmtDate(t.dueDate)}</span>
           {t.seat?.name  && <span className="amt-meta-item">💺 {t.seat.name}</span>}
           {t.variantName && <span className="amt-meta-item">🎫 {t.variantName}</span>}
-          <span className="amt-meta-item">🧳 {t.luggageCount ?? 1} çanta · {t.totalLuggageKg ?? 0} kg</span>
-          {t.hasPet   && <span className="amt-meta-item">🐾 Heyvan</span>}
-          {t.hasChild && <span className="amt-meta-item">👶 Uşaq</span>}
+          <span className="amt-meta-item">🧳 {t.luggageCount ?? 1} bags · {t.totalLuggageKg ?? 0} kg</span>
+          {t.hasPet   && <span className="amt-meta-item">🐾 Pet</span>}
+          {t.hasChild && <span className="amt-meta-item">👶 Child</span>}
         </div>
 
-        {/* footer */}
         <div className="amt-footer">
           {t.broughtDate && (
-            <span className="amt-bought">Alış: {fmtDate(t.broughtDate)}</span>
+            <span className="amt-bought">Purchased: {fmtDate(t.broughtDate)}</span>
           )}
           <div className="amt-price-wrap">
             {hasDsc && (
@@ -155,7 +149,7 @@ export default function AllMyTrainTickets() {
   useEffect(() => {
     fetch(`${API_BASE}/TrainTicket/my-tickets`, { headers: getHeaders() })
       .then((r) => {
-        if (!r.ok) throw new Error("Biletlər yüklənmədi.");
+        if (!r.ok) throw new Error("Tickets could not be loaded.");
         return r.json();
       })
       .then((data) => {
@@ -180,23 +174,22 @@ export default function AllMyTrainTickets() {
       <div className="amt-noise" />
 
       <div className="amt-inner">
-        {/* header */}
         <div className="amt-header">
           <div>
-            <h1 className="amt-title">Qatar Biletlərim</h1>
+            <h1 className="amt-title">My Train Tickets</h1>
             <p className="amt-sub">
-              {activeCount} aktiv · {tickets.length} ümumi
+              {activeCount} active · {tickets.length} total
             </p>
           </div>
           <div className="amt-filters">
             {[
-              { key: "all",     label: "Hamısı" },
-              { key: "active",  label: "Aktiv"  },
-              { key: "expired", label: "Keçmiş" },
+              { key: "all",     label: "All"     },
+              { key: "active",  label: "Active"  },
+              { key: "expired", label: "Past"    },
             ].map((f) => (
               <button
                 key={f.key}
-                className={`amt-filter${filter === f.key ? " amt-filter--on" : ""}`}
+                className={`amt-filter${filter === f.key ? " amp-filter--on" : ""}`}
                 onClick={() => setFilter(f.key)}
               >
                 {f.label}
@@ -205,7 +198,6 @@ export default function AllMyTrainTickets() {
           </div>
         </div>
 
-        {/* loading skeletons */}
         {loading && (
           <div className="amt-list">
             {[...Array(3)].map((_, i) => (
@@ -218,7 +210,6 @@ export default function AllMyTrainTickets() {
           </div>
         )}
 
-        {/* error */}
         {!loading && error && (
           <div className="amt-empty">
             <span className="amt-empty-ico">⚠️</span>
@@ -226,19 +217,17 @@ export default function AllMyTrainTickets() {
           </div>
         )}
 
-        {/* empty */}
         {!loading && !error && visible.length === 0 && (
           <div className="amt-empty">
-            <span className="amt-empty-ico">🚂</span>
+            <span className="amt-empty-ico">傳</span>
             <p>
-              {filter === "active"  ? "Aktiv bilet yoxdur."  :
-               filter === "expired" ? "Keçmiş bilet yoxdur." :
-               "Hələ heç bir bilet almamısınız."}
+              {filter === "active"  ? "No active tickets."  :
+               filter === "expired" ? "No past tickets." :
+               "You haven't purchased any tickets yet."}
             </p>
           </div>
         )}
 
-        {/* list */}
         {!loading && !error && visible.length > 0 && (
           <div className="amt-list">
             {visible.map((t, i) => (

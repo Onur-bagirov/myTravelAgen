@@ -24,14 +24,12 @@
   padding: 0;
 }
 
-/* ── page ── */
-.amt-page {
-  min-height: 100vh;
-  background: var(--bg);
-  font-family: 'Syne', sans-serif;
-  color: var(--text);
+.amt-inner {
   position: relative;
-  overflow-x: hidden;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 40px 20px 80px; 
 }
 
 .amt-noise {
@@ -48,25 +46,25 @@
   z-index: 1;
   max-width: 780px;
   margin: 0 auto;
-  padding: 48px 20px 80px;
+  padding: 90px 20px 80px; /* Yuxarıdan 40px boşluq qoyuldu */
 }
 
-/* ── header ── */
 .amt-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 36px;
+  margin-bottom: 24px; /* Başlıq altındakı boşluq artırıldı */
   flex-wrap: wrap;
 }
 
+/* ── title ── */
 .amt-title {
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #fff;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .amt-sub {
