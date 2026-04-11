@@ -8,7 +8,6 @@ const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
 });
 
-/* ─── Avatar ─── */
 const Avatar = ({ name, surname }) => {
   const initials = `${name?.[0] ?? ""}${surname?.[0] ?? ""}`.toUpperCase() || "?";
   return <div className="profile-avatar">{initials}</div>;
@@ -16,7 +15,6 @@ const Avatar = ({ name, surname }) => {
 
 const Dash = () => <span className="field-dash">—</span>;
 
-/* ─── Toast ─── */
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const t = setTimeout(onClose, 3500);
@@ -30,11 +28,10 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-/* ─── Field Error ─── */
 const FieldError = ({ message }) =>
   message ? <span className="profile-field-error">{message}</span> : null;
 
-/* ─── map backend message → field key ─── */
+
 const mapEditErrors = (message) => {
   const msg = message?.toLowerCase() || "";
   if (msg.includes("surname"))  return { surname: message };
@@ -53,7 +50,6 @@ const mapPwErrors = (message) => {
   return { general: message };
 };
 
-/* ─── Password Panel ─── */
 const PasswordPanel = ({ onCancel, onSuccess }) => {
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [errors, setErrors] = useState({});
@@ -143,7 +139,6 @@ const PasswordPanel = ({ onCancel, onSuccess }) => {
   );
 };
 
-/* ─── Main Profile Page ─── */
 export default function Profile() {
   const [user, setUser]       = useState(null);
   const [draft, setDraft]     = useState(null);

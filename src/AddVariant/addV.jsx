@@ -38,7 +38,6 @@ export default function AddVariant() {
     setTimeout(() => setAlert(null), 3500);
   };
 
-  // ─── Fetch ────────────────────────────────────────────────────────
   const fetchVariants = useCallback(async () => {
     setLoading(true);
     try {
@@ -46,7 +45,7 @@ export default function AddVariant() {
         `${API_BASE}/Variant?Page=${page}&Limit=${limit}`,
         { headers: authHeaders() }
       );
-      if (!res.ok) throw new Error("Variantlar yüklənmədi");
+      if (!res.ok) throw new Error("Failed to load variants");
       const data = await res.json();
       setVariants(Array.isArray(data.data) ? data.data : []);
       setTotalCount(data.totalDataCount ?? 0);
@@ -59,26 +58,24 @@ export default function AddVariant() {
 
   useEffect(() => { fetchVariants(); }, [fetchVariants]);
 
-  // ─── Validate ─────────────────────────────────────────────────────
   const validate = (f = form) => {
     const errors = {};
-    if (!f.name.trim()) errors.name = "Ad boş ola bilməz";
-    else if (f.name.trim().length < 2) errors.name = "Ad ən az 2 simvol olmalıdır";
+    if (!f.name.trim()) errors.name = "Name cannot be empty";
+    else if (f.name.trim().length < 2) errors.name = "Name must be at least 2 characters";
 
     if (f.price === "" || isNaN(Number(f.price)) || Number(f.price) < 0)
-      errors.price = "Düzgün qiymət daxil edin";
+      errors.price = "Enter a valid price";
 
     if (f.allowedLuggageKg === "" || isNaN(Number(f.allowedLuggageKg)) || Number(f.allowedLuggageKg) < 0)
-      errors.allowedLuggageKg = "Düzgün dəyər daxil edin";
+      errors.allowedLuggageKg = "Enter a valid weight";
 
     if (f.allowedLuggageCount === "" || isNaN(Number(f.allowedLuggageCount)) || Number(f.allowedLuggageCount) < 0)
-      errors.allowedLuggageCount = "Düzgün dəyər daxil edin";
+      errors.allowedLuggageCount = "Enter a valid count";
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // ─── Create ───────────────────────────────────────────────────────
   const handleCreate = async () => {
     if (!validate()) return;
     setSubmitting(true);
@@ -96,9 +93,9 @@ export default function AddVariant() {
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e?.message ?? "Xəta baş verdi");
+        throw new Error(e?.message ?? "An error occurred");
       }
-      showAlert("success", `"${form.name.trim()}" variantı yaradıldı!`);
+      showAlert("success", `Variant "${form.name.trim()}" created successfully!`);
       setForm(emptyForm);
       setFormErrors({});
       fetchVariants();
@@ -109,7 +106,6 @@ export default function AddVariant() {
     }
   };
 
-  // ─── Edit / Update ────────────────────────────────────────────────
   const startEdit = (v) => {
     setEditingId(v.id);
     setEditForm({
@@ -141,9 +137,9 @@ export default function AddVariant() {
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e?.message ?? "Yenilənmədi");
+        throw new Error(e?.message ?? "Update failed");
       }
-      showAlert("success", "Variant yeniləndi!");
+      showAlert("success", "Variant updated successfully!");
       cancelEdit();
       fetchVariants();
     } catch (err) {
@@ -153,9 +149,8 @@ export default function AddVariant() {
     }
   };
 
-  // ─── Delete ───────────────────────────────────────────────────────
   const handleDelete = async (id, variantName) => {
-    if (!window.confirm(`"${variantName}" variantını silmək istədiyinizə əminsiniz?`)) return;
+    if (!window.confirm(`Are you sure you want to delete "${variantName}"?`)) return;
     setSubmitting(true);
     try {
       const res = await fetch(`${API_BASE}/Variant`, {
@@ -165,9 +160,9 @@ export default function AddVariant() {
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e?.message ?? "Silinmədi");
+        throw new Error(e?.message ?? "Delete failed");
       }
-      showAlert("success", `"${variantName}" silindi!`);
+      showAlert("success", `"${variantName}" deleted successfully!`);
       fetchVariants();
     } catch (err) {
       showAlert("error", err.message);
@@ -182,7 +177,7 @@ export default function AddVariant() {
     <div className="variant-panel">
       <div className="variant-panel__header">
         <div className="variant-panel__icon">🎫</div>
-        <h2>Variant İdarəetməsi</h2>
+        <h2>Variant Management</h2>
       </div>
 
       {alert && (
@@ -191,25 +186,24 @@ export default function AddVariant() {
         </div>
       )}
 
-      {/* ── Create Form ── */}
       <div className="variant-form-card">
-        <h3>➕ Yeni Variant Əlavə Et</h3>
+        <h3>➕ Add New Variant</h3>
         <div className="variant-form-grid">
 
           <div className="form-group">
-            <label>Variant Adı</label>
+            <label>Variant Name</label>
             <input
               className={`form-input ${formErrors.name ? "error" : ""}`}
               type="text"
               value={form.name}
               onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
-              placeholder="məs. Economy, Business, First Class"
+              placeholder="e.g. Economy, Business"
             />
             {formErrors.name && <span className="form-error">{formErrors.name}</span>}
           </div>
 
           <div className="form-group">
-            <label>Qiymət (AZN)</label>
+            <label>Price (AZN)</label>
             <input
               className={`form-input ${formErrors.price ? "error" : ""}`}
               type="number"
@@ -217,13 +211,13 @@ export default function AddVariant() {
               step="0.01"
               value={form.price}
               onChange={(e) => setForm(p => ({ ...p, price: e.target.value }))}
-              placeholder="məs. 120.00"
+              placeholder="e.g. 120.00"
             />
             {formErrors.price && <span className="form-error">{formErrors.price}</span>}
           </div>
 
           <div className="form-group">
-            <label>İcazə verilən Bagaj (kg)</label>
+            <label>Allowed Luggage (kg)</label>
             <input
               className={`form-input ${formErrors.allowedLuggageKg ? "error" : ""}`}
               type="number"
@@ -231,20 +225,20 @@ export default function AddVariant() {
               step="0.5"
               value={form.allowedLuggageKg}
               onChange={(e) => setForm(p => ({ ...p, allowedLuggageKg: e.target.value }))}
-              placeholder="məs. 23"
+              placeholder="e.g. 23"
             />
             {formErrors.allowedLuggageKg && <span className="form-error">{formErrors.allowedLuggageKg}</span>}
           </div>
 
           <div className="form-group">
-            <label>Bagaj Sayı</label>
+            <label>Luggage Count</label>
             <input
               className={`form-input ${formErrors.allowedLuggageCount ? "error" : ""}`}
               type="number"
               min="0"
               value={form.allowedLuggageCount}
               onChange={(e) => setForm(p => ({ ...p, allowedLuggageCount: e.target.value }))}
-              placeholder="məs. 1"
+              placeholder="e.g. 1"
             />
             {formErrors.allowedLuggageCount && <span className="form-error">{formErrors.allowedLuggageCount}</span>}
           </div>
@@ -258,7 +252,7 @@ export default function AddVariant() {
                 className="checkbox-input"
               />
               <span className="checkbox-custom" />
-              Priority (Öncelikli)
+              Priority Access
             </label>
           </div>
 
@@ -268,39 +262,38 @@ export default function AddVariant() {
             disabled={submitting}
             style={{ alignSelf: "flex-end" }}
           >
-            {submitting ? <><span className="spinner" />Gözləyin...</> : "➕ Əlavə Et"}
+            {submitting ? <><span className="spinner" />Please wait...</> : "➕ Add Variant"}
           </button>
         </div>
       </div>
 
-      {/* ── Table ── */}
       <div className="variant-table-card">
         <div className="variant-table-card__header">
-          <h3>📋 Variantlar Siyahısı</h3>
-          <span className="badge">{totalCount} variant</span>
+          <h3>📋 Variants List</h3>
+          <span className="badge">{totalCount} variants</span>
         </div>
 
         <table className="variant-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Ad</th>
-              <th>Qiymət</th>
-              <th>Bagaj (kg)</th>
-              <th>Bagaj Sayı</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Luggage (kg)</th>
+              <th>Count</th>
               <th>Priority</th>
-              <th>Əməliyyatlar</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr className="loading-row">
-                <td colSpan={7}><span className="spinner" /> Yüklənir...</td>
+                <td colSpan={7}><span className="spinner" /> Loading...</td>
               </tr>
             ) : variants.length === 0 ? (
               <tr>
                 <td colSpan={7}>
-                  <div className="empty-state">Heç bir variant tapılmadı.</div>
+                  <div className="empty-state">No variants found.</div>
                 </td>
               </tr>
             ) : (
@@ -356,7 +349,7 @@ export default function AddVariant() {
                         onChange={(e) => setEditForm(p => ({ ...p, allowedLuggageCount: e.target.value }))}
                       />
                     ) : (
-                      <span>{v.allowedLuggageCount} ədəd</span>
+                      <span>{v.allowedLuggageCount} pcs</span>
                     )}
                   </td>
 
@@ -370,7 +363,7 @@ export default function AddVariant() {
                       />
                     ) : (
                       <span className={`priority-badge ${v.isPriority ? "priority-yes" : "priority-no"}`}>
-                        {v.isPriority ? "⭐ Bəli" : "Xeyr"}
+                        {v.isPriority ? "⭐ Yes" : "No"}
                       </span>
                     )}
                   </td>
@@ -384,23 +377,23 @@ export default function AddVariant() {
                             onClick={() => handleUpdate(v.id)}
                             disabled={submitting}
                           >
-                            ✔ Saxla
+                            ✔ Save
                           </button>
                           <button className="btn btn-secondary" onClick={cancelEdit}>
-                            ✖ Ləğv
+                            ✖ Cancel
                           </button>
                         </>
                       ) : (
                         <>
                           <button className="btn btn-edit" onClick={() => startEdit(v)}>
-                            ✏️ Düzəlt
+                            ✏️ Edit
                           </button>
                           <button
                             className="btn btn-del"
                             onClick={() => handleDelete(v.id, v.name)}
                             disabled={submitting}
                           >
-                            🗑 Sil
+                            🗑 Delete
                           </button>
                         </>
                       )}
@@ -419,7 +412,7 @@ export default function AddVariant() {
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              ← Əvvəl
+              ← Previous
             </button>
             <span>{page} / {totalPages}</span>
             <button
@@ -427,7 +420,7 @@ export default function AddVariant() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Növbəti →
+              Next →
             </button>
           </div>
         )}

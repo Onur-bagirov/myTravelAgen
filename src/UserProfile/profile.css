@@ -1,18 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
 
-/* ─── Global Styles ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background: url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e") center/cover no-repeat;
-    background-attachment: fixed; /* Səhifə scroll olsa da fon sabit qalır */
-    background-color: #05050a; /* fallback color */
+    background-attachment: fixed; 
+    background-color: #05050a; 
     color: #fff;
     min-height: 100vh;
 }
 
-/* Profile / card wrapper blur efekti */
 .profile-wrapper {
     position: relative;
     max-width: 850px;
@@ -21,12 +19,12 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    background: rgba(255, 255, 255, 0.03); /* Glassmorphism */
+    background: rgba(255, 255, 255, 0.03); 
     border-radius: 35px;
     backdrop-filter: blur(25px); /* Həmişə blur */
     -webkit-backdrop-filter: blur(25px);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    animation: slideUp 0.5s ease forwards; /* Daha axıcı görünüş */
+    animation: slideUp 0.5s ease forwards;
 }
 
 @keyframes slideUp {
@@ -34,7 +32,6 @@ body {
     to { opacity: 1; transform: translateY(0); filter: blur(0); }
 }
 
-/* ─── Cards (Glassmorphism) ─── */
 .profile-card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -46,7 +43,6 @@ body {
     transition: all 0.4s ease;
 }
 
-/* ─── Avatar & Header (DÜZƏLDİLDİ) ─── */
 .profile-header {
     display: flex;
     align-items: center;
@@ -56,28 +52,26 @@ body {
 .profile-avatar {
     width: 110px;
     height: 110px;
-    border-radius: 35px; /* Squircle kənarlar */
+    border-radius: 35px; 
     background: conic-gradient(#f09433, #dc2743, #bc1888, #f09433);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    padding: 5px; /* Halqa qalınlığı */
+    padding: 5px;
     box-shadow: 0 15px 35px rgba(220, 39, 67, 0.25);
     z-index: 1;
 }
 
-/* Avatarın daxili tünd qutusu */
 .profile-avatar::after {
     content: '';
     position: absolute;
-    inset: 5px; /* Gradientin görünməsi üçün məsafə */
+    inset: 5px; 
     background: #0f0f1a;
     border-radius: 30px;
-    z-index: -1; /* Yazının altında qalması üçün */
+    z-index: -1; 
 }
 
-/* Baş hərflərin tünd fon üzərində tam ağ görünməsi */
 .profile-avatar {
     font-family: 'Syne', sans-serif;
     font-size: 2.5rem;
@@ -101,7 +95,7 @@ body {
     font-weight: 400;
 }
 
-/* ─── Fields Grid ─── */
+
 .section-label {
     font-family: 'Syne', sans-serif;
     font-size: 11px;
@@ -136,7 +130,6 @@ body {
 
 .field-dash { color: #475569; }
 
-/* ─── Inputs ─── */
 .field-input {
     width: 100%;
     padding: 14px 18px;
@@ -155,7 +148,6 @@ body {
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
 }
 
-/* ─── Actions Row & Buttons ─── */
 .actions-row, .pw-actions {
     display: flex;
     gap: 12px;
@@ -183,7 +175,7 @@ button {
 }
 
 .btn-primary, .btn-save {
-    background: #ffffff; /* Ağ düymə */
+    background: #ffffff;
     color: #000;
     font-weight: 700;
 }
@@ -202,7 +194,6 @@ button {
 
 .btn-logout:hover { background: rgba(239, 68, 68, 0.2); }
 
-/* ─── Password Panel (DÜZƏLDİLDİ) ─── */
 .pw-panel-header {
     display: flex;
     justify-content: space-between;
@@ -235,7 +226,6 @@ button {
     margin: 2.5rem 0;
 }
 
-/* ─── Toast Notifications ─── */
 .toast {
     position: fixed;
     top: 2rem;
@@ -256,7 +246,6 @@ button {
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* ─── Responsive ─── */
 @media (max-width: 700px) {
     .fields-grid { grid-template-columns: 1fr; }
     .profile-header { flex-direction: column; text-align: center; }

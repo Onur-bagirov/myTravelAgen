@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./addC.css";
 
 const API_BASE = "http://localhost:5251/api";
@@ -38,7 +38,6 @@ export default function AddCountry() {
     setTimeout(() => setAlert(null), 3500);
   };
 
-  // ─── Fetch Countries ───────────────────────────────────────────────
   const fetchCountries = useCallback(async () => {
     setLoading(true);
     try {
@@ -46,7 +45,7 @@ export default function AddCountry() {
         `${API_BASE}/Country?Page=${page}&Limit=${limit}`,
         { headers: authHeaders() }
       );
-      if (!res.ok) throw new Error("Ölkələr yüklənmədi");
+      if (!res.ok) throw new Error("Failed to load countries");
       const data = await res.json();
       setCountries(Array.isArray(data.data) ? data.data : []);
       setTotalCount(data.totalDataCount ?? 0);
@@ -59,20 +58,17 @@ export default function AddCountry() {
 
   useEffect(() => { fetchCountries(); }, [fetchCountries]);
 
-  // ─── Fetch Sub-Locations ───────────────────────────────────────────
   const fetchSubLocations = async (countryId) => {
-    // Cache: artıq yüklənibsə yenidən fetch etmə
     if (subLocations[countryId]) return;
     setSubLoading(true);
     try {
       const res = await fetch(
         `${API_BASE}/Location?Page=1&Limit=100`,
-        { headers: getHeaders() } // ✅ GET üçün getHeaders
+        { headers: getHeaders() }
       );
       if (!res.ok) throw new Error();
       const data = await res.json();
 
-      // ✅ Düzgün parse: Pagination<T> → { data: [...], totalDataCount }
       const allLocs = Array.isArray(data.data) ? data.data : [];
       const filtered = allLocs.filter((l) => l.countryId === countryId);
       setSubLocations((prev) => ({ ...prev, [countryId]: filtered }));
@@ -92,21 +88,19 @@ export default function AddCountry() {
     }
   };
 
-  // ─── Validate ──────────────────────────────────────────────────────
   const validate = () => {
     if (!name.trim()) {
-      setNameError("Ölkə adı boş ola bilməz");
+      setNameError("Country name cannot be empty");
       return false;
     }
     if (name.trim().length < 2) {
-      setNameError("Ölkə adı ən azı 2 hərf olmalıdır");
+      setNameError("Country name must be at least 2 characters");
       return false;
     }
     setNameError("");
     return true;
   };
 
-  // ─── Create Country ────────────────────────────────────────────────
   const handleCreate = async () => {
     if (!validate()) return;
     setSubmitting(true);
@@ -118,9 +112,9 @@ export default function AddCountry() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message ?? "Xəta baş verdi");
+        throw new Error(err?.message ?? "An error occurred");
       }
-      showAlert("success", `"${name.trim()}" uğurla əlavə edildi!`);
+      showAlert("success", `"${name.trim()}" successfully added!`);
       setName("");
       fetchCountries();
     } catch (err) {
@@ -130,7 +124,6 @@ export default function AddCountry() {
     }
   };
 
-  // ─── Edit ──────────────────────────────────────────────────────────
   const startEdit = (country) => {
     setEditingId(country.id);
     setEditName(country.name);
@@ -141,7 +134,6 @@ export default function AddCountry() {
     setEditName("");
   };
 
-  // ─── Update Country ────────────────────────────────────────────────
   const handleUpdate = async (id) => {
     if (!editName.trim()) return;
     setSubmitting(true);
@@ -153,9 +145,9 @@ export default function AddCountry() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message ?? "Yenilənmədi");
+        throw new Error(err?.message ?? "Update failed");
       }
-      showAlert("success", "Ölkə uğurla yeniləndi!");
+      showAlert("success", "Country successfully updated!");
       cancelEdit();
       fetchCountries();
     } catch (err) {
@@ -165,9 +157,8 @@ export default function AddCountry() {
     }
   };
 
-  // ─── Delete Country ────────────────────────────────────────────────
   const handleDelete = async (id, countryName) => {
-    if (!window.confirm(`"${countryName}" ölkəsini silmək istədiyinizə əminsiniz?`))
+    if (!window.confirm(`Are you sure you want to delete "${countryName}"?`))
       return;
     setSubmitting(true);
     try {
@@ -178,9 +169,9 @@ export default function AddCountry() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message ?? "Silinmədi");
+        throw new Error(err?.message ?? "Delete failed");
       }
-      showAlert("success", `"${countryName}" silindi!`);
+      showAlert("success", `"${countryName}" deleted!`);
       if (expandedCountryId === id) setExpandedCountryId(null);
       setSubLocations((prev) => {
         const copy = { ...prev };
@@ -201,7 +192,7 @@ export default function AddCountry() {
     <div className="country-panel">
       <div className="country-panel__header">
         <div className="country-panel__icon">🌍</div>
-        <h2>Ölkə İdarəetməsi</h2>
+        <h2>Country Management</h2>
       </div>
 
       {alert && (
@@ -210,12 +201,11 @@ export default function AddCountry() {
         </div>
       )}
 
-      {/* Add Form */}
       <div className="country-form-card">
-        <h3>➕ Yeni Ölkə Əlavə Et</h3>
+        <h3>➕ Add New Country</h3>
         <div className="country-form-row">
           <div className="form-group">
-            <label htmlFor="countryName">Ölkə Adı</label>
+            <label htmlFor="countryName">Country Name</label>
             <input
               id="countryName"
               className={`form-input ${nameError ? "error" : ""}`}
@@ -223,47 +213,46 @@ export default function AddCountry() {
               value={name}
               onChange={(e) => { setName(e.target.value); if (nameError) setNameError(""); }}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              placeholder="Məs: Azərbaycan"
+              placeholder="e.g. Azerbaijan"
             />
             {nameError && <span className="form-error">{nameError}</span>}
           </div>
           <button className="btn btn-primary" onClick={handleCreate} disabled={submitting}>
-            {submitting ? <><span className="spinner" />Gözləyin...</> : "➕ Əlavə Et"}
+            {submitting ? <><span className="spinner" />Please wait...</> : "➕ Add Country"}
           </button>
         </div>
       </div>
 
-      {/* Table */}
       <div className="country-table-card">
         <div className="country-table-card__header">
-          <h3>📋 Ölkələr Siyahısı</h3>
-          <span className="badge">{totalCount} ölkə</span>
+          <h3>📋 Countries List</h3>
+          <span className="badge">{totalCount} countries</span>
         </div>
 
         <table className="country-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Ölkə Adı</th>
-              <th>Lokasiyalar</th>
-              <th>Əməliyyatlar</th>
+              <th>Country Name</th>
+              <th>Locations</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr className="loading-row">
-                <td colSpan={4}><span className="spinner" /> Yüklənir...</td>
+                <td colSpan={4}><span className="spinner" /> Loading...</td>
               </tr>
             ) : countries.length === 0 ? (
               <tr>
                 <td colSpan={4}>
-                  <div className="empty-state"><p>Hələ heç bir ölkə əlavə edilməyib.</p></div>
+                  <div className="empty-state"><p>No countries have been added yet.</p></div>
                 </td>
               </tr>
             ) : (
               countries.map((country) => (
-                <>
-                  <tr key={country.id}>
+                <React.Fragment key={country.id}>
+                  <tr>
                     <td><span className="country-id">#{country.id}</span></td>
                     <td>
                       {editingId === country.id ? (
@@ -287,7 +276,7 @@ export default function AddCountry() {
                         style={{ fontSize: "12px", padding: "5px 12px" }}
                         onClick={() => handleToggleExpand(country.id)}
                       >
-                        {expandedCountryId === country.id ? "▲ Gizlət" : "▼ Lokasiyalar"}
+                        {expandedCountryId === country.id ? "▲ Hide" : "▼ Locations"}
                       </button>
                     </td>
                     <td>
@@ -300,27 +289,27 @@ export default function AddCountry() {
                               onClick={() => handleUpdate(country.id)}
                               disabled={submitting}
                             >
-                              ✔ Saxla
+                              ✔ Save
                             </button>
                             <button
                               className="btn btn-secondary"
                               style={{ padding: "7px 14px", fontSize: "13px" }}
                               onClick={cancelEdit}
                             >
-                              ✖ Ləğv
+                              ✖ Cancel
                             </button>
                           </>
                         ) : (
                           <>
                             <button className="btn btn-edit" onClick={() => startEdit(country)}>
-                              ✏️ Düzəlt
+                              ✏️ Edit
                             </button>
                             <button
                               className="btn btn-del"
                               onClick={() => handleDelete(country.id, country.name)}
                               disabled={submitting}
                             >
-                              🗑 Sil
+                              🗑 Delete
                             </button>
                           </>
                         )}
@@ -328,21 +317,20 @@ export default function AddCountry() {
                     </td>
                   </tr>
 
-                  {/* Sub-locations row */}
                   {expandedCountryId === country.id && (
                     <tr key={`sub-${country.id}`}>
                       <td colSpan={4} style={{ padding: 0 }}>
                         <div className="sub-locations">
                           <div className="sub-locations-title">
-                            📍 {country.name} — Lokasiyalar
+                            📍 {country.name} — Locations
                           </div>
                           {subLoading ? (
                             <div style={{ color: "#aaa", fontSize: "13px" }}>
-                              <span className="spinner" /> Yüklənir...
+                              <span className="spinner" /> Loading...
                             </div>
                           ) : (subLocations[country.id] ?? []).length === 0 ? (
                             <div style={{ color: "#bbb", fontSize: "13px" }}>
-                              Bu ölkəyə aid lokasiya yoxdur.
+                              No locations found for this country.
                             </div>
                           ) : (
                             (subLocations[country.id] ?? []).map((loc) => (
@@ -350,7 +338,7 @@ export default function AddCountry() {
                                 <span className="sub-location-dot" />
                                 <strong>{loc.name}</strong>
                                 <span style={{ color: "#aaa", fontSize: "12px" }}>
-                                  — {loc.distanceToken} token
+                                  — {loc.distanceToken} tokens
                                 </span>
                               </div>
                             ))
@@ -359,7 +347,7 @@ export default function AddCountry() {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))
             )}
           </tbody>
@@ -373,7 +361,7 @@ export default function AddCountry() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              ← Əvvəl
+              ← Prev
             </button>
             <span>{page} / {totalPages}</span>
             <button
@@ -382,7 +370,7 @@ export default function AddCountry() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Növbəti →
+              Next →
             </button>
           </div>
         )}

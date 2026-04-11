@@ -8,8 +8,7 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
-// datetime-local dəyərini (2026-04-11T14:30) backend üçün düzgün formata çevirir
-// toISOString() UTC-yə çevirir və saat fərqi yaranır — bunu etmirik
+
 function toLocalISOString(localDatetimeStr) {
   if (!localDatetimeStr) return "";
   // "2026-04-11T14:30" → "2026-04-11T14:30:00"
@@ -98,7 +97,7 @@ export default function CreateTrainTicket({ onCreated }) {
         trainCompany: form.trainCompany,
         trainNumber: form.trainNumber,
         vagonNumber: Number(form.vagonNumber),
-        dueDate: toLocalISOString(form.dueDate), // ← UTC çevirmə yox, birbaşa
+        dueDate: toLocalISOString(form.dueDate), 
         fromId: Number(form.fromId),
         toId: Number(form.toId),
         seatGroups: seatGroups.map(g => ({

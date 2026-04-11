@@ -1,9 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. useNavigate import et
+import { useNavigate } from 'react-router-dom'; 
 import './buy.css';
 
 const Buy = () => {
-  const navigate = useNavigate(); // 2. Hook-u çağır
+  const navigate = useNavigate(); 
 
   const tickets = [
     { 
@@ -22,18 +22,14 @@ const Buy = () => {
     }
   ];
 
-  // 3. Düyməyə basanda işləyən yeni funksiya
   const handleSelect = (ticketType) => {
     if (ticketType === 'plane') {
-      // Təyyarə bileti səhifəsinə göndər
       navigate('/ticket/plane'); 
     } 
     else if (ticketType === 'train') {
-      // Qatar bileti səhifəsinə göndər
       navigate('/ticket/train'); 
     } 
     else if (ticketType === 'bus') {
-      // Avtobus hələ hazır deyilsə xəbərdarlıq ver və ya onun üçün də route aç
       navigate('/ticket/bus');
     }
     else {

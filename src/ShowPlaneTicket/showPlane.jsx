@@ -11,18 +11,20 @@ const authHeaders = () => ({
 
 function fmtDate(d) {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("az-AZ", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
+  return new Date(d).toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
 }
+
 function fmtTime(d) {
   if (!d) return "";
   return new Date(d).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
+
 function countdown(d) {
   const days = Math.ceil((new Date(d) - new Date()) / 86400000);
-  if (days < 0) return "Keçib";
-  if (days === 0) return "Bu gün";
-  if (days === 1) return "Sabah";
-  return `${days} gün`;
+  if (days < 0) return "Passed";
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  return `${days} days left`;
 }
 
 const VARIANT_COLORS = {
@@ -30,11 +32,11 @@ const VARIANT_COLORS = {
   "business":    { accent: "#7eb8f7", bg: "rgba(126,184,247,0.15)", label: "◈ Business" },
   "economy":     { accent: "#a0a8c0", bg: "rgba(160,168,192,0.15)", label: "◇ Economy" },
 };
+
 function getVariantMeta(name = "") {
   return VARIANT_COLORS[name.toLowerCase()] || { accent: "#a0a8c0", bg: "rgba(160,168,192,0.1)", label: name };
 }
 
-// State badge rəngi
 function stateBadge(state) {
   const s = (state || "").toLowerCase();
   if (s === "pending")   return { color: "#f59e0b", label: "⏳ Pending" };
@@ -44,7 +46,6 @@ function stateBadge(state) {
   return { color: "#a0a8c0", label: state };
 }
 
-// ─── Seat Tooltip ──────────────────────────────────────────────────────────
 function Tooltip({ seat, anchorRef }) {
   const tipRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
@@ -68,7 +69,7 @@ function Tooltip({ seat, anchorRef }) {
         <span className="tooltip-variant" style={{ color: meta.accent }}>{meta.label}</span>
       </div>
       <div className="tooltip-row">
-        <span>{seat.isOccupied ? "🔴 Tutulub" : "🟢 Boş"}</span>
+        <span>{seat.isOccupied ? "🔴 Occupied" : "🟢 Available"}</span>
       </div>
       {!seat.isOccupied && (
         <div className="tooltip-price">{seat.variantPrice} ₼</div>
@@ -77,7 +78,6 @@ function Tooltip({ seat, anchorRef }) {
   );
 }
 
-// ─── Seat Button ───────────────────────────────────────────────────────────
 function SeatButton({ seat }) {
   const [hovered, setHovered] = useState(false);
   const btnRef = useRef(null);
@@ -91,7 +91,7 @@ function SeatButton({ seat }) {
         style={{ "--accent": meta.accent, "--accent-bg": meta.bg }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        aria-label={`${seat.name} - ${seat.variantName} - ${seat.isOccupied ? "Tutulub" : "Boş"}`}
+        aria-label={`${seat.name} - ${seat.variantName} - ${seat.isOccupied ? "Occupied" : "Available"}`}
       >
         <span className="seat-label">{seat.name}</span>
         <span className="seat-dot" />
@@ -101,7 +101,6 @@ function SeatButton({ seat }) {
   );
 }
 
-// ─── Seat Map Modal ────────────────────────────────────────────────────────
 function SeatMapModal({ ticket, onClose }) {
   const [seats, setSeats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +114,7 @@ function SeatMapModal({ ticket, onClose }) {
           `${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=plane`,
           { headers: authHeaders() }
         );
-        if (!res.ok) throw new Error("Oturacaqlar yüklənmədi");
+        if (!res.ok) throw new Error("Seats could not be loaded");
         const data = await res.json();
         const list = data?.data ?? data ?? [];
         setSeats(Array.isArray(list) ? list : []);
@@ -164,9 +163,9 @@ function SeatMapModal({ ticket, onClose }) {
         </div>
 
         <div className="modal-stats">
-          <div className="modal-stat modal-stat--free">🟢 {available} Boş</div>
-          <div className="modal-stat modal-stat--occ">🔴 {occupied} Tutulub</div>
-          <div className="modal-stat">💺 {seats.length} Cəmi</div>
+          <div className="modal-stat modal-stat--free">🟢 {available} Available</div>
+          <div className="modal-stat modal-stat--occ">🔴 {occupied} Occupied</div>
+          <div className="modal-stat">💺 {seats.length} Total</div>
         </div>
 
         {variantLegend.length > 0 && (
@@ -182,12 +181,12 @@ function SeatMapModal({ ticket, onClose }) {
             })}
             <div className="legend-item">
               <span className="legend-dot legend-dot--occ" />
-              Tutulub
+              Occupied
             </div>
           </div>
         )}
 
-        {loading && <div className="seatmap-loading">Yüklənir...</div>}
+        {loading && <div className="seatmap-loading">Loading...</div>}
         {error && <div className="seatmap-error">⚠ {error}</div>}
 
         {!loading && !error && seats.length > 0 && (
@@ -219,14 +218,13 @@ function SeatMapModal({ ticket, onClose }) {
         )}
 
         {!loading && !error && seats.length === 0 && (
-          <div className="seatmap-empty">Bu bilet üçün oturacaq tapılmadı.</div>
+          <div className="seatmap-empty">No seats found for this ticket.</div>
         )}
       </div>
     </div>
   );
 }
 
-// ─── Ticket Card ───────────────────────────────────────────────────────────
 function TicketCard({ ticket, isNew }) {
   const [showSeats, setShowSeats] = useState(false);
   const sb = stateBadge(ticket.state);
@@ -234,7 +232,7 @@ function TicketCard({ ticket, isNew }) {
   return (
     <>
       <div className={`spt-card ${isNew ? "spt-card--new" : ""}`}>
-        {isNew && <div className="spt-card-new-badge">YENİ</div>}
+        {isNew && <div className="spt-card-new-badge">NEW</div>}
 
         <div className="spt-card-header">
           <div className="spt-card-airline">{ticket.airline}</div>
@@ -264,11 +262,11 @@ function TicketCard({ ticket, isNew }) {
 
         <div className="spt-card-info">
           <div className="spt-info-item">
-            <span className="spt-info-label">TARİX</span>
+            <span className="spt-info-label">DATE</span>
             <span className="spt-info-val">{fmtDate(ticket.dueDate)}</span>
           </div>
           <div className="spt-info-item">
-            <span className="spt-info-label">SAAT</span>
+            <span className="spt-info-label">TIME</span>
             <span className="spt-info-val">{fmtTime(ticket.dueDate)}</span>
           </div>
           <div className="spt-info-item">
@@ -284,17 +282,17 @@ function TicketCard({ ticket, isNew }) {
             <span className="spt-info-val">{ticket.meal || "—"}</span>
           </div>
           <div className="spt-info-item">
-            <span className="spt-info-label">BAGAJ</span>
+            <span className="spt-info-label">LUGGAGE</span>
             <span className="spt-info-val">{ticket.luggageKg ?? "—"} kg</span>
           </div>
           <div className="spt-info-item">
-            <span className="spt-info-label">QİYMƏT</span>
+            <span className="spt-info-label">PRICE</span>
             <span className="spt-info-val spt-info-val--price">
               {ticket.price > 0 ? `${ticket.price} ₼` : "—"}
             </span>
           </div>
           <div className="spt-info-item">
-            <span className="spt-info-label">BOŞ YER</span>
+            <span className="spt-info-label">SEATS</span>
             <span className={`spt-info-val ${ticket.availableSeats < 5 ? "spt-info-val--low" : "spt-info-val--ok"}`}>
               {ticket.availableSeats}
             </span>
@@ -306,7 +304,7 @@ function TicketCard({ ticket, isNew }) {
         </div>
 
         <button className="spt-seatmap-btn" onClick={() => setShowSeats(true)}>
-          💺 Oturacaq Xəritəsi
+          💺 Seat Map
         </button>
       </div>
 
@@ -315,7 +313,6 @@ function TicketCard({ ticket, isNew }) {
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────────────────
 export default function ShowPlaneTicket() {
   const navigate = useNavigate();
 
@@ -339,6 +336,7 @@ export default function ShowPlaneTicket() {
   });
   const [highlightId, setHighlightId] = useState(newTicketId);
 
+
   useEffect(() => {
     fetch(`${BASE_URL}/Location?Limit=200&Page=1`, { headers: authHeaders() })
       .then(r => r.json())
@@ -347,6 +345,11 @@ export default function ShowPlaneTicket() {
   }, []);
 
   const fetchTickets = useCallback(async () => {
+    if (airline.length > 50) {
+      setError("Airline name is too long.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -356,12 +359,16 @@ export default function ShowPlaneTicket() {
       if (airline.trim()) params.set("Airline", airline.trim());
       if (fromId) params.set("FromLocationId", fromId);
       if (toId) params.set("ToLocationId", toId);
-      if (date) params.set("Date", new Date(date).toISOString());
+      if (date) {
+        const selectedDate = new Date(date);
+        if (!isNaN(selectedDate.getTime())) {
+          params.set("Date", selectedDate.toISOString());
+        }
+      }
 
       const res = await fetch(`${BASE_URL}/PlaneTicket?${params}`, { headers: authHeaders() });
-      if (!res.ok) throw new Error(`Server xətası: ${res.status}`);
+      if (!res.ok) throw new Error(`Server Error: ${res.status}`);
       const data = await res.json();
-      // Backend Pagination<T> shape: { data: [...], totalDataCount, page, size }
       setTickets(Array.isArray(data?.data) ? data.data : []);
       setTotalCount(data?.totalDataCount ?? 0);
     } catch (err) {
@@ -381,6 +388,11 @@ export default function ShowPlaneTicket() {
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
+  const handleSearch = () => {
+    setPageNumber(1);
+    fetchTickets();
+  };
+
   return (
     <div className="spt-page">
       <div className="spt-header">
@@ -388,17 +400,14 @@ export default function ShowPlaneTicket() {
           <span className="spt-icon">✈️</span>
           <div>
             <h1 className="spt-title">Plane Tickets</h1>
-            <p className="spt-meta">{totalCount} bilet tapıldı</p>
+            <p className="spt-meta">{totalCount} tickets found</p>
           </div>
         </div>
-        <button className="spt-create-btn" onClick={() => navigate("/create-plane-ticket")}>
-          ＋ Bilet Yarat
-        </button>
       </div>
 
       {newTicketId && (
         <div className="spt-new-banner">
-          ✅ Bilet <strong>#{newTicketId}</strong> uğurla yaradıldı!
+          ✅ Ticket <strong>#{newTicketId}</strong> created successfully!
         </div>
       )}
 
@@ -406,30 +415,39 @@ export default function ShowPlaneTicket() {
         <div className="spt-filter-grid">
           <div className="spt-filter-group">
             <label>Airline</label>
-            <input type="text" placeholder="məs. AZAL" value={airline} onChange={e => setAirline(e.target.value)} />
+            <input 
+              type="text" 
+              placeholder="e.g. AZAL" 
+              value={airline} 
+              onChange={e => setAirline(e.target.value)} 
+            />
           </div>
           <div className="spt-filter-group">
-            <label>Haradan</label>
+            <label>From</label>
             <select value={fromId} onChange={e => setFromId(e.target.value)} className="spt-select">
-              <option value="">— Hamısı —</option>
+              <option value="">— All Locations —</option>
               {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
           <div className="spt-filter-group">
-            <label>Haraya</label>
+            <label>To</label>
             <select value={toId} onChange={e => setToId(e.target.value)} className="spt-select">
-              <option value="">— Hamısı —</option>
+              <option value="">— All Locations —</option>
               {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
           <div className="spt-filter-group">
-            <label>Tarix</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <label>Date</label>
+            <input 
+              type="date" 
+              value={date} 
+              onChange={e => setDate(e.target.value)} 
+            />
           </div>
         </div>
         <div className="spt-filter-actions">
-          <button className="spt-search-btn" onClick={() => { setPageNumber(1); fetchTickets(); }}>Axtar</button>
-          <button className="spt-reset-btn" onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); }}>Sıfırla</button>
+          <button className="spt-search-btn" onClick={handleSearch}>Search</button>
+          <button className="spt-reset-btn" onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); }}>Reset</button>
         </div>
       </div>
 
@@ -437,21 +455,21 @@ export default function ShowPlaneTicket() {
         {loading && (
           <div className="spt-state">
             <div className="spt-spinner" />
-            <p>Yüklənir...</p>
+            <p>Loading...</p>
           </div>
         )}
         {error && !loading && (
           <div className="spt-state spt-error">
             <span>⚠️</span><p>{error}</p>
-            <button onClick={fetchTickets}>Yenidən cəhd et</button>
+            <button onClick={fetchTickets}>Try Again</button>
           </div>
         )}
         {!loading && !error && tickets.length === 0 && (
           <div className="spt-state">
             <span className="spt-empty-icon">✈️</span>
-            <p>Bilet tapılmadı.</p>
+            <p>No tickets found.</p>
             <button className="spt-create-btn" onClick={() => navigate("/create-plane-ticket")}>
-              ＋ Bilet Yarat
+              ＋ Create First Ticket
             </button>
           </div>
         )}
@@ -465,9 +483,9 @@ export default function ShowPlaneTicket() {
 
         {!loading && totalPages > 1 && (
           <div className="spt-pagination">
-            <button disabled={pageNumber <= 1} onClick={() => setPageNumber(p => p - 1)}>← Əvvəl</button>
+            <button disabled={pageNumber <= 1} onClick={() => setPageNumber(p => p - 1)}>← Previous</button>
             <span>{pageNumber} / {totalPages}</span>
-            <button disabled={pageNumber >= totalPages} onClick={() => setPageNumber(p => p + 1)}>Növbəti →</button>
+            <button disabled={pageNumber >= totalPages} onClick={() => setPageNumber(p => p + 1)}>Next →</button>
           </div>
         )}
       </div>

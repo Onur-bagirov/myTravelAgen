@@ -42,7 +42,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 
 .nav-buttons { display: flex; gap: 20px; align-items: center; }
 
-/* ── Nav Link ── */
 .nav-link {
     color: rgba(255,255,255,0.8) !important;
     font-size: 15px !important;
@@ -61,7 +60,7 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .nav-link:hover { color: white !important; }
 .nav-link:hover::after { width: 100%; }
 
-/* ── Create Ticket ── */
+
 .create-ticket-link {
     color: #fcd34d !important;
     font-size: 14px !important;
@@ -80,7 +79,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     transform: translateY(-2px);
 }
 
-/* ── Sign In / Sign Up ── */
 .signin-btn {
     background: rgba(255,255,255,0.05);
     color: white;
@@ -93,9 +91,9 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     overflow: hidden;
     transition: color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
-/* Yalnız Sign Up hover ::before effekti */
+
 .signin-btn:not(.logout-color)::before {
-    background: rgba(200, 200, 200, 0.2); /* Açıq boz/fuzlet */
+    background: rgba(200, 200, 200, 0.2);
 }
 
 .signin-btn:not(.logout-color):hover::before {
@@ -107,7 +105,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .signin-btn:hover { color: black; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
 .signin-btn:active { transform: translateY(0) scale(0.97); }
 
-/* ── Log Out ── */
 .logout-color { border-color: rgba(255,77,77,0.4) !important; }
 .logout-color::before { background: rgba(255,77,77,0.15) !important; }
 .logout-color:hover { color: #ff6b6b !important; }
@@ -128,7 +125,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     background: rgba(16, 185, 129, 0.15) !important; 
 }
 
-/* ── Create Company (Admin Düyməsi) ── */
 .create-exec-color { 
     border-color: rgba(252, 211, 77, 0.4) !important; 
     background: rgba(252, 211, 77, 0.05) !important;
@@ -155,7 +151,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     transform: scaleX(1); 
 }
 
-/* Yazının digər qırmızı span-larla qarışmaması üçün */
 .create-exec-color span {
     color: inherit !important;
     position: relative;
@@ -172,7 +167,7 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     transform: scaleX(1); 
 }
 
-/* ── Buy Now ── */
+
 .buy-btn {
     background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
     color: white;
@@ -194,7 +189,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .buy-btn:hover { transform: scale(1.06) translateY(-2px); box-shadow: 0 10px 30px rgba(255,77,77,0.55); filter: brightness(1.1); }
 .buy-btn:active { transform: scale(0.97); }
 
-/* ── My Tickets ── */
 .MyTickets-btn {
     background: rgba(255,255,255,0.05);
     color: rgba(255,255,255,0.85);
@@ -250,12 +244,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .seatmap-btn:hover { color: white; border-color: rgba(16,185,129,0.5); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.2); }
 .seatmap-btn:active { transform: scale(0.97); }
 
-/* ══════════════════════════════════════
-   ── user-profile-btn (My Profile Avatar)
-   ══════════════════════════════════════ */
-/* ══════════════════════════════════════
-   ── user-profile-container (YENİ)
-   ══════════════════════════════════════ */
 .myprofile-btn {
     background: rgba(255,255,255,0.05);
     color: white;
@@ -271,15 +259,13 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 
 
 .myprofile-btn:not(.myprofile-color)::before {
-    background: rgba(200, 200, 200, 0.2); /* Açıq boz/fuzlet */
+    background: rgba(200, 200, 200, 0.2); 
 }
 
 .myprofile-btn:not(.myprofile-color):hover::before {
     transform: scaleX(1);
 }
 
-
-/* Animasiyalar */
 @keyframes avatarSpin {
     from { filter: hue-rotate(0deg); }
     to   { filter: hue-rotate(360deg); }
@@ -338,7 +324,7 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 }
 .avatar-initials:hover { transform: none !important; color: white !important; }
 
-/* ── Hamburger ── */
+
 .menu-icon { display: none; flex-direction: column; gap: 6px; cursor: pointer; }
 .bar {
     width: 28px; height: 3px;
@@ -347,7 +333,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     transition: 0.4s cubic-bezier(0.68,-0.6,0.32,1.6);
 }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
     .menu-icon { display: flex; }
     .navbar {

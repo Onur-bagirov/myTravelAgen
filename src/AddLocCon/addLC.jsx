@@ -8,7 +8,7 @@ function AddCountryLocation() {
     <div className="addlc-wrapper">
       <div className="addlc-header">
         <h2>Admin Panel</h2>
-        <p>İdarə etmek istediyin bolumu sec</p>
+        <p>Select the section you want to manage</p>
       </div>
 
       <div className="addlc-cards">
@@ -22,8 +22,8 @@ function AddCountryLocation() {
             </svg>
           </div>
           <div className="addlc-card__body">
-            <span className="addlc-card__title">Ölkələr</span>
-            <span className="addlc-card__desc">Ölkə əlavə et, düzəlt, sil</span>
+            <span className="addlc-card__title">Countries</span>
+            <span className="addlc-card__desc">Add, edit or delete countries</span>
           </div>
           <div className="addlc-card__arrow">→</div>
         </button>
@@ -37,8 +37,8 @@ function AddCountryLocation() {
             </svg>
           </div>
           <div className="addlc-card__body">
-            <span className="addlc-card__title">Lokasiyalar</span>
-            <span className="addlc-card__desc">Lokasiya əlavə et, düzəlt, sil</span>
+            <span className="addlc-card__title">Locations</span>
+            <span className="addlc-card__desc">Add, edit or delete locations</span>
           </div>
           <div className="addlc-card__arrow">→</div>
         </button>

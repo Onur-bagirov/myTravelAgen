@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./showTrain.css";
 
-// ─── Konfiqurasiya ────────────────────────────────────────────────────────────
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5251/api";
 const PAGE_SIZE = 9;
 
-// ─── Token & Auth köməkçiləri ─────────────────────────────────────────────────
 const getToken = () => localStorage.getItem("userToken");
 
 const isAdmin = () => {
@@ -54,7 +52,6 @@ const parseSeatName = (name) => {
   };
 };
 
-// ─── SeatMap Komponenti ──────────────────────────────────────────────────────
 function SeatMap({ seats, selectedSeatId, onSelect }) {
   if (!seats.length) {
     return <p className="st-no-seats">Bu bilet üçün oturacaq tapılmadı.</p>;
@@ -135,7 +132,6 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
   );
 }
 
-// ─── BookingModal Komponenti (Düymə Silinib) ──────────────────────────────────
 function BookingModal({ ticket, onClose }) {
   const [seats, setSeats] = useState([]);
   const [loadingSeats, setLoadingSeats] = useState(true);
@@ -185,14 +181,13 @@ function BookingModal({ ticket, onClose }) {
             </div>
           )}
           
-          {/* TƏSDİQLƏ DÜYMƏSİ BURADAN SİLİNDİ */}
+
         </div>
       </div>
     </div>
   );
 }
 
-// ─── TicketCard Komponenti ──────────────────────────────────────────────────
 function TicketCard({ ticket, onClick, onDelete, adminMode }) {
   const urgency = ticket.availableSeats <= 5 ? "critical" : ticket.availableSeats <= 15 ? "low" : "ok";
 

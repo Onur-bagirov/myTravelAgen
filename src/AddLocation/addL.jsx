@@ -56,7 +56,7 @@ function AddLocation() {
       );
       if (!res.ok) {
         const errText = await res.text();
-        throw new Error(`Xeta ${res.status}: ${errText}`);
+        throw new Error(`Error ${res.status}: ${errText}`);
       }
       const data = await res.json();
       setLocations(Array.isArray(data.data) ? data.data : []);
@@ -73,21 +73,20 @@ function AddLocation() {
   const validate = () => {
     const errors = {};
     if (!form.name.trim()) {
-      errors.name = "Ad bos ola bilmez";
+      errors.name = "Name cannot be empty";
     } else if (form.name.trim().length < 2) {
-      errors.name = "Ad en az 2 simvol olmalidir";
+      errors.name = "Name must be at least 2 characters";
     }
     if (!form.countryId) {
-      errors.countryId = "Olke secin";
+      errors.countryId = "Select a country";
     }
     if (form.distanceToken === "" || isNaN(Number(form.distanceToken))) {
-      errors.distanceToken = "Token daxil edin";
+      errors.distanceToken = "Token is required";
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // ✅ POST Düzəldildi: country obyekti əlavə edildi
   const handleCreate = async () => {
     if (!validate()) return;
     setSubmitting(true);
@@ -99,14 +98,14 @@ function AddLocation() {
           name: form.name.trim(),
           countryId: Number(form.countryId),
           distanceToken: Number(form.distanceToken),
-          country: null // Backend-dəki obyekt gözləntisini qarşılamaq üçün
+          country: null 
         }),
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e?.message ?? `Xeta ${res.status}`);
+        throw new Error(e?.message ?? `Error ${res.status}`);
       }
-      showAlert("success", "Lokasiya elave edildi!");
+      showAlert("success", "Location added successfully!");
       setForm({ name: "", countryId: "", distanceToken: "" });
       setFormErrors({});
       fetchLocations();
@@ -128,7 +127,6 @@ function AddLocation() {
 
   const cancelEdit = () => setEditingId(null);
 
-  // ✅ PUT Düzəldildi: country obyekti əlavə edildi
   const handleUpdate = async (id) => {
     if (!editForm.name.trim() || !editForm.countryId) return;
     setSubmitting(true);
@@ -146,9 +144,9 @@ function AddLocation() {
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e?.message ?? "Yenilenmedi");
+        throw new Error(e?.message ?? "Update failed");
       }
-      showAlert("success", "Lokasiya yenilendi!");
+      showAlert("success", "Location updated successfully!");
       cancelEdit();
       fetchLocations();
     } catch (err) {
@@ -158,9 +156,8 @@ function AddLocation() {
     }
   };
 
-  // ✅ DELETE Düzəldildi: Backend-də [FromBody] mütləq olmalıdır
   const handleDelete = async (id, locName) => {
-    if (!window.confirm(`"${locName}" silinsin?`)) return;
+    if (!window.confirm(`Are you sure you want to delete "${locName}"?`)) return;
     setSubmitting(true);
     try {
       const res = await fetch(`${API_BASE}/Location`, {
@@ -170,9 +167,9 @@ function AddLocation() {
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e?.message ?? "Silinmedi");
+        throw new Error(e?.message ?? "Delete failed");
       }
-      showAlert("success", `"${locName}" silindi!`);
+      showAlert("success", `"${locName}" deleted!`);
       fetchLocations();
     } catch (err) {
       showAlert("error", err.message);
@@ -194,7 +191,7 @@ function AddLocation() {
     <div className="location-panel">
       <div className="location-panel__header">
         <div className="location-panel__icon">📍</div>
-        <h2>Lokasiya Idareetmesi</h2>
+        <h2>Location Management</h2>
       </div>
 
       {alert && (
@@ -204,28 +201,28 @@ function AddLocation() {
       )}
 
       <div className="location-form-card">
-        <h3>Yeni Lokasiya Elave Et</h3>
+        <h3>Add New Location</h3>
         <div className="location-form-grid">
           <div className="form-group">
-            <label>Lokasiya Adi</label>
+            <label>Location Name</label>
             <input
               className={`form-input ${formErrors.name ? "error" : ""}`}
               type="text"
               value={form.name}
               onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-              placeholder="Mes: Baki"
+              placeholder="e.g. Baku"
             />
             {formErrors.name && <span className="form-error">{formErrors.name}</span>}
           </div>
 
           <div className="form-group">
-            <label>Olke</label>
+            <label>Country</label>
             <select
               className={`form-select ${formErrors.countryId ? "error" : ""}`}
               value={form.countryId}
               onChange={(e) => setForm((p) => ({ ...p, countryId: e.target.value }))}
             >
-              <option value="">Olke secin</option>
+              <option value="">Select country</option>
               {countries.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -234,13 +231,13 @@ function AddLocation() {
           </div>
 
           <div className="form-group">
-            <label>Mesafe Token</label>
+            <label>Distance Token</label>
             <input
               className={`form-input ${formErrors.distanceToken ? "error" : ""}`}
               type="number"
               value={form.distanceToken}
               onChange={(e) => setForm((p) => ({ ...p, distanceToken: e.target.value }))}
-              placeholder="Mes: 120"
+              placeholder="e.g. 120"
             />
             {formErrors.distanceToken && <span className="form-error">{formErrors.distanceToken}</span>}
           </div>
@@ -251,26 +248,26 @@ function AddLocation() {
             disabled={submitting}
             style={{ alignSelf: "flex-end" }}
           >
-            {submitting ? "Gozleyin..." : "Elave Et"}
+            {submitting ? "Waiting..." : "Add Location"}
           </button>
         </div>
       </div>
 
       <div className="location-table-card">
         <div className="location-table-card__header">
-          <h3>Lokasiyalar Siyahisi</h3>
+          <h3>Locations List</h3>
           <div className="header-right">
             <select
               className="filter-select"
               value={filterCountryId}
               onChange={(e) => setFilterCountryId(e.target.value)}
             >
-              <option value="">Butun Olkeler</option>
+              <option value="">All Countries</option>
               {countries.map((c) => (
                 <option key={c.id} value={String(c.id)}>{c.name}</option>
               ))}
             </select>
-            <span className="badge">{totalCount} lokasiya</span>
+            <span className="badge">{totalCount} locations</span>
           </div>
         </div>
 
@@ -278,19 +275,19 @@ function AddLocation() {
           <thead>
             <tr>
               <th>#</th>
-              <th>Ad</th>
-              <th>Olke</th>
+              <th>Name</th>
+              <th>Country</th>
               <th>Token</th>
-              <th>Emeliyyatlar</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr className="loading-row"><td colSpan={5}>Yuklenir...</td></tr>
+              <tr className="loading-row"><td colSpan={5}>Loading...</td></tr>
             ) : displayed.length === 0 ? (
               <tr>
                 <td colSpan={5}>
-                  <div className="empty-state">Hec bir lokasiya tapilmadi.</div>
+                  <div className="empty-state">No locations found.</div>
                 </td>
               </tr>
             ) : (
@@ -345,21 +342,21 @@ function AddLocation() {
                             onClick={() => handleUpdate(loc.id)}
                             disabled={submitting}
                           >
-                            Saxla
+                            Save
                           </button>
                           <button className="btn btn-secondary" onClick={cancelEdit}>
-                            Legv
+                            Cancel
                           </button>
                         </>
                       ) : (
                         <>
-                          <button className="btn btn-edit" onClick={() => startEdit(loc)}>Duzel</button>
+                          <button className="btn btn-edit" onClick={() => startEdit(loc)}>Edit</button>
                           <button
                             className="btn btn-del"
                             onClick={() => handleDelete(loc.id, loc.name)}
                             disabled={submitting}
                           >
-                            Sil
+                            Delete
                           </button>
                         </>
                       )}
@@ -378,7 +375,7 @@ function AddLocation() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Evvel
+              Previous
             </button>
             <span>{page} / {totalPages}</span>
             <button
@@ -386,7 +383,7 @@ function AddLocation() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Novbeti
+              Next
             </button>
           </div>
         )}

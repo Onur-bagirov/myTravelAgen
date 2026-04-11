@@ -81,7 +81,6 @@ export default function Register() {
         const firstKey = Object.keys(data.errors)[0];
         setError(data.errors[firstKey][0]);
       } 
-      // 3. Sadə mesajlar üçün (məs: "Email already exists")
       else {
         setError(data?.message || "Registration failed. Try a different email.");
       }

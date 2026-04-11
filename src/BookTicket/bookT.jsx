@@ -34,7 +34,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const [success, setSuccess] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
 
-  // ── Vaxtı keçib-keçmədiyini yoxla ───────────────────────────────────────
   const isExpired = flight?.dueDate ? new Date(flight.dueDate) < new Date() : false;
 
   const variantGroups = seats.reduce((acc, s) => {
@@ -168,7 +167,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const luggageExtra = luggageKg > (flight.luggageKg || 20) ? 10 : 0;
   const totalPrice = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
 
-  // ── Uğur ekranı ──────────────────────────────────────────────────────────
   if (success) {
     return (
       <div className="fb-page">
@@ -187,7 +185,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     );
   }
 
-  // ── Əsas ekran ────────────────────────────────────────────────────────────
+
   return (
     <div className="fb-page">
       <div className="fb-noise" />
@@ -205,7 +203,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
-        {/* Bilet xülasəsi */}
         <div className={`fb-summary${isExpired ? " fb-summary--expired" : ""}`}>
           <div className="fb-summary-top">
             <span className="fb-eyebrow">✦ {flight.airline}</span>
@@ -237,7 +234,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         </div>
 
-        {/* 01 — Oturacaq seçimi — vaxtı keçibsə bloklanır */}
         <div className={`fb-section${isExpired ? " fb-section--disabled" : ""}`}>
           <h3 className="fb-section-title">
             <span className="fb-section-num">01</span>Oturacaq Seçin
@@ -285,7 +281,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           )}
         </div>
 
-        {/* 02 — Əlavələr — vaxtı keçibsə gizlədilir */}
         {!isExpired && (
           <div className="fb-section">
             <h3 className="fb-section-title">
@@ -333,7 +328,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
-        {/* Sifariş xülasəsi */}
         {selectedSeat && !isExpired && (
           <div className="fb-order-summary">
             <div className="fb-order-row">
@@ -355,7 +349,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
 
         {error && <div className="fb-error"><span>⚠</span> {error}</div>}
 
-        {/* ── Alış düyməsi — vaxtı keçibsə tamamilə bloklanır ── */}
         {isExpired ? (
           <button className="fb-buy-btn fb-buy-btn--expired" disabled>
             🕐 Uçuşun vaxtı keçib

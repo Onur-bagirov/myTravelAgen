@@ -1,9 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // Naviqasiya üçün hook
+import { useNavigate } from 'react-router-dom'; 
 import './selectTicket.css';
 
 const SelectTicket = () => {
-  const navigate = useNavigate(); // Funksiyanı işə salırıq
+  const navigate = useNavigate(); 
 
   const travelOptions = [
     { 
@@ -12,7 +12,7 @@ const SelectTicket = () => {
       desc: 'Lüks və sürətli uçuş təcrübəsi.',
       icon: '✈️',
       bgClass: 'plane-card',
-      path: '/create-ticket' // Kliklədikdə gedəcəyi ünvan
+      path: '/create-ticket'
     },
     { 
       id: 2, 
@@ -20,11 +20,10 @@ const SelectTicket = () => {
       desc: 'Komfortlu qatar səyahəti.',
       icon: '🚄',
       bgClass: 'train-card',
-      path: '/create-train-ticket' // Kliklədikdə gedəcəyi ünvan
+      path: '/create-train-ticket'
     },
   ];
 
-  // Klik funksiyası
   const handleSelection = (path) => {
     navigate(path);
   };
@@ -48,7 +47,7 @@ const SelectTicket = () => {
             <div 
               key={option.id} 
               className={`st-premium-card ${option.bgClass}`}
-              onClick={() => handleSelection(option.path)} // Karta klik edəndə keçid edir
+              onClick={() => handleSelection(option.path)}
             >
               <div className="st-card-top">
                 <div className="st-icon-box">{option.icon}</div>
@@ -65,7 +64,7 @@ const SelectTicket = () => {
                 <button 
                   className="st-select-btn"
                   onClick={(e) => {
-                    e.stopPropagation(); // Düyməyə klikləyəndə kartın kliklənməsini təkrarlamasın
+                    e.stopPropagation();
                     handleSelection(option.path);
                   }}
                 >

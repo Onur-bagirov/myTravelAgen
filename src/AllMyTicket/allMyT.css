@@ -1,7 +1,8 @@
 .tickets-container {
   min-height: 100vh;
-  padding: 40px 20px;
-  background: #0f0f0f; /* Tünd və zəngin fon */
+  padding: 90px 20px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65)), 
+                url("/MainScreen.png") no-repeat center center/cover;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -35,9 +36,8 @@
   cursor: pointer;
 }
 
-/* Fon şəkilləri */
 .plane-card {
-  background: url('https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?q=80&w=1000') center/cover;
+  background: url('public/Plane.webp') center/cover;
 }
 
 .train-card {
@@ -76,7 +76,6 @@
   line-height: 1.4;
 }
 
-/* Button Stylləri */
 .btn-view {
   width: 100%;
   padding: 12px;
@@ -103,10 +102,8 @@
   backdrop-filter: blur(5px);
 }
 
-/* Hover Effektləri */
 .ticket-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 
 .plane-btn:hover {
@@ -117,6 +114,5 @@
 
 .train-btn:hover {
   background: #ffba00;
-  color: #000;
   box-shadow: 0 0 20px rgba(255, 186, 0, 0.4);
 }

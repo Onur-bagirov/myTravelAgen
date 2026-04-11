@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
 
-/* Ümumi Reset və Body tənzimləmələri */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -15,7 +14,6 @@
     align-items: center;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.65)), 
                 url("/MainScreen.png") no-repeat center center/cover;
-    /* Mobil cihazlarda kartın ekranın kənarlarına yapışmaması üçün padding */
     padding: 20px;
     font-family: 'Poppins', sans-serif;
 }
@@ -26,7 +24,6 @@
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.15);
     
-    /* Desktop üçün padding */
     padding: 60px 40px;
     border-radius: 40px;
     width: 100%;
@@ -38,7 +35,6 @@
     animation: birdiePop 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67);
 }
 
-/* İkon və Başlıq */
 .mail-icon-wrapper {
     width: 80px;
     height: 80px;
@@ -55,7 +51,7 @@
 .mail-icon { font-size: 2.5rem; }
 
 .verify-header h2 {
-    font-size: clamp(1.8rem, 5vw, 2.5rem); /* Ekran ölçüsünə görə avtomatik kiçilən başlıq */
+    font-size: clamp(1.8rem, 5vw, 2.5rem);
     font-weight: 800;
     margin-bottom: 12px;
 }
@@ -72,17 +68,14 @@
     margin-bottom: 40px;
 }
 
-/* Kod Giriş Sahələri - Responsive Flexbox */
 .code-inputs {
     display: flex;
     justify-content: center;
-    /* Kiçik telefonlarda inputların sığması üçün gap-i azaldırıq */
     gap: clamp(5px, 2vw, 15px); 
     margin-bottom: 40px;
 }
 
 .code-inputs input {
-    /* Kod qutularının ölçüsü */
     width: clamp(40px, 12vw, 60px);
     height: clamp(55px, 15vw, 75px);
     background: rgba(255, 255, 255, 0.07);
@@ -103,7 +96,6 @@
     transform: translateY(-5px);
 }
 
-/* Təsdiq Düyməsi */
 .confirm-btn {
     width: 100%;
     background: linear-gradient(45deg, #ff4d4d, #f9cb28);
@@ -124,20 +116,17 @@
     box-shadow: 0 15px 30px rgba(255, 77, 77, 0.5);
 }
 
-/* Status Mesajları */
 .status-msg {
     margin-top: 25px;
     padding: 12px;
     border-radius: 12px;
     font-size: 0.9rem;
-    word-wrap: break-word; /* Uzun mesajlar qutunu partlatmasın */
+    word-wrap: break-word; 
 }
-
-/* Media Query - Planşet və Mobil üçün xüsusi düzəlişlər */
 
 @media (max-width: 600px) {
     .verify-card {
-        padding: 40px 20px; /* Daxili boşluqları azaltdıq */
+        padding: 40px 20px;
         border-radius: 30px;
     }
 
@@ -151,7 +140,7 @@
 
 @media (max-width: 400px) {
     .code-inputs {
-        gap: 5px; /* Çox kiçik ekranlarda qutuları bir-birinə yaxınlaşdırırıq */
+        gap: 5px; 
     }
 
     .code-inputs input {
@@ -165,7 +154,6 @@
     }
 }
 
-/* Animasiya */
 @keyframes birdiePop {
     0% { opacity: 0; transform: scale(0.9) translateY(30px); }
     100% { opacity: 1; transform: scale(1) translateY(0); }

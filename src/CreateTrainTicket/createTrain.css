@@ -1,13 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* ── Reset ─────────────────────────────────────────────── */
 .ct-page *, .ct-page *::before, .ct-page *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* ── Page ───────────────────────────────────────────────── */
+
 .ct-page {
   --accent:   #38bdf8;
   --accent2:  #818cf8;
@@ -28,7 +27,6 @@
   padding: 48px 16px 80px;
 }
 
-/* ── Background lines ───────────────────────────────────── */
 .ct-bg {
   position: fixed;
   inset: 0;
@@ -48,7 +46,6 @@
   );
 }
 
-/* ── Wrapper ────────────────────────────────────────────── */
 .ct-wrapper {
   position: relative;
   z-index: 1;
@@ -56,7 +53,7 @@
   margin: 0 auto;
 }
 
-/* ── Header ─────────────────────────────────────────────── */
+
 .ct-header {
   display: flex;
   align-items: center;
@@ -95,7 +92,7 @@
   color: var(--accent);
 }
 
-/* ── Alerts ─────────────────────────────────────────────── */
+
 .ct-alert {
   border-radius: 12px;
   padding: 14px 18px;
@@ -114,14 +111,14 @@
   color: var(--green);
 }
 
-/* ── Form ───────────────────────────────────────────────── */
+
 .ct-form {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* ── Section ────────────────────────────────────────────── */
+
 .ct-section {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -143,7 +140,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-/* ── Grids ──────────────────────────────────────────────── */
 .ct-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -155,7 +151,6 @@
   gap: 14px;
 }
 
-/* ── Field ──────────────────────────────────────────────── */
 .ct-field {
   display: flex;
   flex-direction: column;
@@ -195,7 +190,6 @@
 .ct-field input::placeholder { color: var(--muted); }
 .ct-field select option { background: #161b22; }
 
-/* ── Route preview ──────────────────────────────────────── */
 .ct-route-preview {
   display: flex;
   align-items: center;
@@ -219,7 +213,6 @@
 }
 .ct-route-arrow svg { width: 100%; }
 
-/* ── Group box ──────────────────────────────────────────── */
 .ct-group-box {
   background: rgba(56,189,248,0.03);
   border: 1px solid rgba(56,189,248,0.15);
@@ -264,7 +257,6 @@
   background: rgba(248,113,113,0.2);
 }
 
-/* ── Seat preview ───────────────────────────────────────── */
 .ct-seat-preview {
   display: flex;
   align-items: center;
@@ -293,7 +285,6 @@
   margin-left: 4px;
 }
 
-/* ── Add group button ───────────────────────────────────── */
 .ct-add-group-btn {
   width: 100%;
   padding: 12px;
@@ -313,7 +304,6 @@
   border-color: rgba(56,189,248,0.5);
 }
 
-/* ── Submit button ──────────────────────────────────────── */
 .ct-submit-btn {
   width: 100%;
   padding: 16px;
@@ -341,7 +331,6 @@
 .ct-submit-btn:active:not(:disabled) { transform: translateY(0); }
 .ct-submit-btn:disabled { opacity: .45; cursor: default; }
 
-/* ── Spinner ────────────────────────────────────────────── */
 .ct-spinner {
   display: inline-block;
   width: 16px; height: 16px;
@@ -352,7 +341,6 @@
 }
 @keyframes ct-spin { to { transform: rotate(360deg); } }
 
-/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 640px) {
   .ct-page { padding: 32px 14px 60px; }
   .ct-section { padding: 20px 16px; }

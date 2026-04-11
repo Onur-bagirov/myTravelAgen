@@ -1,12 +1,10 @@
 import { useState, useCallback } from "react";
 import "./CreateExecutive.css";
 
-// ─── Config ──────────────────────────────────────────────────────────────────
 const API_BASE = "http://localhost:5251/api";
 
 const getToken = () => localStorage.getItem("auth_token") ?? "";
 
-// ─── Password Generator (mirrors your PasswordGenerator.cs exactly) ──────────
   const WORDS = [
     "alma","arpa","atlas","azer","baki","bulud","burun","cavid",
     "duman","elvan","emin","ekin","farid","feriz","gelin","gelmir",
@@ -30,16 +28,12 @@ const getToken = () => localStorage.getItem("auth_token") ?? "";
     const word2 = rand(WORDS.filter(w => w !== word1));
     const word3 = rand(WORDS.filter(w => w !== word1 && w !== word2));
   
-    // Capitalise first word to satisfy uppercase requirement
     const w1 = word1.charAt(0).toUpperCase() + word1.slice(1);
-    const num = Math.floor(Math.random() * 90 + 10); // 10–99
+    const num = Math.floor(Math.random() * 90 + 10);
     const sep = rand(SPECIALS.split(""));
   
-    // Pattern: Coral!storm42pine  — readable, typeable, valid
     return `${w1}${sep}${word2}${num}${word3}`;
   }
-
-// ─── Password strength scorer ─────────────────────────────────────────────────
 function scorePassword(pw) {
   if (!pw) return { score: 0, label: "" };
   let score = 0;
@@ -52,7 +46,6 @@ function scorePassword(pw) {
   return { score, label: labels[score] ?? "Strong" };
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function StrengthBar({ password }) {
   const { score, label } = scorePassword(password);
@@ -89,7 +82,6 @@ function ResponseBox({ status, message, detail }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CreateExecutive() {
   const [form, setForm] = useState({
@@ -105,13 +97,11 @@ export default function CreateExecutive() {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  // ── Regenerate password ───────────────────────────────────────────────────
   const regenerate = useCallback(() => {
     setForm((f) => ({ ...f, Password: generatePassword() }));
     setRes(null);
   }, []);
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -164,7 +154,6 @@ export default function CreateExecutive() {
     }
   };
 
-  // ── Reset ─────────────────────────────────────────────────────────────────
   const handleReset = () => {
     setForm({ Name: "", Surname: "", Email: "", Password: generatePassword() });
     setRes(null);
@@ -174,7 +163,6 @@ export default function CreateExecutive() {
   return (
     <div className="ce-shell">
 
-      {/* Header */}
       <header className="ce-header">
         <div className="ce-eyebrow">Admin Portal</div>
         <h1 className="ce-title">
@@ -220,7 +208,6 @@ export default function CreateExecutive() {
           </div>
         </div>
 
-        {/* Email */}
         <div className="ce-row ce-row--1">
           <div className="ce-field">
             <label className="ce-label">
@@ -240,7 +227,6 @@ export default function CreateExecutive() {
 
         <hr className="ce-hr" />
 
-        {/* Password */}
         <p className="ce-section">Access Credentials</p>
         <div className="ce-row ce-row--1">
           <div className="ce-field">
@@ -259,7 +245,6 @@ export default function CreateExecutive() {
                 spellCheck={false}
               />
 
-              {/* Show / Hide */}
               <div className="ce-pw-actions">
                 <button
                   type="button"
@@ -270,7 +255,6 @@ export default function CreateExecutive() {
                   {showPw ? "🙈" : "👁"}
                 </button>
 
-                {/* Regenerate */}
                 <button
                   type="button"
                   className="ce-regen-btn"
@@ -292,7 +276,6 @@ export default function CreateExecutive() {
 
         <hr className="ce-hr" />
 
-        {/* Role — read only, always Company */}
         <p className="ce-section">Assigned Role</p>
         <div className="ce-role-badge">
           <span className="ce-role-badge__dot" />

@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
 
-/* ── PAGE ── */
 .cpt-page-body {
     width: 100%;
     min-height: 100vh;
@@ -13,7 +12,6 @@
     font-family: 'Poppins', sans-serif;
 }
 
-/* ── FORM CARD ── */
 .cpt-card {
     width: 100%;
     max-width: 760px;
@@ -34,7 +32,6 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── HEADER ── */
 .cpt-header {
     text-align: center;
     margin-bottom: 40px;
@@ -65,7 +62,6 @@
     font-size: 0.9rem;
 }
 
-/* ── SECTION TITLE ── */
 .cpt-section-title {
     font-size: 0.7rem;
     font-weight: 600;
@@ -77,7 +73,6 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* ── GRIDS ── */
 .cpt-form-grid {
     display: grid;
     gap: 16px;
@@ -85,7 +80,6 @@
 .cpt-form-grid-2 { grid-template-columns: repeat(2, 1fr); }
 .cpt-form-grid-3 { grid-template-columns: repeat(3, 1fr); }
 
-/* ── INPUT GROUP ── */
 .cpt-input-group {
     display: flex;
     flex-direction: column;
@@ -134,7 +128,6 @@
     padding-left: 4px;
 }
 
-/* ── SERVER ERROR ── */
 .cpt-server-error {
     background: rgba(239, 68, 68, 0.12);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -145,7 +138,6 @@
     margin-top: 20px;
 }
 
-/* ── SUBMIT BUTTON ── */
 .cpt-generate-btn {
     width: 100%;
     margin-top: 32px;
@@ -186,10 +178,6 @@
 }
 @keyframes cpt-spin { to { transform: rotate(360deg); } }
 
-
-/* ══════════════════════════════════════
-   BOARDING PASS
-══════════════════════════════════════ */
 .cpt-boarding-container {
     display: flex;
     flex-direction: column;
@@ -216,7 +204,6 @@
     box-shadow: 0 40px 100px rgba(0,0,0,0.65);
 }
 
-/* LEFT STUB */
 .cpt-pass-left {
     flex: 1;
     background: linear-gradient(145deg, #0f172a, #1e3a5f);
@@ -245,7 +232,6 @@
     margin-top: 4px;
 }
 
-/* ROUTE */
 .cpt-pass-route {
     display: flex;
     align-items: center;
@@ -290,7 +276,6 @@
     to   { transform: translateX(4px)  translateY(-2px) rotate(8deg); }
 }
 
-/* INFO GRID */
 .cpt-pass-info-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -314,7 +299,6 @@
     color: #fff;
 }
 
-/* PERFORATION */
 .cpt-perforation {
     width: 2px;
     display: flex;
@@ -333,7 +317,6 @@
     flex-shrink: 0;
 }
 
-/* RIGHT STUB */
 .cpt-pass-right {
     width: 180px;
     flex-shrink: 0;
@@ -365,7 +348,6 @@
 }
 .cpt-stub-details p { margin: 0; }
 
-/* BARCODE */
 .cpt-barcode-area {
     margin-top: auto;
     display: flex;
@@ -381,7 +363,6 @@
     min-width: 2px;
 }
 
-/* ── ACTION BUTTONS ── */
 .cpt-action-buttons {
     display: flex;
     gap: 14px;
@@ -428,8 +409,6 @@
     background: rgba(255,255,255,0.1);
     color: #fff;
 }
-
-/* ── RESPONSIVE ── */
 @media (max-width: 700px) {
     .cpt-card { padding: 36px 20px; }
     .cpt-form-grid-2,

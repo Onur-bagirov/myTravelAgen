@@ -20,7 +20,7 @@
     padding: 40px;
     border-radius: 35px;
     width: 100%;
-    max-width: 520px; /* Form genişləndiyi üçün bir az artırdıq */
+    max-width: 520px;
     text-align: center;
     color: white;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
@@ -68,7 +68,6 @@
     transition: 0.3s;
 }
 
-/* Tarix seçimi üçün ikon rəngi */
 .date-input::-webkit-calendar-picker-indicator {
     filter: invert(1);
     cursor: pointer;

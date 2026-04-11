@@ -443,9 +443,6 @@
 .st-book-btn:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
 .st-book-btn:disabled { opacity: .45; cursor: default; }
 
-/* ── Admin delete düyməsi (showPlane.css və showTrain.css-ə əlavə edin) ─── */
-
-/* Plane ticket kartı üçün */
 .spt-delete-btn {
   background: none;
   border: none;
@@ -465,7 +462,6 @@
   transform: scale(0.92);
 }
 
-/* Plane sayfasındakı xəta banneri */
 .spt-error-banner {
   margin: 0 0 1rem;
   padding: 10px 16px;
@@ -476,7 +472,6 @@
   border: 0.5px solid rgba(239, 68, 68, 0.25);
 }
 
-/* Train ticket kartı üçün */
 .st-delete-btn {
   background: none;
   border: none;
@@ -496,7 +491,6 @@
   transform: scale(0.92);
 }
 
-/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 600px) {
   .st-container { padding: 40px 16px 60px; }
   .st-filters { flex-direction: column; }

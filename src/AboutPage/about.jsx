@@ -1,12 +1,12 @@
 import React from 'react';
-import { useNavigate } from "react-router-dom"; // Naviqasiya üçün mütləqdir
+import { useNavigate } from "react-router-dom";
 import './about.css';
 
 const About = () => {
-  const navigate = useNavigate(); // Hook-u çağırırıq
+  const navigate = useNavigate(); 
 
   const handleStartTrip = () => {
-    navigate("/buy"); // Düyməyə basanda 'Buy' səhifəsinə uçur
+    navigate("/buy");
   };
 
   const stats = [
@@ -19,7 +19,6 @@ const About = () => {
     <div className="about-page-wrapper">
       <div className="about-container">
         
-        {/* HERO SECTION */}
         <section className="about-hero">
           <span className="badge-text">Since 2026</span>
           <h1 className="about-title">We Redefine the <br /> <span>Journey Experience.</span></h1>
@@ -28,7 +27,7 @@ const About = () => {
           </p>
         </section>
 
-        {/* STATS SECTION */}
+
         <div className="stats-grid">
           {stats.map((stat, index) => (
             <div key={index} className="stat-card">
@@ -38,7 +37,6 @@ const About = () => {
           ))}
         </div>
 
-        {/* CONTENT SECTION */}
         <section className="about-details">
           <div className="detail-item">
             <div className="detail-icon">🌍</div>

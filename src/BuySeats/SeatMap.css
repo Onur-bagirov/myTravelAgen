@@ -1,10 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   SeatMap.css  –  Aviation dark theme
-   ═══════════════════════════════════════════════════════════ */
-
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:wght@400;500&display=swap");
 
-/* ── Root tokens ── */
 :root {
   --bg:          #0d1117;
   --surface:     #161c27;
@@ -18,7 +13,6 @@
   --seat-size:   52px;
 }
 
-/* ── Outer wrapper ── */
 .seatmap-root {
   min-height: 100vh;
   background: var(--bg);
@@ -31,7 +25,6 @@
   gap: 2rem;
 }
 
-/* ── Header ── */
 .seatmap-header {
   text-align: center;
   display: flex;
@@ -66,7 +59,6 @@
   letter-spacing: 0.06em;
 }
 
-/* ── Legend ── */
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -94,7 +86,6 @@
   box-shadow: 0 0 6px var(--occupied);
 }
 
-/* ── Cabin grid ── */
 .seatmap-cabin {
   display: flex;
   flex-direction: column;
@@ -106,7 +97,6 @@
   box-shadow: 0 8px 40px #00000066;
 }
 
-/* ── Row ── */
 .seat-row {
   display: flex;
   align-items: center;
@@ -141,12 +131,11 @@
   height: var(--seat-size);
 }
 
-/* ── Seat wrapper (positions tooltip) ── */
 .seat-wrapper {
   position: relative;
 }
 
-/* ── Seat button ── */
+
 .seat-btn {
   width: var(--seat-size);
   height: var(--seat-size);
@@ -167,7 +156,6 @@
     background 0.15s ease;
 }
 
-/* free state */
 .seat-btn.seat--free {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
@@ -179,7 +167,6 @@
   z-index: 1;
 }
 
-/* occupied state */
 .seat-btn.seat--occupied {
   background: var(--occupied-bg);
   border-color: color-mix(in srgb, var(--occupied) 50%, transparent);
@@ -191,7 +178,6 @@
   border-color: var(--occupied);
 }
 
-/* seat label */
 .seat-label {
   font-family: "DM Mono", monospace;
   font-size: 0.68rem;
@@ -204,7 +190,6 @@
   color: color-mix(in srgb, var(--occupied) 80%, white);
 }
 
-/* small colour dot at bottom of seat */
 .seat-dot {
   width: 7px;
   height: 7px;
@@ -222,9 +207,8 @@
   opacity: 1;
 }
 
-/* ── Tooltip ── */
 .seat-tooltip {
-  position: fixed;          /* fixed so it escapes overflow:hidden parents */
+  position: fixed;   
   z-index: 9999;
   min-width: 180px;
   background: #1a2235ee;
@@ -246,7 +230,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* re-enable pointer events on the button inside */
 .seat-tooltip button {
   pointer-events: all;
 }
@@ -283,7 +266,6 @@
 .tooltip-icon { font-size: 0.65rem; }
 .tooltip-status { flex: 1; word-break: break-word; }
 
-/* buy button */
 .tooltip-buy-btn {
   margin-top: 0.2rem;
   padding: 0.48rem 0;
@@ -310,7 +292,6 @@
   border: 1px solid var(--border);
 }
 
-/* ── Toast notification ── */
 .seatmap-toast {
   position: fixed;
   bottom: 2rem;
@@ -333,7 +314,6 @@
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* ── Loading ── */
 .seatmap-loading {
   min-height: 100vh;
   display: flex;
@@ -346,7 +326,6 @@
   letter-spacing: 0.1em;
 }
 
-/* ─Responsivliy */
 @media (max-width: 600px) {
   .seatmap-cabin {
     padding: 1rem;
