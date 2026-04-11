@@ -29,7 +29,6 @@ function parseLocations(data) {
   return [];
 }
 
-// ✅ DÜZƏLDİLDİ: datetime-local string-i birbaşa oxuyuruq, timezone sürüşməsi olmur
 const formatDateFromLocal = (localStr) => {
   if (!localStr) return "—";
   const [datePart] = localStr.split("T");
@@ -43,18 +42,48 @@ const formatTimeFromLocal = (localStr) => {
   if (!localStr) return "";
   const parts = localStr.split("T");
   if (parts.length < 2) return "";
-  // "HH:MM" və ya "HH:MM:SS" — ikisini də dəstəkləyirik
   return parts[1].slice(0, 5);
 };
 
-// Server-ə göndərmək üçün ISO string — local vaxtı UTC kimi göndəririk
 const toISOFromLocal = (localStr) => {
   if (!localStr) return "";
-  // "2025-04-11T13:00" → "2025-04-11T13:00:00.000Z"
-  return localStr.length === 16 
-    ? localStr + ":00.000Z" 
+  return localStr.length === 16
+    ? localStr + ":00.000Z"
     : localStr + ".000Z";
 };
+
+// ✅ ƏSAS FIX: Field komponenti CreatePlaneTicket-dən KƏNARDA təyin edilib
+// Əvvəl render() içində təyin olunurdu → hər render-də yeni komponent instance yaranırdı → focus itirdi
+const Field = ({ label, name, type = "text", placeholder, min, step, value, onChange, onBlur, error, touched }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>
+      {label}
+    </label>
+    <input
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      min={min}
+      step={step}
+      autoComplete="off"
+      className={`ticket-input${error && touched ? " ticket-input--error" : ""}`}
+    />
+    {touched && error && (
+      <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {error}</span>
+    )}
+  </div>
+);
+
+const SectionTitle = ({ icon, text }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "24px 0 14px", borderBottom: "1px solid rgba(167,139,250,0.2)", paddingBottom: 10 }}>
+    <span style={{ fontSize: 16 }}>{icon}</span>
+    <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa" }}>{text}</span>
+  </div>
+);
+
 export default function CreatePlaneTicket() {
   const navigate = (path) => { window.location.href = path; };
 
@@ -165,7 +194,6 @@ export default function CreatePlaneTicket() {
       plane: form.plane.trim(),
       meal: form.meal.trim(),
       luggageKg: Number(form.luggageKg),
-      // ✅ DÜZƏLDİLDİ: daxil edilən local string-i düzgün ISO-ya çeviririk
       dueDate: toISOFromLocal(form.dueDate),
       fromId: Number(form.locationId),
       toId: Number(form.toLocationId),
@@ -177,8 +205,6 @@ export default function CreatePlaneTicket() {
     };
 
     try {
-      console.log("📤 Göndərilən payload:", JSON.stringify(payload, null, 2));
-
       const res = await fetch(`${BASE_URL}/PlaneTicket`, {
         method: "POST",
         headers: authHeaders(),
@@ -186,13 +212,11 @@ export default function CreatePlaneTicket() {
       });
 
       const responseText = await res.text();
-      console.log("📥 Server cavabı (raw):", responseText);
 
       if (!res.ok) {
         let errMsg = `Server xətası: ${res.status}`;
         try {
           const errJson = JSON.parse(responseText);
-          console.log("📥 Server xətası (JSON):", errJson);
           if (errJson?.errors) {
             const msgs = Object.entries(errJson.errors)
               .map(([field, errs]) => `${field}: ${Array.isArray(errs) ? errs.join(", ") : errs}`)
@@ -207,10 +231,9 @@ export default function CreatePlaneTicket() {
 
       const data = JSON.parse(responseText);
       const ticket = data?.data ?? data;
-      // ✅ DÜZƏLDİLDİ: orijinal local string-i saxlayırıq ki, göstərəndə timezone problemi olmasın
       ticket._fromName = fromLocationName;
       ticket._toName = toLocationName;
-      ticket._localDueDate = form.dueDate; // local string saxlanır
+      ticket._localDueDate = form.dueDate;
       setCreatedTicket(ticket);
       setIsGenerated(true);
     } catch (err) {
@@ -237,79 +260,6 @@ export default function CreatePlaneTicket() {
     });
   };
 
-  const Field = ({ label, name, type = "text", placeholder, min, step }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>{label}</label>
-      <input
-        name={name} type={type} value={form[name]}
-        onChange={handleChange} onBlur={handleBlur}
-        placeholder={placeholder} min={min} step={step}
-        autoComplete="off"
-        style={{
-          background: errors[name] && touched[name] ? "rgba(255,80,80,0.07)" : "rgba(255,255,255,0.05)",
-          border: `1.5px solid ${errors[name] && touched[name] ? "#ff5050" : "rgba(255,255,255,0.12)"}`,
-          borderRadius: 10,
-          padding: "11px 14px",
-          color: "#fff",
-          fontSize: 14,
-          outline: "none",
-          transition: "border 0.2s",
-          width: "100%",
-          boxSizing: "border-box",
-          colorScheme: "dark",
-        }}
-        onFocus={e => e.target.style.borderColor = "#a78bfa"}
-        onBlur={e => { handleBlur(e); e.target.style.borderColor = errors[name] && touched[name] ? "#ff5050" : "rgba(255,255,255,0.12)"; }}
-      />
-      {touched[name] && errors[name] && (
-        <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {errors[name]}</span>
-      )}
-    </div>
-  );
-
-  const LocationSelect = ({ label, value, onChange, fieldKey }) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>{label}</label>
-      <select
-        value={value} onChange={onChange} disabled={locLoading}
-        style={{
-          background: "rgba(255,255,255,0.05)",
-          border: "1.5px solid rgba(255,255,255,0.12)",
-          borderRadius: 10,
-          padding: "11px 14px",
-          color: value ? "#fff" : "#666",
-          fontSize: 14,
-          outline: "none",
-          cursor: "pointer",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-        onFocus={e => e.target.style.borderColor = "#a78bfa"}
-        onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.12)"}
-      >
-        <option value="" style={{ background: "#1a1528" }}>
-          {locLoading ? "Yüklənir..." : "— Lokasiya seçin —"}
-        </option>
-        {locations.map(l => (
-          <option key={l.id} value={l.id} style={{ background: "#1a1528" }}>
-            {l.name}{l.country ? ` (${l.country})` : ""}
-          </option>
-        ))}
-      </select>
-      {fieldKey === "locationId" && touched.locationId && errors.locationId && (
-        <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {errors.locationId}</span>
-      )}
-    </div>
-  );
-
-  const SectionTitle = ({ icon, text }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "24px 0 14px", borderBottom: "1px solid rgba(167,139,250,0.2)", paddingBottom: 10 }}>
-      <span style={{ fontSize: 16 }}>{icon}</span>
-      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa" }}>{text}</span>
-    </div>
-  );
-
-  // ✅ Boarding pass-də göstərilən tarix/saat — həmişə _localDueDate-dən oxuyuruq
   const displayDate = createdTicket?._localDueDate || form.dueDate;
   const displayFrom = createdTicket?._fromName || fromLocationName;
   const displayTo   = createdTicket?._toName   || toLocationName;
@@ -329,15 +279,60 @@ export default function CreatePlaneTicket() {
         @keyframes fly { 0%,100% { transform: translateX(0) rotate(-5deg); } 50% { transform: translateX(12px) rotate(5deg); } }
         @keyframes barcode-in { from { opacity:0; transform: scaleY(0); } to { opacity:1; transform: scaleY(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        input::placeholder { color: rgba(255,255,255,0.2); }
+
+        .ticket-input {
+          background: rgba(255,255,255,0.05);
+          border: 1.5px solid rgba(255,255,255,0.12);
+          border-radius: 10px;
+          padding: 11px 14px;
+          color: #fff;
+          font-size: 14px;
+          outline: none;
+          transition: border-color 0.2s;
+          width: 100%;
+          box-sizing: border-box;
+          color-scheme: dark;
+          font-family: inherit;
+        }
+        .ticket-input:focus {
+          border-color: #a78bfa;
+        }
+        .ticket-input--error {
+          background: rgba(255,80,80,0.07);
+          border-color: #ff5050 !important;
+        }
+        .ticket-input::placeholder { color: rgba(255,255,255,0.2); }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
         input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
-        select option { background: #1a1528; color: #fff; }
+
+        .ticket-select {
+          background: rgba(255,255,255,0.05);
+          border: 1.5px solid rgba(255,255,255,0.12);
+          border-radius: 10px;
+          padding: 11px 14px;
+          color: #fff;
+          font-size: 14px;
+          outline: none;
+          cursor: pointer;
+          width: 100%;
+          box-sizing: border-box;
+          transition: border-color 0.2s;
+          font-family: inherit;
+        }
+        .ticket-select:focus {
+          border-color: #a78bfa;
+        }
+        .ticket-select--error {
+          background: rgba(255,80,80,0.07);
+          border-color: #ff5050 !important;
+        }
+        .ticket-select option { background: #1a1528; color: #fff; }
+
+        .action-btn:hover { transform: translateY(-2px); }
       `}</style>
 
       {!isGenerated ? (
-        /* ── FORM ── */
         <div style={{
           width: "100%", maxWidth: 680,
           background: "rgba(255,255,255,0.04)",
@@ -367,18 +362,28 @@ export default function CreatePlaneTicket() {
           <form onSubmit={handleSubmit} noValidate style={{ padding: "28px 36px 36px" }}>
             <SectionTitle icon="✈" text="Airline Məlumatları" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              <Field label="Airline Adı" name="airline" placeholder="məs. AZAL" />
-              <Field label="Gate" name="gate" placeholder="məs. A12" />
-              <Field label="Plane Modeli" name="plane" placeholder="məs. Boeing 737" />
-              <Field label="Yemək Tipi" name="meal" placeholder="məs. Standard" />
+              <Field label="Airline Adı" name="airline" placeholder="məs. AZAL"
+                value={form.airline} onChange={handleChange} onBlur={handleBlur}
+                error={errors.airline} touched={touched.airline} />
+              <Field label="Gate" name="gate" placeholder="məs. A12"
+                value={form.gate} onChange={handleChange} onBlur={handleBlur}
+                error={errors.gate} touched={touched.gate} />
+              <Field label="Plane Modeli" name="plane" placeholder="məs. Boeing 737"
+                value={form.plane} onChange={handleChange} onBlur={handleBlur}
+                error={errors.plane} touched={touched.plane} />
+              <Field label="Yemək Tipi" name="meal" placeholder="məs. Standard"
+                value={form.meal} onChange={handleChange} onBlur={handleBlur}
+                error={errors.meal} touched={touched.meal} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
-              <Field label="Bagaj (kg)" name="luggageKg" type="number" min="0" step="0.5" />
-              {/* ✅ DÜZƏLDİLDİ: datetime-local — daxil etdiyin kimi görünür */}
-              <Field label="Uçuş Tarixi & Saatı" name="dueDate" type="datetime-local" />
+              <Field label="Bagaj (kg)" name="luggageKg" type="number" min="0" step="0.5"
+                value={form.luggageKg} onChange={handleChange} onBlur={handleBlur}
+                error={errors.luggageKg} touched={touched.luggageKg} />
+              <Field label="Uçuş Tarixi & Saatı" name="dueDate" type="datetime-local"
+                value={form.dueDate} onChange={handleChange} onBlur={handleBlur}
+                error={errors.dueDate} touched={touched.dueDate} />
             </div>
 
-            {/* ✅ Seçilmiş tarix/saat preview */}
             {form.dueDate && (
               <div style={{
                 marginTop: 10, padding: "10px 16px",
@@ -396,33 +401,63 @@ export default function CreatePlaneTicket() {
 
             <SectionTitle icon="📍" text="Lokasiyalar" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              <LocationSelect label="Haradan (From) *" value={form.locationId} onChange={handleFromLocation} fieldKey="locationId" />
-              <LocationSelect label="Haraya (To)" value={form.toLocationId} onChange={handleToLocation} fieldKey="toLocationId" />
+              {/* From location */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>Haradan (From) *</label>
+                <select
+                  value={form.locationId}
+                  onChange={handleFromLocation}
+                  disabled={locLoading}
+                  className={`ticket-select${touched.locationId && errors.locationId ? " ticket-select--error" : ""}`}
+                >
+                  <option value="">{locLoading ? "Yüklənir..." : "— Lokasiya seçin —"}</option>
+                  {locations.map(l => (
+                    <option key={l.id} value={l.id}>{l.name}{l.country ? ` (${l.country})` : ""}</option>
+                  ))}
+                </select>
+                {touched.locationId && errors.locationId && (
+                  <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {errors.locationId}</span>
+                )}
+              </div>
+
+              {/* To location */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>Haraya (To)</label>
+                <select
+                  value={form.toLocationId}
+                  onChange={handleToLocation}
+                  disabled={locLoading}
+                  className="ticket-select"
+                >
+                  <option value="">{locLoading ? "Yüklənir..." : "— Lokasiya seçin —"}</option>
+                  {locations.map(l => (
+                    <option key={l.id} value={l.id}>{l.name}{l.country ? ` (${l.country})` : ""}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <SectionTitle icon="💺" text="Oturacaq Konfiqurasiyası" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+              {/* Variant select */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>Variant (Sinif)</label>
                 <select
                   value={form.variantId}
-                  onChange={e => { setForm(prev => ({ ...prev, variantId: e.target.value })); if (touched.variantId) setErrors(prev => ({ ...prev, variantId: !e.target.value ? "Variant seçin" : null })); }}
-                  onBlur={() => { setTouched(p => ({ ...p, variantId: true })); setErrors(p => ({ ...p, variantId: !form.variantId ? "Variant seçin" : null })); }}
-                  disabled={varLoading}
-                  style={{
-                    background: errors.variantId && touched.variantId ? "rgba(255,80,80,0.07)" : "rgba(255,255,255,0.05)",
-                    border: `1.5px solid ${errors.variantId && touched.variantId ? "#ff5050" : "rgba(255,255,255,0.12)"}`,
-                    borderRadius: 10, padding: "11px 14px", color: form.variantId ? "#fff" : "#666",
-                    fontSize: 14, outline: "none", cursor: "pointer", width: "100%", boxSizing: "border-box",
+                  onChange={e => {
+                    setForm(prev => ({ ...prev, variantId: e.target.value }));
+                    if (touched.variantId) setErrors(prev => ({ ...prev, variantId: !e.target.value ? "Variant seçin" : null }));
                   }}
+                  onBlur={() => {
+                    setTouched(p => ({ ...p, variantId: true }));
+                    setErrors(p => ({ ...p, variantId: !form.variantId ? "Variant seçin" : null }));
+                  }}
+                  disabled={varLoading}
+                  className={`ticket-select${touched.variantId && errors.variantId ? " ticket-select--error" : ""}`}
                 >
-                  <option value="" style={{ background: "#1a1528" }}>
-                    {varLoading ? "Yüklənir..." : variants.length === 0 ? "— Variant yoxdur —" : "— Variant seçin —"}
-                  </option>
+                  <option value="">{varLoading ? "Yüklənir..." : variants.length === 0 ? "— Variant yoxdur —" : "— Variant seçin —"}</option>
                   {variants.map(v => (
-                    <option key={v.id} value={v.id} style={{ background: "#1a1528" }}>
-                      {v.name} — {v.price} AZN
-                    </option>
+                    <option key={v.id} value={v.id}>{v.name} — {v.price} AZN</option>
                   ))}
                 </select>
                 {touched.variantId && errors.variantId && (
@@ -432,8 +467,13 @@ export default function CreatePlaneTicket() {
                   <span style={{ color: "#f59e0b", fontSize: 11, fontWeight: 600 }}>⚠ Əvvəlcə Admin paneldən Variant yaradın!</span>
                 )}
               </div>
-              <Field label="Sıra Sayı" name="rowCount" type="number" min="1" />
-              <Field label="Sıradakı Oturacaq" name="seatsPerRow" type="number" min="1" />
+
+              <Field label="Sıra Sayı" name="rowCount" type="number" min="1"
+                value={form.rowCount} onChange={handleChange} onBlur={handleBlur}
+                error={errors.rowCount} touched={touched.rowCount} />
+              <Field label="Sıradakı Oturacaq" name="seatsPerRow" type="number" min="1"
+                value={form.seatsPerRow} onChange={handleChange} onBlur={handleBlur}
+                error={errors.seatsPerRow} touched={touched.seatsPerRow} />
             </div>
 
             {serverError && (
@@ -456,6 +496,7 @@ export default function CreatePlaneTicket() {
                 cursor: loading ? "not-allowed" : "pointer",
                 transition: "all 0.25s", boxShadow: "0 8px 32px rgba(109,40,217,0.35)",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                fontFamily: "inherit",
               }}
             >
               {loading ? (
@@ -537,7 +578,6 @@ export default function CreatePlaneTicket() {
                   ["PLANE",   createdTicket?.plane || form.plane],
                   ["MEAL",    createdTicket?.meal || form.meal],
                   ["BAGAJ",   `${createdTicket?.luggageKg ?? form.luggageKg} kg`],
-                  // ✅ DÜZƏLDİLDİ: local string-dən oxuyuruq
                   ["TARİX",   formatDateFromLocal(displayDate)],
                   ["SAAT",    formatTimeFromLocal(displayDate)],
                   ["OTURACAQ", createdTicket?.totalTicketsCreated ?? "—"],
@@ -579,15 +619,12 @@ export default function CreatePlaneTicket() {
                 <div style={{ fontSize: 9, color: "#555", marginTop: 2 }}>BOARDING PASS</div>
               </div>
               <div style={{ fontSize: 12, color: "#d1d5db", fontWeight: 600, lineHeight: 1.5 }}>
-                {(displayFrom || "—").slice(0, 3).toUpperCase()}
-                &nbsp;→&nbsp;
-                {(displayTo || "—").slice(0, 3).toUpperCase()}
+                {(displayFrom || "—").slice(0, 3).toUpperCase()} → {(displayTo || "—").slice(0, 3).toUpperCase()}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {[
                   ["Gate",  createdTicket?.gate || form.gate],
                   ["Plane", createdTicket?.plane || form.plane],
-                  // ✅ DÜZƏLDİLDİ: local string-dən oxuyuruq
                   ["Date",  formatDateFromLocal(displayDate)],
                   ["Time",  formatTimeFromLocal(displayDate)],
                   ["Seats", createdTicket?.totalTicketsCreated ?? "—"],
@@ -623,15 +660,12 @@ export default function CreatePlaneTicket() {
               { label: "✈ Biletlərə Bax", onClick: () => navigate("/Show-Ticket"), bg: "rgba(255,255,255,0.08)" },
               { label: "🏠 Ana Səhifə", onClick: () => navigate("/"), bg: "rgba(255,255,255,0.05)" },
             ].map(({ label, onClick, bg }) => (
-              <button key={label} onClick={onClick} style={{
+              <button key={label} onClick={onClick} className="action-btn" style={{
                 padding: "12px 24px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)",
                 background: bg, color: "#fff", fontWeight: 700, fontSize: 13,
                 cursor: "pointer", transition: "transform 0.15s, opacity 0.15s",
-                letterSpacing: "0.03em",
-              }}
-                onMouseEnter={e => e.target.style.transform = "translateY(-2px)"}
-                onMouseLeave={e => e.target.style.transform = "translateY(0)"}
-              >
+                letterSpacing: "0.03em", fontFamily: "inherit",
+              }}>
                 {label}
               </button>
             ))}

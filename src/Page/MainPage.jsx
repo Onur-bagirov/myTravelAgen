@@ -12,12 +12,16 @@ const destinations = [
 export default function MainPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   const checkUser = () => {
     const token = localStorage.getItem("userToken");
+    const role = localStorage.getItem("userRole");
     const firstName = localStorage.getItem("userFirstName");
     const lastName = localStorage.getItem("userLastName");
+    
     setUser(token && firstName ? { firstName, lastName } : null);
+    setUserRole(role);
   };
 
   useEffect(() => {
@@ -25,6 +29,9 @@ export default function MainPage() {
     window.addEventListener("storage", checkUser);
     return () => window.removeEventListener("storage", checkUser);
   }, []);
+
+  const isAdmin = userRole === "Admin";
+  const isCompany = userRole === "Company";
 
   return (
     <div className="main-page">
@@ -46,7 +53,15 @@ export default function MainPage() {
             <div className="hero-buttons">
               {user ? (
                 <>
-                  <button className="explore-btn" onClick={() => navigate("/buy")}>Explore Tours</button>
+                  {/* Admin üçün Add Company, Company üçün Add Ticket, digərləri üçün Explore */}
+                  {isAdmin ? (
+                    <button className="explore-btn" onClick={() => navigate("/create-executive")}>Add Company</button>
+                  ) : isCompany ? (
+                    <button className="explore-btn" onClick={() => navigate("/Select-Ticket")}>Add Ticket</button>
+                  ) : (
+                    <button className="explore-btn" onClick={() => navigate("/buy")}>Explore Tours</button>
+                  )}
+                  
                   <button className="details-btn" onClick={() => navigate("/User-Profile")}>My Profile</button>
                 </>
               ) : (
