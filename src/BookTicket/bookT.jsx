@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PaymentModal from "../PymetModal/pyMod";
 import "./bookT.css";
 
 const API_BASE = "http://localhost:5251/api";
@@ -31,6 +32,10 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+
+  // ── Vaxtı keçib-keçmədiyini yoxla ───────────────────────────────────────
+  const isExpired = flight?.dueDate ? new Date(flight.dueDate) < new Date() : false;
 
   const variantGroups = seats.reduce((acc, s) => {
     const key = s.variantName;
@@ -60,6 +65,10 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   }, [flight.id]);
 
   async function handleBuy() {
+    if (isExpired) {
+      setError("Bu uçuşun vaxtı keçib. Zəhmət olmasa başqa uçuş seçin.");
+      return;
+    }
     if (!selectedSeat) {
       setError("Zəhmət olmasa bir oturacaq seçin.");
       return;
@@ -76,8 +85,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
 
     try {
       const body = {
-        // ✅ DÜZƏLİŞ: flight.id yox, seçilmiş oturacağın öz PlaneTicketId-si istifadə edilir
-        // Beləliklə hər oturacaq müstəqil bilətə bağlıdır, biri satılsa digərləri bloklanmır
         id: Number(selectedSeat.planeTicketId ?? flight.id),
         userId: Number(userId),
         dueDate: flight.dueDate,
@@ -104,13 +111,11 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         result = null;
       }
 
-      // ✅ DÜZƏLİŞ: Backend 400 qaytarırsa (bilet artıq satılıb / oturacaq dolu) xəta göstər
       if (!res.ok) {
         let errMsg = result?.message || result?.title || `Server xətası: ${res.status}`;
         if (result?.errors) {
           errMsg = Object.values(result.errors).flat().join(", ");
         }
-        // Xəta olan oturacağı UI-da dolu kimi işarələ və seçimi sıfırla
         setSeats((prev) =>
           prev.map((s) =>
             s.id === selectedSeat.id ? { ...s, isOccupied: true } : s
@@ -120,7 +125,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         throw new Error(errMsg);
       }
 
-      // ✅ DÜZƏLİŞ: data null gəlirsə (bilet başqası tərəfindən alınıb) xəta göstər
       if (!result?.data) {
         setSeats((prev) =>
           prev.map((s) =>
@@ -164,6 +168,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const luggageExtra = luggageKg > (flight.luggageKg || 20) ? 10 : 0;
   const totalPrice = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
 
+  // ── Uğur ekranı ──────────────────────────────────────────────────────────
   if (success) {
     return (
       <div className="fb-page">
@@ -182,13 +187,26 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     );
   }
 
+  // ── Əsas ekran ────────────────────────────────────────────────────────────
   return (
     <div className="fb-page">
       <div className="fb-noise" />
       <div className="fb-inner">
         <button className="fb-back" onClick={onBack}>← Geri</button>
 
-        <div className="fb-summary">
+        {/* ── Vaxtı keçmiş xəbərdarlıq banneri ── */}
+        {isExpired && (
+          <div className="fb-expired-banner">
+            <span className="fb-expired-icon">🕐</span>
+            <div>
+              <strong>Bu uçuşun vaxtı keçib</strong>
+              <p>Uçuş tarixi: {formatDate(flight.dueDate)} · {formatTime(flight.dueDate)}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Bilet xülasəsi */}
+        <div className={`fb-summary${isExpired ? " fb-summary--expired" : ""}`}>
           <div className="fb-summary-top">
             <span className="fb-eyebrow">✦ {flight.airline}</span>
             <span className="fb-flight-badge">{flight.plane}</span>
@@ -219,9 +237,17 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         </div>
 
-        <div className="fb-section">
-          <h3 className="fb-section-title"><span className="fb-section-num">01</span>Oturacaq Seçin</h3>
-          {seatsLoading ? (
+        {/* 01 — Oturacaq seçimi — vaxtı keçibsə bloklanır */}
+        <div className={`fb-section${isExpired ? " fb-section--disabled" : ""}`}>
+          <h3 className="fb-section-title">
+            <span className="fb-section-num">01</span>Oturacaq Seçin
+          </h3>
+
+          {isExpired ? (
+            <div className="fb-seats-empty">
+              Bu uçuş artıq tamamlanıb. Oturacaq seçimi mümkün deyil.
+            </div>
+          ) : seatsLoading ? (
             <div className="fb-seats-loading">
               {[...Array(12)].map((_, i) => <div key={i} className="fb-seat-skeleton" />)}
             </div>
@@ -259,62 +285,103 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           )}
         </div>
 
-        <div className="fb-section">
-          <h3 className="fb-section-title"><span className="fb-section-num">02</span>Əlavələr</h3>
-          <div className="fb-options">
-            <div className="fb-option">
-              <div className="fb-option-info">
-                <span className="fb-option-icon">🐾</span>
-                <div><span className="fb-option-name">Ev heyvanı</span></div>
+        {/* 02 — Əlavələr — vaxtı keçibsə gizlədilir */}
+        {!isExpired && (
+          <div className="fb-section">
+            <h3 className="fb-section-title">
+              <span className="fb-section-num">02</span>Əlavələr
+            </h3>
+            <div className="fb-options">
+              <div className="fb-option">
+                <div className="fb-option-info">
+                  <span className="fb-option-icon">🐾</span>
+                  <div><span className="fb-option-name">Ev heyvanı</span></div>
+                </div>
+                <div className={`fb-toggle${hasPet ? " fb-toggle--on" : ""}`} onClick={() => setHasPet(!hasPet)}>
+                  <span className="fb-toggle-knob" />
+                </div>
               </div>
-              <div className={`fb-toggle${hasPet ? " fb-toggle--on" : ""}`} onClick={() => setHasPet(!hasPet)}>
-                <span className="fb-toggle-knob" />
-              </div>
-            </div>
 
-            <div className="fb-option">
-              <div className="fb-option-info">
-                <span className="fb-option-icon">👶</span>
-                <div><span className="fb-option-name">Uşaq</span></div>
+              <div className="fb-option">
+                <div className="fb-option-info">
+                  <span className="fb-option-icon">👶</span>
+                  <div><span className="fb-option-name">Uşaq</span></div>
+                </div>
+                <div className={`fb-toggle${hasChild ? " fb-toggle--on" : ""}`} onClick={() => setHasChild(!hasChild)}>
+                  <span className="fb-toggle-knob" />
+                </div>
               </div>
-              <div className={`fb-toggle${hasChild ? " fb-toggle--on" : ""}`} onClick={() => setHasChild(!hasChild)}>
-                <span className="fb-toggle-knob" />
-              </div>
-            </div>
 
-            <div className="fb-option fb-option--luggage">
-              <div className="fb-option-info">
-                <span className="fb-option-icon">🧳</span>
-                <div><span className="fb-option-name">Bagaj çəkisi</span></div>
-              </div>
-              <div className="fb-counter">
-                <button className="fb-counter-btn" onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}>−</button>
-                <span className="fb-counter-val">{luggageKg} kg</span>
-                <button className="fb-counter-btn" onClick={() => setLuggageKg(luggageKg + 5)}>+</button>
+              <div className="fb-option fb-option--luggage">
+                <div className="fb-option-info">
+                  <span className="fb-option-icon">🧳</span>
+                  <div><span className="fb-option-name">Bagaj çəkisi</span></div>
+                </div>
+                <div className="fb-counter">
+                  <button className="fb-counter-btn" onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}>−</button>
+                  <span className="fb-counter-val">{luggageKg} kg</span>
+                  <button className="fb-counter-btn" onClick={() => setLuggageKg(luggageKg + 5)}>+</button>
+                </div>
               </div>
             </div>
+            <textarea
+              className="fb-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Xüsusi qeyd..."
+            />
           </div>
-          <textarea className="fb-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Xüsusi qeyd..." />
-        </div>
+        )}
 
-        {selectedSeat && (
+        {/* Sifariş xülasəsi */}
+        {selectedSeat && !isExpired && (
           <div className="fb-order-summary">
-            <div className="fb-order-row"><span>Baza + Sinif</span><span>{(basePrice + seatExtra).toFixed(2)} ₼</span></div>
-            {luggageExtra > 0 && <div className="fb-order-row"><span>Əlavə bagaj</span><span>+{luggageExtra} ₼</span></div>}
-            <div className="fb-order-total"><span>Cəmi</span><span>{totalPrice} ₼</span></div>
+            <div className="fb-order-row">
+              <span>Baza + Sinif</span>
+              <span>{(basePrice + seatExtra).toFixed(2)} ₼</span>
+            </div>
+            {luggageExtra > 0 && (
+              <div className="fb-order-row">
+                <span>Əlavə bagaj</span>
+                <span>+{luggageExtra} ₼</span>
+              </div>
+            )}
+            <div className="fb-order-total">
+              <span>Cəmi</span>
+              <span>{totalPrice} ₼</span>
+            </div>
           </div>
         )}
 
         {error && <div className="fb-error"><span>⚠</span> {error}</div>}
 
-        <button
-          className={`fb-buy-btn ${buying ? "fb-buy-btn--loading" : ""} ${!selectedSeat ? "fb-buy-btn--disabled" : ""}`}
-          onClick={handleBuy}
-          disabled={buying || !selectedSeat}
-        >
-          {buying ? "Emal edilir..." : `Bilet Al · ${totalPrice} ₼`}
-        </button>
+        {/* ── Alış düyməsi — vaxtı keçibsə tamamilə bloklanır ── */}
+        {isExpired ? (
+          <button className="fb-buy-btn fb-buy-btn--expired" disabled>
+            🕐 Uçuşun vaxtı keçib
+          </button>
+        ) : (
+          <button
+            className={`fb-buy-btn ${buying ? "fb-buy-btn--loading" : ""} ${!selectedSeat ? "fb-buy-btn--disabled" : ""}`}
+            onClick={() => !isExpired && selectedSeat && setShowPayment(true)}
+            disabled={buying || !selectedSeat}
+          >
+            {buying ? "Emal edilir..." : `Bilet Al · ${totalPrice} ₼`}
+          </button>
+        )}
       </div>
+
+      {showPayment && (
+        <PaymentModal
+          amount={totalPrice}
+          loading={buying}
+          onCancel={() => setShowPayment(false)}
+          onConfirm={() => {
+            setShowPayment(false);
+            handleBuy();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -27,6 +27,8 @@ import ShowTrainTickets from "./ShowTrainTicket/showTrain";
 import AllMyTicket from "./AllMyTicket/allMyT";
 import AllMyP from "./MyPlainTicket/allMyP";
 import TrainBooking from "./BookTrainTicket/bookTrainT";
+import AllMyTrainTickets from "./MyTrainTicket/myTrainT";
+import PaymentModal from "./PymetModal/pyMod";
 
 function App() {    
   return (
@@ -47,6 +49,8 @@ function App() {
         <Route path="/show-ticket" element={<ShowTicket/>} />
         <Route path="/show-plane-ticket" element={<ShowPlaneTicket/>} />
         <Route path="/Show-Train-T" element={<ShowTrainTickets/>}/>
+        <Route path="/All-My-Train-T" element={<AllMyTrainTickets/>}/>
+        <Route path="/Pay-Mod" element={<PaymentModal/>}/>
         
         {/* Seçim səhifəsi (2 düymə olan yer) */}
         <Route path="/All-My-Tic" element={<AllMyTicket/>} />

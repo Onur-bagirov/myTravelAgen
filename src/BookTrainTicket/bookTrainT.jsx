@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PaymentModal from "../PymetModal/pyMod";
 import "./bookTrainT.css";
 
 const API_BASE = "http://localhost:5251/api";
@@ -31,6 +32,10 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+
+  // ── Vaxtı keçib-keçmədiyini yoxla ───────────────────────────────────────
+  const isExpired = train?.dueDate ? new Date(train.dueDate) < new Date() : false;
 
   const variantGroups = seats.reduce((acc, s) => {
     const key = s.variantName;
@@ -40,7 +45,6 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
   }, {});
 
   useEffect(() => {
-    // Əgər train prop yoxdursa (standalone route kimi açılıbsa), heç nə etmə
     if (!train?.id) {
       setSeatsLoading(false);
       return;
@@ -65,6 +69,10 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
   }, [train?.id]);
 
   async function handleBuy() {
+    if (isExpired) {
+      setError("Bu bilətin vaxtı keçib. Zəhmət olmasa başqa bilet seçin.");
+      return;
+    }
     if (!selectedSeat) {
       setError("Zəhmət olmasa bir oturacaq seçin.");
       return;
@@ -157,11 +165,6 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
     });
   }
 
-  // ✅ Məbləğ hesabı:
-  // basePrice  = train.price (ən aşağı qiymət)
-  // seatExtra  = variantPrice - basePrice (sinif fərqi, mənfi ola bilməz)
-  // luggageExtra = limit (30kg) aşıldıqda hər 5kg üçün +5₼
-  // totalPrice = basePrice + seatExtra + luggageExtra
   const basePrice = Number(train?.price || 0);
   const seatExtra = selectedSeat
     ? Math.max(0, Number(selectedSeat.variantPrice || 0) - basePrice)
@@ -203,7 +206,13 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
           <div style={{ textAlign: "center", color: "var(--tb-muted)" }}>
             <p style={{ fontSize: 48, marginBottom: 16 }}>🚂</p>
             <p>Bu səhifəyə birbaşa daxil olmaq mümkün deyil.</p>
-            <p style={{ fontSize: 14, marginTop: 8 }}>Zəhmət olmasa <a href="/ticket/train" style={{ color: "var(--tb-accent)" }}>Qatar Biletləri</a> səhifəsindən daxil olun.</p>
+            <p style={{ fontSize: 14, marginTop: 8 }}>
+              Zəhmət olmasa{" "}
+              <a href="/ticket/train" style={{ color: "var(--tb-accent)" }}>
+                Qatar Biletləri
+              </a>{" "}
+              səhifəsindən daxil olun.
+            </p>
           </div>
         </div>
       </div>
@@ -219,8 +228,19 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
           <button className="tb-back" onClick={onBack}>← Geri</button>
         )}
 
+        {/* ── Vaxtı keçmiş xəbərdarlıq banneri ── */}
+        {isExpired && (
+          <div className="tb-expired-banner">
+            <span className="tb-expired-icon">🕐</span>
+            <div>
+              <strong>Bu bilətin vaxtı keçib</strong>
+              <p>Sefer tarixi: {formatDate(train.dueDate)} · {formatTime(train.dueDate)}</p>
+            </div>
+          </div>
+        )}
+
         {/* Bilet xülasəsi */}
-        <div className="tb-summary">
+        <div className={`tb-summary${isExpired ? " tb-summary--expired" : ""}`}>
           <div className="tb-summary-top">
             <span className="tb-eyebrow">🚄 {train.trainCompany}</span>
             <span className="tb-train-badge">{train.trainNumber}</span>
@@ -252,13 +272,17 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
           </div>
         </div>
 
-        {/* 01 — Oturacaq seçimi */}
-        <div className="tb-section">
+        {/* 01 — Oturacaq seçimi — vaxtı keçibsə bloklanır */}
+        <div className={`tb-section${isExpired ? " tb-section--disabled" : ""}`}>
           <h3 className="tb-section-title">
             <span className="tb-section-num">01</span>Oturacaq Seçin
           </h3>
 
-          {seatsLoading ? (
+          {isExpired ? (
+            <div className="tb-seats-empty">
+              Bu sefer artıq tamamlanıb. Oturacaq seçimi mümkün deyil.
+            </div>
+          ) : seatsLoading ? (
             <div className="tb-seats-loading">
               {[...Array(12)].map((_, i) => (
                 <div key={i} className="tb-seat-skeleton" />
@@ -316,67 +340,69 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
           )}
         </div>
 
-        {/* 02 — Əlavələr */}
-        <div className="tb-section">
-          <h3 className="tb-section-title">
-            <span className="tb-section-num">02</span>Əlavələr
-          </h3>
-          <div className="tb-options">
-            <div className="tb-option">
-              <div className="tb-option-info">
-                <span className="tb-option-icon">🐾</span>
-                <span className="tb-option-name">Ev heyvanı</span>
+        {/* 02 — Əlavələr — vaxtı keçibsə bloklanır */}
+        {!isExpired && (
+          <div className="tb-section">
+            <h3 className="tb-section-title">
+              <span className="tb-section-num">02</span>Əlavələr
+            </h3>
+            <div className="tb-options">
+              <div className="tb-option">
+                <div className="tb-option-info">
+                  <span className="tb-option-icon">🐾</span>
+                  <span className="tb-option-name">Ev heyvanı</span>
+                </div>
+                <div
+                  className={`tb-toggle${hasPet ? " tb-toggle--on" : ""}`}
+                  onClick={() => setHasPet(!hasPet)}
+                >
+                  <span className="tb-toggle-knob" />
+                </div>
               </div>
-              <div
-                className={`tb-toggle${hasPet ? " tb-toggle--on" : ""}`}
-                onClick={() => setHasPet(!hasPet)}
-              >
-                <span className="tb-toggle-knob" />
+
+              <div className="tb-option">
+                <div className="tb-option-info">
+                  <span className="tb-option-icon">👶</span>
+                  <span className="tb-option-name">Uşaq</span>
+                </div>
+                <div
+                  className={`tb-toggle${hasChild ? " tb-toggle--on" : ""}`}
+                  onClick={() => setHasChild(!hasChild)}
+                >
+                  <span className="tb-toggle-knob" />
+                </div>
+              </div>
+
+              <div className="tb-option">
+                <div className="tb-option-info">
+                  <span className="tb-option-icon">🧳</span>
+                  <span className="tb-option-name">Bagaj çəkisi</span>
+                </div>
+                <div className="tb-counter">
+                  <button
+                    className="tb-counter-btn"
+                    onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}
+                  >−</button>
+                  <span className="tb-counter-val">{luggageKg} kg</span>
+                  <button
+                    className="tb-counter-btn"
+                    onClick={() => setLuggageKg(luggageKg + 5)}
+                  >+</button>
+                </div>
               </div>
             </div>
 
-            <div className="tb-option">
-              <div className="tb-option-info">
-                <span className="tb-option-icon">👶</span>
-                <span className="tb-option-name">Uşaq</span>
-              </div>
-              <div
-                className={`tb-toggle${hasChild ? " tb-toggle--on" : ""}`}
-                onClick={() => setHasChild(!hasChild)}
-              >
-                <span className="tb-toggle-knob" />
-              </div>
-            </div>
-
-            <div className="tb-option">
-              <div className="tb-option-info">
-                <span className="tb-option-icon">🧳</span>
-                <span className="tb-option-name">Bagaj çəkisi</span>
-              </div>
-              <div className="tb-counter">
-                <button
-                  className="tb-counter-btn"
-                  onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}
-                >−</button>
-                <span className="tb-counter-val">{luggageKg} kg</span>
-                <button
-                  className="tb-counter-btn"
-                  onClick={() => setLuggageKg(luggageKg + 5)}
-                >+</button>
-              </div>
-            </div>
+            <textarea
+              className="tb-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Xüsusi qeyd..."
+            />
           </div>
-
-          <textarea
-            className="tb-note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Xüsusi qeyd..."
-          />
-        </div>
+        )}
 
         {/* Sifariş xülasəsi */}
-        {selectedSeat && (
+        {selectedSeat && !isExpired && (
           <div className="tb-order-summary">
             <div className="tb-order-row">
               <span>Baza qiyməti</span>
@@ -407,14 +433,33 @@ export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSucc
           </div>
         )}
 
-        <button
-          className={`tb-buy-btn ${buying ? "tb-buy-btn--loading" : ""} ${!selectedSeat ? "tb-buy-btn--disabled" : ""}`}
-          onClick={handleBuy}
-          disabled={buying || !selectedSeat}
-        >
-          {buying ? "Emal edilir..." : `Bilet Al · ${totalPrice} ₼`}
-        </button>
+        {/* ── Alış düyməsi — vaxtı keçibsə tamamilə bloklanır ── */}
+        {isExpired ? (
+          <button className="tb-buy-btn tb-buy-btn--expired" disabled>
+            🕐 Bilətin vaxtı keçib
+          </button>
+        ) : (
+          <button
+            className={`tb-buy-btn ${buying ? "tb-buy-btn--loading" : ""} ${!selectedSeat ? "tb-buy-btn--disabled" : ""}`}
+            onClick={() => !isExpired && selectedSeat && setShowPayment(true)}
+            disabled={buying || !selectedSeat}
+          >
+            {buying ? "Emal edilir..." : `Bilet Al · ${totalPrice} ₼`}
+          </button>
+        )}
       </div>
+
+      {showPayment && (
+        <PaymentModal
+          amount={totalPrice}
+          loading={buying}
+          onCancel={() => setShowPayment(false)}
+          onConfirm={() => {
+            setShowPayment(false);
+            handleBuy();
+          }}
+        />
+      )}
     </div>
   );
 }

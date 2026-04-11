@@ -1,0 +1,307 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── Overlay ── */
+.pm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: pmFadeIn 0.2s ease;
+}
+
+@keyframes pmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal ── */
+.pm-modal {
+  background: #0e1318;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  animation: pmSlideUp 0.25s ease;
+  font-family: 'Syne', sans-serif;
+}
+
+@keyframes pmSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  color: #64748b;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.pm-close:hover { background: rgba(255, 255, 255, 0.12); color: #e2e8f0; }
+
+/* ── Header ── */
+.pm-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pm-lock-icon {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+
+.pm-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+
+.pm-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-family: 'DM Mono', monospace;
+  margin: 0;
+}
+
+/* ── Kart preview ── */
+.pm-card-preview {
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #1e2a3a 0%, #0f1923 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: background 0.3s;
+}
+
+.pm-card-preview--visa {
+  background: linear-gradient(135deg, #1a237e 0%, #0d1b6e 100%);
+}
+.pm-card-preview--mastercard {
+  background: linear-gradient(135deg, #1b0000 0%, #3d1500 100%);
+}
+.pm-card-preview--kapital {
+  background: linear-gradient(135deg, #004d1a 0%, #001f0a 100%);
+}
+
+.pm-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pm-chip {
+  width: 32px;
+  height: 24px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #d4af37, #f5d06e);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+/* Brand logos */
+.pm-brand--visa {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0.05em;
+  font-style: italic;
+}
+
+.pm-brand--mc {
+  display: flex;
+  align-items: center;
+}
+.pm-mc-left, .pm-mc-right {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+.pm-mc-left  { background: rgba(235, 0, 27, 0.85); }
+.pm-mc-right { background: rgba(255, 163, 0, 0.85); margin-left: -10px; }
+
+.pm-brand--kb {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #4ade80;
+  letter-spacing: 0.1em;
+  border: 1px solid #4ade80;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* Card number */
+.pm-card-number {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.pm-card-group {
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.1em;
+}
+
+/* Card bottom */
+.pm-card-bottom {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.pm-card-label {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.pm-card-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.pm-card-amount {
+  margin-left: auto;
+  text-align: right;
+}
+
+.pm-card-val--price {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e8d5a3;
+}
+
+/* ── Form ── */
+.pm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pm-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pm-input {
+  background: #141a22;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #e2e8f0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.pm-input::placeholder { color: #334155; }
+
+.pm-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.pm-input--err {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+.pm-err {
+  font-size: 0.65rem;
+  color: #fca5a5;
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── Pay button ── */
+.pm-pay-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pm-pay-btn:hover:not(:disabled) { background: #2563eb; }
+.pm-pay-btn:active:not(:disabled) { transform: scale(0.98); }
+.pm-pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.pm-pay-btn--loading { background: #1d4ed8; }
+
+/* Spinner */
+.pm-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pmSpin 0.7s linear infinite;
+}
+
+@keyframes pmSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Disclaimer ── */
+.pm-disclaimer {
+  text-align: center;
+  font-size: 0.65rem;
+  color: #334155;
+  font-family: 'DM Mono', monospace;
+  margin: 0;
+}

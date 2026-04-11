@@ -695,6 +695,72 @@
   color: var(--tb-accent);
 }
 
+/* ── Vaxtı keçmiş bilet stillər — bookTrainT.css-ə əlavə et ── */
+
+/* Xəbərdarlıq banneri */
+.tb-expired-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  color: #fca5a5;
+}
+
+.tb-expired-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.tb-expired-banner strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fca5a5;
+  margin-bottom: 3px;
+}
+
+.tb-expired-banner p {
+  font-size: 0.75rem;
+  color: rgba(252, 165, 165, 0.7);
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Summary solğun görünüş */
+.tb-summary--expired {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+  pointer-events: none;
+}
+
+/* Bölmə bloklanmış vəziyyəti */
+.tb-section--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Alış düyməsi — vaxtı keçib */
+.tb-buy-btn--expired {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  color: #fca5a5;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  cursor: not-allowed;
+  letter-spacing: 0.02em;
+  margin-top: 8px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .tb-route-time {

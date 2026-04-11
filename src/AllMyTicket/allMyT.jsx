@@ -20,7 +20,7 @@ const AllMyTicket = () => {
           </div>
         </div>
 
-        <div className="ticket-card train-card" onClick={() => handleNavigation("/All-My-P")}>
+        <div className="ticket-card train-card" onClick={() => handleNavigation("/All-My-Train-T")}>
           <div className="card-overlay"></div>
           <div className="card-content">
             <div className="icon-badge">🚆</div>
