@@ -166,11 +166,10 @@ function BookingModal({ ticket, onClose }) {
   const [success, setSuccess]           = useState(false);
   const [showPayment, setShowPayment]   = useState(false);
 
-  const basePrice  = Number(ticket.price ?? ticket.minPrice ?? ticket.basePrice ?? 0);
-  const seatExtra  = Number(selectedSeat?.variantPrice ?? 0);
+  // ── Düzəliş: qiymət yalnız seat-in variantPrice-ından gəlir ──
   const totalPrice = selectedSeat
-    ? (basePrice + seatExtra).toFixed(2)
-    : basePrice.toFixed(2);
+    ? Number(selectedSeat.variantPrice ?? 0).toFixed(2)
+    : "—";
 
   useEffect(() => {
     if (!ticket?.id) return;
@@ -323,6 +322,14 @@ function TicketCard({ ticket, onClick, onDelete, adminMode }) {
   const fromFull = ticket.from?.split(",")[0] ?? "";
   const toFull   = ticket.to?.split(",")[0]   ?? "";
 
+  // Qiymət 0-dırsa "—" göstər
+  const displayPrice =
+    ticket.minPrice && Number(ticket.minPrice) > 0
+      ? `from ${Number(ticket.minPrice).toFixed(2)} ₼`
+      : ticket.price && Number(ticket.price) > 0
+        ? `${ticket.price} ₼`
+        : "—";
+
   return (
     <div className="st-card">
       <div className="st-card-header">
@@ -371,9 +378,7 @@ function TicketCard({ ticket, onClick, onDelete, adminMode }) {
       <div className="st-card-info st-card-info--2col">
         <div className="st-info-item">
           <span className="st-info-label">PRICE</span>
-          <span className="st-info-val st-info-val--price">
-            {ticket.price ?? ticket.minPrice ?? "—"} ₼
-          </span>
+          <span className="st-info-val st-info-val--price">{displayPrice}</span>
         </div>
         <div className="st-info-item">
           <span className="st-info-label">SEATS</span>

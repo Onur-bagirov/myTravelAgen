@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./showPlane.css";
 
@@ -46,57 +46,18 @@ function stateBadge(state) {
   return { color: "#a0a8c0", label: state };
 }
 
-function Tooltip({ seat, anchorRef }) {
-  const tipRef = useRef(null);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
-  const meta = getVariantMeta(seat.variantName);
-
-  useEffect(() => {
-    if (!anchorRef?.current || !tipRef?.current) return;
-    const btn = anchorRef.current.getBoundingClientRect();
-    const tip = tipRef.current.getBoundingClientRect();
-    let top = btn.top + window.scrollY - tip.height - 10;
-    let left = btn.left + window.scrollX + btn.width / 2 - tip.width / 2;
-    if (left < 8) left = 8;
-    if (left + tip.width > window.innerWidth - 8) left = window.innerWidth - 8 - tip.width;
-    setPos({ top, left });
-  }, [anchorRef]);
-
-  return (
-    <div ref={tipRef} className="seat-tooltip" style={{ top: pos.top, left: pos.left, "--accent": meta.accent }}>
-      <div className="tooltip-header">
-        <span className="tooltip-seat-name">{seat.name}</span>
-        <span className="tooltip-variant" style={{ color: meta.accent }}>{meta.label}</span>
-      </div>
-      <div className="tooltip-row">
-        <span>{seat.isOccupied ? "🔴 Occupied" : "🟢 Available"}</span>
-      </div>
-      {!seat.isOccupied && (
-        <div className="tooltip-price">{seat.variantPrice} ₼</div>
-      )}
-    </div>
-  );
-}
-
 function SeatButton({ seat }) {
-  const [hovered, setHovered] = useState(false);
-  const btnRef = useRef(null);
   const meta = getVariantMeta(seat.variantName);
-
   return (
     <div className="seat-wrapper">
       <button
-        ref={btnRef}
         className={`seat-btn ${seat.isOccupied ? "seat--occupied" : "seat--free"}`}
         style={{ "--accent": meta.accent, "--accent-bg": meta.bg }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         aria-label={`${seat.name} - ${seat.variantName} - ${seat.isOccupied ? "Occupied" : "Available"}`}
       >
         <span className="seat-label">{seat.name}</span>
         <span className="seat-dot" />
       </button>
-      {hovered && <Tooltip seat={seat} anchorRef={btnRef} />}
     </div>
   );
 }
@@ -335,7 +296,6 @@ export default function ShowPlaneTicket() {
   });
   const [highlightId, setHighlightId] = useState(newTicketId);
 
-
   useEffect(() => {
     fetch(`${BASE_URL}/Location?Limit=200&Page=1`, { headers: authHeaders() })
       .then(r => r.json())
@@ -414,11 +374,11 @@ export default function ShowPlaneTicket() {
         <div className="spt-filter-grid">
           <div className="spt-filter-group">
             <label>Airline</label>
-            <input 
-              type="text" 
-              placeholder="e.g. AZAL" 
-              value={airline} 
-              onChange={e => setAirline(e.target.value)} 
+            <input
+              type="text"
+              placeholder="e.g. AZAL"
+              value={airline}
+              onChange={e => setAirline(e.target.value)}
             />
           </div>
           <div className="spt-filter-group">
@@ -437,10 +397,10 @@ export default function ShowPlaneTicket() {
           </div>
           <div className="spt-filter-group">
             <label>Date</label>
-            <input 
-              type="date" 
-              value={date} 
-              onChange={e => setDate(e.target.value)} 
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
             />
           </div>
         </div>

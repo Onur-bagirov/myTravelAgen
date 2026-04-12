@@ -290,15 +290,6 @@
   letter-spacing: 0.04em;
 }
 
-.spt-card-id {
-  font-size: 11px;
-  color: rgba(255,255,255,0.3);
-  font-weight: 700;
-  background: rgba(255,255,255,0.05);
-  padding: 3px 9px;
-  border-radius: 6px;
-}
-
 .spt-card-route {
   display: flex;
   align-items: center;
@@ -445,7 +436,6 @@
   color: #fff;
 }
 
-/* ── Modal ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -533,7 +523,6 @@
 .modal-plane-icon {
   color: #ff4d4d;
   font-size: 22px;
-  filter: drop-shadow(0 0 8px rgba(255, 77, 77, 0.5));
 }
 
 .modal-meta {
@@ -574,7 +563,6 @@
   color: #ff8080;
 }
 
-/* ── Seatmap ── */
 .seatmap-legend {
   display: flex;
   flex-wrap: wrap;
@@ -633,7 +621,10 @@
 
 .aisle-spacer { width: 20px; flex-shrink: 0; }
 .seat-empty { width: 44px; height: 44px; flex-shrink: 0; }
-.seat-wrapper { position: relative; }
+
+.seat-wrapper {
+  position: relative;
+}
 
 .seat-btn {
   width: 44px; height: 44px;
@@ -644,12 +635,9 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  cursor: pointer;
-  transition: transform 0.12s, box-shadow 0.12s;
+  cursor: default;
   outline: none;
 }
-
-.seat-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 
 .seat--free {
   background: var(--accent-bg, rgba(255,77,77,0.1));
@@ -659,10 +647,7 @@
 .seat--occupied {
   background: rgba(255,255,255,0.05);
   border-color: rgba(255,255,255,0.1);
-  cursor: default;
 }
-
-.seat--occupied:hover { transform: none; box-shadow: none; }
 
 .seat-label {
   font-size: 10px;
@@ -678,32 +663,6 @@
 }
 
 .seat--occupied .seat-dot { background: rgba(255,255,255,0.2); }
-
-.seat-tooltip {
-  position: fixed;
-  z-index: 2000;
-  background: rgba(20,10,30,0.97);
-  border: 1px solid var(--accent, rgba(255,77,77,0.4));
-  border-radius: 10px;
-  padding: 10px 14px;
-  min-width: 140px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
-  pointer-events: none;
-  backdrop-filter: blur(12px);
-}
-
-.tooltip-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  gap: 10px;
-}
-
-.tooltip-seat-name { font-size: 16px; font-weight: 900; color: #fff; }
-.tooltip-variant { font-size: 10px; font-weight: 700; }
-.tooltip-row { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 4px; }
-.tooltip-price { font-size: 13px; font-weight: 800; color: #6ee7b7; }
 
 .seatmap-loading,
 .seatmap-empty {
@@ -724,7 +683,6 @@
   border-radius: 10px;
 }
 
-/* ── Delete & Error banners ── */
 .spt-delete-btn {
   background: none;
   border: none;

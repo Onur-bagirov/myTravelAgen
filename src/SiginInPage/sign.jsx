@@ -160,7 +160,7 @@ const SignIn = () => {
             className="signin-main-btn"
             disabled={loading}
           >
-            {loading ? "Yoxlanılır..." : "Sign In"}
+            {loading ? "Checking..." : "Sign In"}
           </button>
         </form>
 
