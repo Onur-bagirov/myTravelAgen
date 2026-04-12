@@ -9,9 +9,26 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
+function getUserRole() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return (
+      payload["role"] ||
+      payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
 function fmtDate(d) {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
+  return new Date(d)
+    .toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase();
 }
 
 function fmtTime(d) {
@@ -29,23 +46,128 @@ function countdown(d) {
 
 const VARIANT_COLORS = {
   "first class": { accent: "#c9a84c", bg: "rgba(201,168,76,0.15)", label: "✦ First Class" },
-  "business":    { accent: "#7eb8f7", bg: "rgba(126,184,247,0.15)", label: "◈ Business" },
-  "economy":     { accent: "#a0a8c0", bg: "rgba(160,168,192,0.15)", label: "◇ Economy" },
+  business:      { accent: "#7eb8f7", bg: "rgba(126,184,247,0.15)", label: "◈ Business" },
+  economy:       { accent: "#a0a8c0", bg: "rgba(160,168,192,0.15)", label: "◇ Economy" },
 };
 
 function getVariantMeta(name = "") {
-  return VARIANT_COLORS[name.toLowerCase()] || { accent: "#a0a8c0", bg: "rgba(160,168,192,0.1)", label: name };
+  return (
+    VARIANT_COLORS[name.toLowerCase()] || {
+      accent: "#a0a8c0",
+      bg: "rgba(160,168,192,0.1)",
+      label: name,
+    }
+  );
 }
 
 function stateBadge(state) {
   const s = (state || "").toLowerCase();
-  if (s === "pending")   return { color: "#f59e0b", label: "⏳ Pending" };
-  if (s === "available") return { color: "#34d399", label: "✅ Available" };
-  if (s === "booked")    return { color: "#7eb8f7", label: "🔒 Booked" };
-  if (s === "canceled")  return { color: "#f87171", label: "❌ Canceled" };
-  return { color: "#a0a8c0", label: state };
+  if (s === "pending")   return { color: "#f59e0b", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.35)", label: "⏳ Pending" };
+  if (s === "available") return { color: "#34d399", bg: "rgba(52,211,153,0.15)", border: "rgba(52,211,153,0.35)", label: "✅ Available" };
+  if (s === "booked")    return { color: "#7eb8f7", bg: "rgba(126,184,247,0.15)", border: "rgba(126,184,247,0.35)", label: "🔒 Booked" };
+  if (s === "canceled")  return { color: "#f87171", bg: "rgba(248,113,113,0.15)", border: "rgba(248,113,113,0.35)", label: "❌ Canceled" };
+  return { color: "#a0a8c0", bg: "rgba(160,168,192,0.1)", border: "rgba(160,168,192,0.3)", label: state };
 }
 
+const STATE_MAP = { Pending: 0, Available: 1, Booked: 2, Canceled: 4 };
+const STATE_OPTIONS = Object.keys(STATE_MAP);
+
+// ── Edit Modal ───────────────────────────────────────────────
+function EditModal({ ticket, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    id:        ticket.id,
+    airline:   ticket.airline  || "",
+    gate:      ticket.gate     || "",
+    plane:     ticket.plane    || "",
+    meal:      ticket.meal     || "",
+    luggageKg: ticket.luggageKg ?? 0,
+    state:     ticket.state    || "Available",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState(null);
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
+  };
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const body = {
+        id:        form.id,
+        airline:   form.airline,
+        gate:      form.gate,
+        plane:     form.plane,
+        meal:      form.meal,
+        luggageKg: parseFloat(form.luggageKg) || 0,
+        state:     STATE_MAP[form.state] ?? 1,
+      };
+      const res = await fetch(`${BASE_URL}/PlaneTicket`, {
+        method:  "PUT",
+        headers: authHeaders(),
+        body:    JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`Error: ${res.status}`);
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box edit-modal-box" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>✕</button>
+        <div className="edit-modal-title">✏️ Edit Ticket #{ticket.id}</div>
+
+        {error && <div className="seatmap-error">⚠ {error}</div>}
+
+        <div className="edit-form">
+          <div className="edit-field">
+            <label>Airline</label>
+            <input name="airline" value={form.airline} onChange={handleChange} placeholder="e.g. AZAL" />
+          </div>
+          <div className="edit-field">
+            <label>Gate</label>
+            <input name="gate" value={form.gate} onChange={handleChange} placeholder="e.g. A12" />
+          </div>
+          <div className="edit-field">
+            <label>Plane</label>
+            <input name="plane" value={form.plane} onChange={handleChange} placeholder="e.g. Boeing 737" />
+          </div>
+          <div className="edit-field">
+            <label>Meal</label>
+            <input name="meal" value={form.meal} onChange={handleChange} placeholder="e.g. Vegetarian" />
+          </div>
+          <div className="edit-field">
+            <label>Luggage (kg)</label>
+            <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange} />
+          </div>
+          <div className="edit-field">
+            <label>State</label>
+            <select name="state" value={form.state} onChange={handleChange} className="edit-select">
+              {STATE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="edit-actions">
+          <button className="edit-cancel-btn" onClick={onClose} disabled={saving}>Cancel</button>
+          <button className="edit-save-btn"   onClick={handleSubmit} disabled={saving}>
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Seat Map Modal ───────────────────────────────────────────
 function SeatButton({ seat }) {
   const meta = getVariantMeta(seat.variantName);
   return (
@@ -63,12 +185,12 @@ function SeatButton({ seat }) {
 }
 
 function SeatMapModal({ ticket, onClose }) {
-  const [seats, setSeats] = useState([]);
+  const [seats,   setSeats]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error,   setError]   = useState(null);
 
   useEffect(() => {
-    const fetchSeats = async () => {
+    (async () => {
       setLoading(true);
       try {
         const res = await fetch(
@@ -84,8 +206,7 @@ function SeatMapModal({ ticket, onClose }) {
       } finally {
         setLoading(false);
       }
-    };
-    fetchSeats();
+    })();
   }, [ticket.id]);
 
   const parsedSeats = seats.map(s => {
@@ -94,28 +215,30 @@ function SeatMapModal({ ticket, onClose }) {
   });
 
   const maxRow = parsedSeats.reduce((m, s) => Math.max(m, s.row), 0);
-  const cols = [...new Set(parsedSeats.map(s => s.col))].sort();
-  const displayCols = cols.length >= 6
-    ? [cols[0], cols[1], cols[2], "", cols[3], cols[4], cols[5]]
-    : cols;
+  const cols   = [...new Set(parsedSeats.map(s => s.col))].sort();
+  const displayCols =
+    cols.length >= 6
+      ? [cols[0], cols[1], cols[2], "", cols[3], cols[4], cols[5]]
+      : cols;
 
   const seatIndex = {};
   parsedSeats.forEach(s => { seatIndex[s.name] = s; });
 
   const variantLegend = [...new Set(seats.map(s => s.variantName))];
-  const available = seats.filter(s => !s.isOccupied).length;
-  const occupied = seats.filter(s => s.isOccupied).length;
+  const available     = seats.filter(s => !s.isOccupied).length;
+  const occupied      = seats.filter(s =>  s.isOccupied).length;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
+
         <div className="modal-header">
           <div className="modal-airline">{ticket.airline}</div>
           <div className="modal-route">
             <span>{(ticket.from || "—").split(",")[0]}</span>
             <span className="modal-plane-icon">✈</span>
-            <span>{(ticket.to || "—").split(",")[0]}</span>
+            <span>{(ticket.to   || "—").split(",")[0]}</span>
           </div>
           <div className="modal-meta">
             <span>Gate: <strong>{ticket.gate}</strong></span>
@@ -148,7 +271,7 @@ function SeatMapModal({ ticket, onClose }) {
         )}
 
         {loading && <div className="seatmap-loading">Loading...</div>}
-        {error && <div className="seatmap-error">⚠ {error}</div>}
+        {error   && <div className="seatmap-error">⚠ {error}</div>}
 
         {!loading && !error && seats.length > 0 && (
           <div className="seatmap-cabin">
@@ -186,20 +309,72 @@ function SeatMapModal({ ticket, onClose }) {
   );
 }
 
-function TicketCard({ ticket, isNew }) {
+// ── Ticket Card ──────────────────────────────────────────────
+function TicketCard({ ticket, isNew, role, onDeleted, onEdited }) {
   const [showSeats, setShowSeats] = useState(false);
-  const sb = stateBadge(ticket.state);
+  const [showEdit,  setShowEdit]  = useState(false);
+  const [deleting,  setDeleting]  = useState(false);
+
+  const isAdmin   = role === "Admin";
+  const isCompany = role === "Company";
+  const sb        = stateBadge(ticket.state);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Ticket #${ticket.id} silinsin?`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${BASE_URL}/PlaneTicket?id=${ticket.id}`, {
+        method:  "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error(`Error: ${res.status}`);
+      onDeleted(ticket.id);
+    } catch (err) {
+      alert(err.message);
+      setDeleting(false);
+    }
+  };
 
   return (
     <>
       <div className={`spt-card ${isNew ? "spt-card--new" : ""}`}>
         {isNew && <div className="spt-card-new-badge">NEW</div>}
 
-        <div className="spt-card-header">
+        {/* ── TOP BAR: airline (sol) + action buttons (sağ) ── */}
+        <div className="spt-card-topbar">
           <div className="spt-card-airline">{ticket.airline}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: sb.color }}>{sb.label}</span>
-          </div>
+
+          {(isAdmin || isCompany) && (
+            <div className="spt-card-actions">
+              <button
+                className="spt-action-btn spt-action-btn--edit"
+                onClick={() => setShowEdit(true)}
+                title="Edit"
+              >✏️</button>
+              {isAdmin && (
+                <button
+                  className="spt-action-btn spt-action-btn--delete"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  title="Delete"
+                >{deleting ? "…" : "🗑️"}</button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── STATE BADGE — airline-in altında, ayrı sıra ── */}
+        <div className="spt-card-state-row">
+          <span
+            className="spt-state-badge"
+            style={{
+              color:       sb.color,
+              background:  sb.bg,
+              borderColor: sb.border,
+            }}
+          >
+            {sb.label}
+          </span>
         </div>
 
         <div className="spt-card-route">
@@ -259,9 +434,7 @@ function TicketCard({ ticket, isNew }) {
           </div>
         </div>
 
-        <div className="spt-card-countdown">
-          🕐 {countdown(ticket.dueDate)}
-        </div>
+        <div className="spt-card-countdown">🕐 {countdown(ticket.dueDate)}</div>
 
         <button className="spt-seatmap-btn" onClick={() => setShowSeats(true)}>
           💺 Seat Map
@@ -269,22 +442,31 @@ function TicketCard({ ticket, isNew }) {
       </div>
 
       {showSeats && <SeatMapModal ticket={ticket} onClose={() => setShowSeats(false)} />}
+      {showEdit  && (
+        <EditModal
+          ticket={ticket}
+          onClose={() => setShowEdit(false)}
+          onSaved={onEdited}
+        />
+      )}
     </>
   );
 }
 
+// ── Main ─────────────────────────────────────────────────────
 export default function ShowPlaneTicket() {
   const navigate = useNavigate();
+  const role     = getUserRole();
 
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [tickets,    setTickets]    = useState([]);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState(null);
   const [totalCount, setTotalCount] = useState(0);
 
-  const [airline, setAirline] = useState("");
-  const [fromId, setFromId] = useState("");
-  const [toId, setToId] = useState("");
-  const [date, setDate] = useState("");
+  const [airline,    setAirline]    = useState("");
+  const [fromId,     setFromId]     = useState("");
+  const [toId,       setToId]       = useState("");
+  const [date,       setDate]       = useState("");
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
 
@@ -304,27 +486,20 @@ export default function ShowPlaneTicket() {
   }, []);
 
   const fetchTickets = useCallback(async () => {
-    if (airline.length > 50) {
-      setError("Airline name is too long.");
-      return;
-    }
-
+    if (airline.length > 50) { setError("Airline name is too long."); return; }
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
       params.set("PageNumber", pageNumber);
-      params.set("PageSize", pageSize);
+      params.set("PageSize",   pageSize);
       if (airline.trim()) params.set("Airline", airline.trim());
       if (fromId) params.set("FromLocationId", fromId);
-      if (toId) params.set("ToLocationId", toId);
+      if (toId)   params.set("ToLocationId",   toId);
       if (date) {
-        const selectedDate = new Date(date);
-        if (!isNaN(selectedDate.getTime())) {
-          params.set("Date", selectedDate.toISOString());
-        }
+        const d = new Date(date);
+        if (!isNaN(d.getTime())) params.set("Date", d.toISOString());
       }
-
       const res = await fetch(`${BASE_URL}/PlaneTicket?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error(`Server Error: ${res.status}`);
       const data = await res.json();
@@ -346,11 +521,6 @@ export default function ShowPlaneTicket() {
   }, [highlightId]);
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
-
-  const handleSearch = () => {
-    setPageNumber(1);
-    fetchTickets();
-  };
 
   return (
     <div className="spt-page">
@@ -374,12 +544,7 @@ export default function ShowPlaneTicket() {
         <div className="spt-filter-grid">
           <div className="spt-filter-group">
             <label>Airline</label>
-            <input
-              type="text"
-              placeholder="e.g. AZAL"
-              value={airline}
-              onChange={e => setAirline(e.target.value)}
-            />
+            <input type="text" placeholder="e.g. AZAL" value={airline} onChange={e => setAirline(e.target.value)} />
           </div>
           <div className="spt-filter-group">
             <label>From</label>
@@ -397,24 +562,19 @@ export default function ShowPlaneTicket() {
           </div>
           <div className="spt-filter-group">
             <label>Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-            />
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
           </div>
         </div>
         <div className="spt-filter-actions">
-          <button className="spt-search-btn" onClick={handleSearch}>Search</button>
-          <button className="spt-reset-btn" onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); }}>Reset</button>
+          <button className="spt-search-btn" onClick={() => { setPageNumber(1); fetchTickets(); }}>Search</button>
+          <button className="spt-reset-btn"  onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); }}>Reset</button>
         </div>
       </div>
 
       <div className="spt-content">
         {loading && (
           <div className="spt-state">
-            <div className="spt-spinner" />
-            <p>Loading...</p>
+            <div className="spt-spinner" /><p>Loading...</p>
           </div>
         )}
         {error && !loading && (
@@ -435,14 +595,21 @@ export default function ShowPlaneTicket() {
         {!loading && !error && tickets.length > 0 && (
           <div className="spt-grid">
             {tickets.map(ticket => (
-              <TicketCard key={ticket.id} ticket={ticket} isNew={ticket.id === highlightId} />
+              <TicketCard
+                key={ticket.id}
+                ticket={ticket}
+                isNew={ticket.id === highlightId}
+                role={role}
+                onDeleted={id  => setTickets(prev => prev.filter(t => t.id !== id))}
+                onEdited={fetchTickets}
+              />
             ))}
           </div>
         )}
 
         {!loading && totalPages > 1 && (
           <div className="spt-pagination">
-            <button disabled={pageNumber <= 1} onClick={() => setPageNumber(p => p - 1)}>← Previous</button>
+            <button disabled={pageNumber <= 1}          onClick={() => setPageNumber(p => p - 1)}>← Previous</button>
             <span>{pageNumber} / {totalPages}</span>
             <button disabled={pageNumber >= totalPages} onClick={() => setPageNumber(p => p + 1)}>Next →</button>
           </div>
