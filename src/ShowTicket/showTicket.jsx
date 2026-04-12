@@ -14,7 +14,6 @@ const ShowTicket = () => {
         <div className="st-choice-card plane-bg" onClick={() => navigate('/Show-Plane-Ticket')}>
           <div className="st-overlay"></div>
           <div className="st-content-box">
-            <div className="st-icon">✈️</div>
             <h3>Air Travels</h3>
             <button className="st-nav-btn plane-border">Show Plane Tickets</button>
           </div>
@@ -24,7 +23,6 @@ const ShowTicket = () => {
         <div className="st-choice-card train-bg" onClick={() => navigate('/Show-Train-T')}>
           <div className="st-overlay"></div>
           <div className="st-content-box">
-            <div className="st-icon">🚄</div>
             <h3>Railway Travels</h3>
             <button className="st-nav-btn train-border">Show Train Tickets</button>
           </div>
