@@ -238,7 +238,6 @@ function TicketCard({ ticket, isNew }) {
           <div className="spt-card-airline">{ticket.airline}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: sb.color }}>{sb.label}</span>
-            <div className="spt-card-id">#{ticket.id}</div>
           </div>
         </div>
 

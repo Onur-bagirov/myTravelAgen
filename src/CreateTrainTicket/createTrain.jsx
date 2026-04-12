@@ -8,16 +8,14 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
-
-function toLocalISOString(localDatetimeStr) {
-  if (!localDatetimeStr) return "";
-  // "2026-04-11T14:30" → "2026-04-11T14:30:00"
-  return localDatetimeStr.length === 16 ? localDatetimeStr + ":00" : localDatetimeStr;
+function toLocalISOString(str) {
+  if (!str) return "";
+  return str.length === 16 ? str + ":00" : str;
 }
 
 export default function CreateTrainTicket({ onCreated }) {
   const [locations, setLocations] = useState([]);
-  const [variants, setVariants] = useState([]);
+  const [variants, setVariants]   = useState([]);
 
   const [form, setForm] = useState({
     trainCompany: "",
@@ -32,26 +30,23 @@ export default function CreateTrainTicket({ onCreated }) {
     { variantId: "", rowCount: 5, seatsPerRow: 4 },
   ]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]         = useState(false);
   const [serverError, setServerError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
+  const [successMsg, setSuccessMsg]   = useState(null);
 
   useEffect(() => {
     fetch(`${BASE_URL}/Location?Limit=200&Page=1`, { headers: authHeaders() })
       .then(r => r.json())
-      .then(d => setLocations(Array.isArray(d?.data) ? d.data : []))
-      .catch(err => console.error("Location xətası:", err));
+      .then(d => setLocations(Array.isArray(d?.data) ? d.data : []));
 
     fetch(`${BASE_URL}/Variant?Page=1&Limit=100`, { headers: authHeaders() })
       .then(r => r.json())
       .then(d => {
         const list = Array.isArray(d?.data) ? d.data : [];
         setVariants(list);
-        if (list.length > 0) {
+        if (list.length > 0)
           setSeatGroups([{ variantId: String(list[0].id), rowCount: 5, seatsPerRow: 4 }]);
-        }
-      })
-      .catch(err => console.error("Variant xətası:", err));
+      });
   }, []);
 
   const handleForm = e => {
@@ -60,9 +55,11 @@ export default function CreateTrainTicket({ onCreated }) {
   };
 
   const handleGroup = (idx, field, val) =>
-    setSeatGroups(prev => prev.map((g, i) =>
-      i === idx ? { ...g, [field]: field === "variantId" ? val : Number(val) } : g
-    ));
+    setSeatGroups(prev =>
+      prev.map((g, i) =>
+        i === idx ? { ...g, [field]: field === "variantId" ? val : Number(val) } : g
+      )
+    );
 
   const addGroup = () =>
     setSeatGroups(p => [
@@ -70,8 +67,7 @@ export default function CreateTrainTicket({ onCreated }) {
       { variantId: variants[0] ? String(variants[0].id) : "", rowCount: 5, seatsPerRow: 4 },
     ]);
 
-  const removeGroup = idx =>
-    setSeatGroups(p => p.filter((_, i) => i !== idx));
+  const removeGroup = idx => setSeatGroups(p => p.filter((_, i) => i !== idx));
 
   const totalSeats = seatGroups.reduce(
     (s, g) => s + Number(g.rowCount) * Number(g.seatsPerRow), 0
@@ -83,11 +79,11 @@ export default function CreateTrainTicket({ onCreated }) {
     setSuccessMsg(null);
 
     if (!form.trainCompany.trim() || !form.fromId || !form.toId || !form.dueDate) {
-      setServerError("Zəhmət olmasa bütün vacib xanaları doldurun.");
+      setServerError("Please fill in all required fields.");
       return;
     }
     if (form.fromId === form.toId) {
-      setServerError("Çıxış və gəliş lokasiyaları eyni ola bilməz.");
+      setServerError("Departure and arrival locations cannot be the same.");
       return;
     }
 
@@ -97,7 +93,7 @@ export default function CreateTrainTicket({ onCreated }) {
         trainCompany: form.trainCompany,
         trainNumber: form.trainNumber,
         vagonNumber: Number(form.vagonNumber),
-        dueDate: toLocalISOString(form.dueDate), 
+        dueDate: toLocalISOString(form.dueDate),
         fromId: Number(form.fromId),
         toId: Number(form.toId),
         seatGroups: seatGroups.map(g => ({
@@ -114,17 +110,11 @@ export default function CreateTrainTicket({ onCreated }) {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.message || "Server xətası yarandı.");
+      if (!res.ok) throw new Error(json?.message || "Server error occurred.");
 
-      setSuccessMsg(`✅ Qatar bileti uğurla yaradıldı! (${totalSeats} oturacaq)`);
-      setForm({
-        trainCompany: "",
-        trainNumber: "",
-        vagonNumber: 1,
-        dueDate: "",
-        fromId: "",
-        toId: "",
-      });
+      setSuccessMsg(`Ticket created successfully! (${totalSeats} seats)`);
+      setForm({ trainCompany: "", trainNumber: "", vagonNumber: 1, dueDate: "", fromId: "", toId: "" });
+      setSeatGroups([{ variantId: variants[0] ? String(variants[0].id) : "", rowCount: 5, seatsPerRow: 4 }]);
 
       if (onCreated) onCreated(json.data);
     } catch (err) {
@@ -137,43 +127,48 @@ export default function CreateTrainTicket({ onCreated }) {
   return (
     <div className="ct-page">
       <div className="ct-wrapper">
-        <header className="ct-header">
-          <div className="ct-header-loco">🚆</div>
-          <div className="ct-header-text">
-            <h1 className="ct-title">StepTravels <span>Admin</span></h1>
-            <p className="ct-subtitle">Cəmi: <strong>{totalSeats} oturacaq</strong> yaradılır.</p>
+
+        <div className="ct-header">
+          <div className="ct-header-icon">🚆</div>
+          <div>
+            <h1 className="ct-title">Create Train Ticket</h1>
+            <p className="ct-subtitle">
+              Total: <strong>{totalSeats} seats</strong> will be created
+            </p>
           </div>
-        </header>
+        </div>
 
         {serverError && <div className="ct-alert ct-alert--error">{serverError}</div>}
-        {successMsg && <div className="ct-alert ct-alert--success">{successMsg}</div>}
+        {successMsg  && <div className="ct-alert ct-alert--success">✅ {successMsg}</div>}
 
         <form className="ct-form" onSubmit={handleSubmit}>
+
+          {/* Train Details */}
           <section className="ct-section">
-            <h2 className="ct-section-title"><span>🚂</span> Qatar Detalları</h2>
+            <h2 className="ct-section-title">🚂 Train Details</h2>
             <div className="ct-grid-2">
               <div className="ct-field">
-                <label>Şirkət</label>
+                <label>Company</label>
                 <input
                   name="trainCompany"
                   value={form.trainCompany}
                   onChange={handleForm}
-                  placeholder="ADY"
+                  placeholder="e.g. ADY"
                   required
                 />
               </div>
               <div className="ct-field">
-                <label>Qatar №</label>
+                <label>Train No</label>
                 <input
                   name="trainNumber"
                   value={form.trainNumber}
                   onChange={handleForm}
-                  placeholder="T-100"
+                  placeholder="e.g. T-100"
                   required
                 />
               </div>
               <div className="ct-field">
-                <label>Tarix (Gediş vaxtı)</label>
+                <label>Departure Date & Time</label>
                 <input
                   name="dueDate"
                   type="datetime-local"
@@ -183,7 +178,7 @@ export default function CreateTrainTicket({ onCreated }) {
                 />
               </div>
               <div className="ct-field">
-                <label>Vaqon №</label>
+                <label>Wagon No</label>
                 <input
                   name="vagonNumber"
                   type="number"
@@ -195,22 +190,23 @@ export default function CreateTrainTicket({ onCreated }) {
             </div>
           </section>
 
+          {/* Route */}
           <section className="ct-section">
-            <h2 className="ct-section-title"><span>📍</span> Marşrut Seçimi</h2>
+            <h2 className="ct-section-title">📍 Route</h2>
             <div className="ct-grid-2">
               <div className="ct-field">
-                <label>Haradan</label>
+                <label>From</label>
                 <select name="fromId" value={form.fromId} onChange={handleForm} required>
-                  <option value="">Şəhər seçin...</option>
+                  <option value="">Select city...</option>
                   {locations.map(l => (
                     <option key={l.id} value={l.id}>{l.name}, {l.country}</option>
                   ))}
                 </select>
               </div>
               <div className="ct-field">
-                <label>Haraya</label>
+                <label>To</label>
                 <select name="toId" value={form.toId} onChange={handleForm} required>
-                  <option value="">Şəhər seçin...</option>
+                  <option value="">Select city...</option>
                   {locations.map(l => (
                     <option key={l.id} value={l.id}>{l.name}, {l.country}</option>
                   ))}
@@ -219,34 +215,36 @@ export default function CreateTrainTicket({ onCreated }) {
             </div>
           </section>
 
+          {/* Seat Classes */}
           <section className="ct-section">
-            <h2 className="ct-section-title"><span>💺</span> Siniflər və Oturacaqlar</h2>
+            <h2 className="ct-section-title">💺 Classes & Seats</h2>
+
             {seatGroups.map((g, idx) => (
               <div key={idx} className="ct-group-box">
                 <div className="ct-group-header">
-                  <span>Qrup {idx + 1}</span>
+                  <span>Group {idx + 1}</span>
                   {seatGroups.length > 1 && (
                     <button type="button" className="ct-remove-btn" onClick={() => removeGroup(idx)}>
-                      Sil
+                      Remove
                     </button>
                   )}
                 </div>
                 <div className="ct-grid-3">
                   <div className="ct-field">
-                    <label>Sinif (Variant)</label>
+                    <label>Class (Variant)</label>
                     <select
                       value={g.variantId}
                       onChange={e => handleGroup(idx, "variantId", e.target.value)}
                       required
                     >
-                      <option value="">Seçin...</option>
+                      <option value="">Select...</option>
                       {variants.map(v => (
-                        <option key={v.id} value={v.id}>{v.name} - {v.price}₼</option>
+                        <option key={v.id} value={v.id}>{v.name} — {v.price} ₼</option>
                       ))}
                     </select>
                   </div>
                   <div className="ct-field">
-                    <label>Sıra sayı</label>
+                    <label>Row Count</label>
                     <input
                       type="number"
                       min={1}
@@ -255,7 +253,7 @@ export default function CreateTrainTicket({ onCreated }) {
                     />
                   </div>
                   <div className="ct-field">
-                    <label>Oturacaq/Sıra</label>
+                    <label>Seats / Row</label>
                     <input
                       type="number"
                       min={1}
@@ -267,14 +265,16 @@ export default function CreateTrainTicket({ onCreated }) {
                 </div>
               </div>
             ))}
+
             <button type="button" className="ct-add-group-btn" onClick={addGroup}>
-              + Yeni Sinif Qrupu
+              + Add New Class Group
             </button>
           </section>
 
           <button type="submit" className="ct-submit-btn" disabled={loading}>
-            {loading ? "Gözləyin..." : `🚆 BİLETLƏRİ YARAT (${totalSeats} oturacaq)`}
+            {loading ? "Creating..." : `🚆 Create Tickets (${totalSeats} seats)`}
           </button>
+
         </form>
       </div>
     </div>

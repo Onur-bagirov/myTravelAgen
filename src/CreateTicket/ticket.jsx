@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./ticket.css";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5251/api";
 const getToken = () => localStorage.getItem("userToken");
@@ -7,78 +9,78 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
+/* ── Validation ── */
 const rules = {
   airline: (v) => {
-    if (!v || !v.trim()) return "Airline adı boş ola bilməz";
-    if (v.trim().length < 2) return "Ən az 2 simvol olmalıdır";
-    if (v.length > 100) return "100 simvoldan çox ola bilməz";
-    if (!/^[a-zA-ZğüşöçıəƏĞÜŞÖÇİ0-9 \-&().]+$/i.test(v.trim()))
-      return "Yalnız hərf, rəqəm və - & ( ) . işarələri";
+    if (!v?.trim()) return "Airline name is required";
+    if (v.trim().length < 2) return "At least 2 characters required";
+    if (v.length > 100) return "Maximum 100 characters";
+    if (!/^[a-zA-Z0-9 \-&().]+$/i.test(v.trim())) return "Only letters, numbers and - & ( ) .";
     return null;
   },
   gate: (v) => {
-    if (!v || !v.trim()) return "Gate boş ola bilməz";
-    if (v.length > 10) return "10 simvoldan çox ola bilməz";
-    if (!/^[A-Za-z0-9\-]+$/.test(v.trim())) return "Yalnız hərf və rəqəm";
+    if (!v?.trim()) return "Gate is required";
+    if (v.length > 10) return "Maximum 10 characters";
+    if (!/^[A-Za-z0-9\-]+$/.test(v.trim())) return "Only letters and numbers";
     return null;
   },
   plane: (v) => {
-    if (!v || !v.trim()) return "Plane modeli boş ola bilməz";
-    if (v.trim().length < 2) return "Ən az 2 simvol olmalıdır";
-    if (v.length > 50) return "50 simvoldan çox ola bilməz";
+    if (!v?.trim()) return "Plane model is required";
+    if (v.trim().length < 2) return "At least 2 characters required";
+    if (v.length > 50) return "Maximum 50 characters";
     return null;
   },
   meal: (v) => {
-    if (!v || !v.trim()) return "Meal tipi boş ola bilməz";
-    if (v.trim().length < 2) return "Ən az 2 simvol olmalıdır";
-    if (v.length > 50) return "50 simvoldan çox ola bilməz";
+    if (!v?.trim()) return "Meal type is required";
+    if (v.trim().length < 2) return "At least 2 characters required";
+    if (v.length > 50) return "Maximum 50 characters";
     return null;
   },
   luggageKg: (v) => {
-    if (v === "" || v === null || v === undefined) return "Bagaj miqdarı boş ola bilməz";
+    if (v === "" || v == null) return "Luggage amount is required";
     const n = Number(v);
-    if (isNaN(n)) return "Rəqəm daxil edin";
-    if (n < 0) return "Bagaj mənfi ola bilməz";
-    if (n > 100) return "Maksimum 100 kq ola bilər";
+    if (isNaN(n)) return "Enter a number";
+    if (n < 0) return "Luggage cannot be negative";
+    if (n > 100) return "Maximum 100 kg";
     return null;
   },
   dueDate: (v) => {
-    if (!v) return "Uçuş tarixi boş ola bilməz";
-    const selected = new Date(v);
-    if (isNaN(selected.getTime())) return "Düzgün tarix daxil edin";
-    if (selected <= new Date()) return "Uçuş tarixi gələcəkdə olmalıdır";
-    const maxDate = new Date();
-    maxDate.setFullYear(maxDate.getFullYear() + 2);
-    if (selected > maxDate) return "Tarix 2 ildən artıq ola bilməz";
+    if (!v) return "Flight date is required";
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return "Enter a valid date";
+    if (d <= new Date()) return "Flight date must be in the future";
+    const max = new Date();
+    max.setFullYear(max.getFullYear() + 2);
+    if (d > max) return "Date cannot be more than 2 years ahead";
     return null;
   },
   locationId: (v) => {
-    if (!v || Number(v) < 1) return "Haradan lokasiya seçin";
+    if (!v || Number(v) < 1) return "Select a departure location";
     return null;
   },
   toLocationId: (v, form) => {
-    if (!v || Number(v) < 1) return "Haraya lokasiya seçin";
-    if (form && String(v) === String(form.locationId)) return '"Haradan" və "Haraya" eyni ola bilməz';
+    if (!v || Number(v) < 1) return "Select an arrival location";
+    if (form && String(v) === String(form.locationId)) return "Departure and arrival cannot be the same";
     return null;
   },
   variantId: (v) => {
-    if (!v || Number(v) < 1) return "Variant seçin";
+    if (!v || Number(v) < 1) return "Select a variant";
     return null;
   },
   rowCount: (v) => {
-    if (v === "" || v === null || v === undefined) return "Sıra sayı boş ola bilməz";
+    if (v === "" || v == null) return "Row count is required";
     const n = Number(v);
-    if (isNaN(n) || !Number.isInteger(n)) return "Tam rəqəm daxil edin";
-    if (n < 1) return "Sıra sayı ən azı 1 olmalıdır";
-    if (n > 50) return "Sıra sayı maksimum 50 ola bilər";
+    if (!Number.isInteger(n) || isNaN(n)) return "Enter a whole number";
+    if (n < 1) return "At least 1 row required";
+    if (n > 50) return "Maximum 50 rows";
     return null;
   },
   seatsPerRow: (v) => {
-    if (v === "" || v === null || v === undefined) return "Oturacaq sayı boş ola bilməz";
+    if (v === "" || v == null) return "Seats per row is required";
     const n = Number(v);
-    if (isNaN(n) || !Number.isInteger(n)) return "Tam rəqəm daxil edin";
-    if (n < 1) return "Sıradakı oturacaq ən azı 1 olmalıdır";
-    if (n > 12) return "Sıradakı oturacaq maksimum 12 ola bilər";
+    if (!Number.isInteger(n) || isNaN(n)) return "Enter a whole number";
+    if (n < 1) return "At least 1 seat per row";
+    if (n > 12) return "Maximum 12 seats per row";
     return null;
   },
 };
@@ -96,73 +98,75 @@ function parseLocations(data) {
   return [];
 }
 
-const formatDateFromLocal = (localStr) => {
-  if (!localStr) return "—";
-  const [datePart] = localStr.split("T");
-  if (!datePart) return "—";
-  const [year, month, day] = datePart.split("-");
-  const months = ["", "YAN", "FEV", "MAR", "APR", "MAY", "İYN", "İYL", "AVQ", "SEP", "OKT", "NOY", "DEK"];
-  return `${day} ${months[parseInt(month, 10)]} ${year}`;
-};
+function fmtDate(str) {
+  if (!str) return "—";
+  const [d] = str.split("T");
+  if (!d) return "—";
+  const [y, m, day] = d.split("-");
+  const months = ["","JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  return `${day} ${months[parseInt(m, 10)]} ${y}`;
+}
 
-const formatTimeFromLocal = (localStr) => {
-  if (!localStr) return "";
-  const parts = localStr.split("T");
-  if (parts.length < 2) return "";
-  return parts[1].slice(0, 5);
-};
+function fmtTime(str) {
+  if (!str) return "";
+  const parts = str.split("T");
+  return parts.length < 2 ? "" : parts[1].slice(0, 5);
+}
 
-const toISOFromLocal = (localStr) => {
-  if (!localStr) return "";
-  return localStr.length === 16 ? localStr + ":00.000Z" : localStr + ".000Z";
-};
+function toISO(str) {
+  if (!str) return "";
+  return str.length === 16 ? str + ":00.000Z" : str + ".000Z";
+}
 
-const Field = ({ label, name, type = "text", placeholder, min, max, step, value, onChange, onBlur, error, touched }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-    <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>
-      {label} <span style={{ color: "#ff6b6b" }}>*</span>
-    </label>
-    <input
-      name={name}
-      type={type}
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      placeholder={placeholder}
-      min={min}
-      max={max}
-      step={step}
-      autoComplete="off"
-      className={`ticket-input${error && touched ? " ticket-input--error" : ""}`}
-    />
-    {touched && error && (
-      <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {error}</span>
-    )}
-  </div>
-);
+/* ── Field ── */
+function Field({ label, name, type = "text", placeholder, min, max, step, value, onChange, onBlur, error, touched }) {
+  return (
+    <div className="cpt-field">
+      <label>{label}</label>
+      <input
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        min={min}
+        max={max}
+        step={step}
+        autoComplete="off"
+        className={error && touched ? "cpt-input--error" : ""}
+      />
+      {touched && error && <span className="cpt-field-error">⚠ {error}</span>}
+    </div>
+  );
+}
 
-const SectionTitle = ({ icon, text }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "24px 0 14px", borderBottom: "1px solid rgba(167,139,250,0.2)", paddingBottom: 10 }}>
-    <span style={{ fontSize: 16 }}>{icon}</span>
-    <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa" }}>{text}</span>
-  </div>
-);
+/* ── Section title ── */
+function SectionTitle({ icon, text }) {
+  return (
+    <div className="cpt-section-title">
+      <span>{icon}</span>
+      {text}
+    </div>
+  );
+}
 
+/* ── Main ── */
 export default function CreatePlaneTicket() {
-  const navigate = (path) => { window.location.href = path; };
+  const navigate = useNavigate();
 
   const [isGenerated, setIsGenerated] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]         = useState(false);
   const [serverError, setServerError] = useState(null);
   const [createdTicket, setCreatedTicket] = useState(null);
-  const [touched, setTouched] = useState({});
-  const [errors, setErrors] = useState({});
-  const [locations, setLocations] = useState([]);
+  const [touched, setTouched]   = useState({});
+  const [errors, setErrors]     = useState({});
+  const [locations, setLocations]   = useState([]);
   const [locLoading, setLocLoading] = useState(false);
-  const [fromLocationName, setFromLocationName] = useState("");
-  const [toLocationName, setToLocationName] = useState("");
-  const [variants, setVariants] = useState([]);
+  const [variants, setVariants]     = useState([]);
   const [varLoading, setVarLoading] = useState(false);
+  const [fromName, setFromName]     = useState("");
+  const [toName, setToName]         = useState("");
 
   const [form, setForm] = useState({
     airline: "", gate: "", plane: "", meal: "",
@@ -172,44 +176,28 @@ export default function CreatePlaneTicket() {
   });
 
   useEffect(() => {
-    const fetchLocations = async () => {
-      setLocLoading(true);
-      try {
-        const res = await fetch(`${BASE_URL}/Location?Limit=200&Page=1`, { headers: authHeaders() });
-        if (!res.ok) throw new Error("Lokasiyalar yüklənmədi");
-        const data = await res.json();
-        setLocations(parseLocations(data));
-      } catch (err) {
-        setServerError(err.message);
-      } finally {
-        setLocLoading(false);
-      }
-    };
+    setLocLoading(true);
+    fetch(`${BASE_URL}/Location?Limit=200&Page=1`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(d => setLocations(parseLocations(d)))
+      .catch(() => {})
+      .finally(() => setLocLoading(false));
 
-    const fetchVariants = async () => {
-      setVarLoading(true);
-      try {
-        const res = await fetch(`${BASE_URL}/Variant?Page=1&Limit=100`, { headers: authHeaders() });
-        if (!res.ok) throw new Error("Variantlar yüklənmədi");
-        const data = await res.json();
-        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+    setVarLoading(true);
+    fetch(`${BASE_URL}/Variant?Page=1&Limit=100`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(d => {
+        const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
         setVariants(list);
-        if (list.length > 0) setForm(prev => ({ ...prev, variantId: list[0].id }));
-      } catch (err) {
-        console.warn("Variant yüklənmədi:", err.message);
-      } finally {
-        setVarLoading(false);
-      }
-    };
-
-    fetchLocations();
-    fetchVariants();
+        if (list.length > 0) setForm(p => ({ ...p, variantId: list[0].id }));
+      })
+      .catch(() => {})
+      .finally(() => setVarLoading(false));
   }, []);
 
   const validate = (name, value, currentForm) => {
     const fn = rules[name];
-    if (!fn) return null;
-    return fn(String(value ?? ""), currentForm ?? form);
+    return fn ? fn(String(value ?? ""), currentForm ?? form) : null;
   };
 
   const handleChange = (e) => {
@@ -217,28 +205,25 @@ export default function CreatePlaneTicket() {
     const coerced = type === "number" ? (value === "" ? "" : Number(value)) : value;
     const newForm = { ...form, [name]: coerced };
     setForm(newForm);
-    if (touched[name]) {
-      setErrors(prev => ({ ...prev, [name]: validate(name, coerced, newForm) }));
-    }
-    if (name === "locationId" && touched.toLocationId) {
-      setErrors(prev => ({ ...prev, toLocationId: validate("toLocationId", newForm.toLocationId, newForm) }));
-    }
+    if (touched[name]) setErrors(p => ({ ...p, [name]: validate(name, coerced, newForm) }));
+    if (name === "locationId" && touched.toLocationId)
+      setErrors(p => ({ ...p, toLocationId: validate("toLocationId", newForm.toLocationId, newForm) }));
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    setErrors(prev => ({ ...prev, [name]: validate(name, value) }));
+    setTouched(p => ({ ...p, [name]: true }));
+    setErrors(p => ({ ...p, [name]: validate(name, value) }));
   };
 
   const handleFromLocation = (e) => {
     const id = e.target.value;
     const newForm = { ...form, locationId: id };
     setForm(newForm);
-    setFromLocationName(locations.find(l => String(l.id) === String(id))?.name || "");
+    setFromName(locations.find(l => String(l.id) === String(id))?.name || "");
     setTouched(p => ({ ...p, locationId: true }));
-    setErrors(prev => ({
-      ...prev,
+    setErrors(p => ({
+      ...p,
       locationId: validate("locationId", id, newForm),
       ...(touched.toLocationId ? { toLocationId: validate("toLocationId", newForm.toLocationId, newForm) } : {}),
     }));
@@ -248,21 +233,9 @@ export default function CreatePlaneTicket() {
     const id = e.target.value;
     const newForm = { ...form, toLocationId: id };
     setForm(newForm);
-    setToLocationName(locations.find(l => String(l.id) === String(id))?.name || "");
-    setTouched(prev => ({ ...prev, toLocationId: true }));
-    setErrors(prev => ({ ...prev, toLocationId: validate("toLocationId", id, newForm) }));
-  };
-
-  const handleVariantChange = (e) => {
-    const val = e.target.value;
-    setForm(prev => ({ ...prev, variantId: val }));
-    if (touched.variantId)
-      setErrors(prev => ({ ...prev, variantId: validate("variantId", val) }));
-  };
-
-  const handleVariantBlur = () => {
-    setTouched(p => ({ ...p, variantId: true }));
-    setErrors(p => ({ ...p, variantId: validate("variantId", form.variantId) }));
+    setToName(locations.find(l => String(l.id) === String(id))?.name || "");
+    setTouched(p => ({ ...p, toLocationId: true }));
+    setErrors(p => ({ ...p, toLocationId: validate("toLocationId", id, newForm) }));
   };
 
   const validateAll = () => {
@@ -289,7 +262,7 @@ export default function CreatePlaneTicket() {
       plane: form.plane.trim(),
       meal: form.meal.trim(),
       luggageKg: Number(form.luggageKg),
-      dueDate: toISOFromLocal(form.dueDate),
+      dueDate: toISO(form.dueDate),
       fromId: Number(form.locationId),
       toId: Number(form.toLocationId),
       seatGroups: [{
@@ -300,39 +273,28 @@ export default function CreatePlaneTicket() {
     };
 
     try {
-      const res = await fetch(`${BASE_URL}/PlaneTicket`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify(payload),
+      const res  = await fetch(`${BASE_URL}/PlaneTicket`, {
+        method: "POST", headers: authHeaders(), body: JSON.stringify(payload),
       });
-
-      const responseText = await res.text();
-
+      const text = await res.text();
       if (!res.ok) {
-        let errMsg = `Server xətası: ${res.status}`;
+        let msg = `Server error: ${res.status}`;
         try {
-          const errJson = JSON.parse(responseText);
-          if (errJson?.errors) {
-            const msgs = Object.entries(errJson.errors)
-              .map(([field, errs]) => `${field}: ${Array.isArray(errs) ? errs.join(", ") : errs}`)
-              .join(" | ");
-            errMsg = msgs;
-          } else {
-            errMsg = errJson?.message || errJson?.title || errMsg;
-          }
+          const j = JSON.parse(text);
+          if (j?.errors) msg = Object.entries(j.errors).map(([f, e]) => `${f}: ${Array.isArray(e) ? e.join(", ") : e}`).join(" | ");
+          else msg = j?.message || j?.title || msg;
         } catch {}
-        throw new Error(errMsg);
+        throw new Error(msg);
       }
-
-      const data = JSON.parse(responseText);
+      const data   = JSON.parse(text);
       const ticket = data?.data ?? data;
-      ticket._fromName = fromLocationName;
-      ticket._toName = toLocationName;
+      ticket._fromName     = fromName;
+      ticket._toName       = toName;
       ticket._localDueDate = form.dueDate;
       setCreatedTicket(ticket);
       setIsGenerated(true);
     } catch (err) {
-      setServerError(err.message || "Xəta baş verdi.");
+      setServerError(err.message || "An error occurred.");
     } finally {
       setLoading(false);
     }
@@ -344,131 +306,75 @@ export default function CreatePlaneTicket() {
     setServerError(null);
     setTouched({});
     setErrors({});
-    setFromLocationName("");
-    setToLocationName("");
+    setFromName("");
+    setToName("");
     setForm({
       airline: "", gate: "", plane: "", meal: "",
       luggageKg: 23, dueDate: "",
       locationId: "", toLocationId: "",
-      variantId: variants.length > 0 ? variants[0].id : "",
+      variantId: variants[0]?.id ?? "",
       rowCount: 10, seatsPerRow: 6,
     });
   };
 
   const displayDate = createdTicket?._localDueDate || form.dueDate;
-  const displayFrom = createdTicket?._fromName || fromLocationName;
-  const displayTo = createdTicket?._toName || toLocationName;
+  const displayFrom = createdTicket?._fromName || fromName;
+  const displayTo   = createdTicket?._toName   || toName;
+  const totalSeats  = createdTicket?.totalTicketsCreated ?? (Number(form.rowCount) * Number(form.seatsPerRow));
 
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0d0b14 0%, #1a1130 40%, #0f1629 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "40px 20px",
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-    }}>
-      <style>{`
-        @keyframes pop { from { opacity:0; transform: scale(0.88) translateY(30px); } to { opacity:1; transform: scale(1) translateY(0); } }
-        @keyframes fly { 0%,100% { transform: translateX(0) rotate(-5deg); } 50% { transform: translateX(12px) rotate(5deg); } }
-        @keyframes barcode-in { from { opacity:0; transform: scaleY(0); } to { opacity:1; transform: scaleY(1); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .ticket-input {
-          background: rgba(255,255,255,0.05);
-          border: 1.5px solid rgba(255,255,255,0.12);
-          border-radius: 10px; padding: 11px 14px;
-          color: #fff; font-size: 14px; outline: none;
-          transition: border-color 0.2s; width: 100%;
-          box-sizing: border-box; color-scheme: dark; font-family: inherit;
-        }
-        .ticket-input:focus { border-color: #a78bfa; }
-        .ticket-input--error { background: rgba(255,80,80,0.07); border-color: #ff5050 !important; }
-        .ticket-input::placeholder { color: rgba(255,255,255,0.2); }
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
-        .ticket-select {
-          background: rgba(255,255,255,0.05);
-          border: 1.5px solid rgba(255,255,255,0.12);
-          border-radius: 10px; padding: 11px 14px;
-          color: #fff; font-size: 14px; outline: none;
-          cursor: pointer; width: 100%; box-sizing: border-box;
-          transition: border-color 0.2s; font-family: inherit;
-        }
-        .ticket-select:focus { border-color: #a78bfa; }
-        .ticket-select--error { background: rgba(255,80,80,0.07); border-color: #ff5050 !important; }
-        .ticket-select option { background: #1a1528; color: #fff; }
-        .action-btn:hover { transform: translateY(-2px); }
-      `}</style>
+  /* ══ Form view ══ */
+  if (!isGenerated) return (
+    <div className="cpt-page">
+      <div className="cpt-wrapper">
 
-      {!isGenerated ? (
-        <div style={{
-          width: "100%", maxWidth: 680,
-          background: "rgba(255,255,255,0.04)",
-          backdropFilter: "blur(20px)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 24, overflow: "hidden",
-          animation: "pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both",
-        }}>
-          <div style={{
-            background: "linear-gradient(135deg, #6d28d9, #4f46e5)",
-            padding: "32px 36px 28px", position: "relative", overflow: "hidden",
-          }}>
-            <div style={{ position: "absolute", top: -30, right: -30, fontSize: 120, opacity: 0.08, transform: "rotate(-25deg)" }}>✈</div>
-            <div style={{ fontSize: 36, marginBottom: 10, animation: "fly 3s ease-in-out infinite" }}>✈️</div>
-            <h2 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-              Plane Ticket <span style={{ color: "#c4b5fd" }}>Yarat</span>
-            </h2>
-            <p style={{ margin: "6px 0 0", color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
-              Uçuş məlumatlarını doldurun — oturacaqlar avtomatik yaranacaq
-            </p>
+        <div className="cpt-header">
+          <div className="cpt-header-icon">✈️</div>
+          <div>
+            <h1 className="cpt-title">Create Plane Ticket</h1>
+            <p className="cpt-subtitle">Fill in flight details — seats will be generated automatically</p>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} noValidate style={{ padding: "28px 36px 36px" }}>
-            <SectionTitle icon="✈" text="Airline Məlumatları" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              <Field label="Airline Adı" name="airline" placeholder="məs. AZAL"
+        {serverError && <div className="cpt-alert cpt-alert--error">⚠️ {serverError}</div>}
+
+        <div className="cpt-form-card">
+          <form onSubmit={handleSubmit} noValidate>
+
+            <SectionTitle icon="✈" text="Flight Details" />
+            <div className="cpt-grid-2">
+              <Field label="Airline" name="airline" placeholder="e.g. AZAL"
                 value={form.airline} onChange={handleChange} onBlur={handleBlur}
                 error={errors.airline} touched={touched.airline} />
-              <Field label="Gate" name="gate" placeholder="məs. A12"
+              <Field label="Gate" name="gate" placeholder="e.g. A12"
                 value={form.gate} onChange={handleChange} onBlur={handleBlur}
                 error={errors.gate} touched={touched.gate} />
-              <Field label="Plane Modeli" name="plane" placeholder="məs. Boeing 737"
+              <Field label="Plane Model" name="plane" placeholder="e.g. Boeing 737"
                 value={form.plane} onChange={handleChange} onBlur={handleBlur}
                 error={errors.plane} touched={touched.plane} />
-              <Field label="Yemək Tipi" name="meal" placeholder="məs. Standard"
+              <Field label="Meal Type" name="meal" placeholder="e.g. Standard"
                 value={form.meal} onChange={handleChange} onBlur={handleBlur}
                 error={errors.meal} touched={touched.meal} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
-              <Field label="Bagaj (kg) — maks. 100" name="luggageKg" type="number" min="0" max="100" step="0.5"
+            <div className="cpt-grid-2" style={{ marginTop: 14 }}>
+              <Field label="Luggage (kg) — max 100" name="luggageKg" type="number" min="0" max="100" step="0.5"
                 value={form.luggageKg} onChange={handleChange} onBlur={handleBlur}
                 error={errors.luggageKg} touched={touched.luggageKg} />
-              <Field label="Uçuş Tarixi & Saatı" name="dueDate" type="datetime-local"
+              <Field label="Departure Date & Time" name="dueDate" type="datetime-local"
                 value={form.dueDate} onChange={handleChange} onBlur={handleBlur}
                 error={errors.dueDate} touched={touched.dueDate} />
             </div>
 
             {form.dueDate && !errors.dueDate && (
-              <div style={{
-                marginTop: 10, padding: "10px 16px",
-                background: "rgba(167,139,250,0.1)",
-                border: "1px solid rgba(167,139,250,0.25)",
-                borderRadius: 10, display: "flex", alignItems: "center", gap: 10,
-              }}>
-                <span style={{ fontSize: 16 }}>🗓️</span>
-                <span style={{ color: "#c4b5fd", fontSize: 13, fontWeight: 600 }}>
-                  {formatDateFromLocal(form.dueDate)} — saat {formatTimeFromLocal(form.dueDate)}
-                </span>
+              <div className="cpt-hint-banner">
+                🗓 {fmtDate(form.dueDate)} at {fmtTime(form.dueDate)}
               </div>
             )}
 
-            <SectionTitle icon="📍" text="Lokasiyalar" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>
-                  Haradan (From) <span style={{ color: "#ff6b6b" }}>*</span>
-                </label>
+            <SectionTitle icon="📍" text="Route" />
+            <div className="cpt-grid-2">
+              <div className="cpt-field">
+                <label>From</label>
                 <select
                   value={form.locationId}
                   onChange={handleFromLocation}
@@ -477,22 +383,18 @@ export default function CreatePlaneTicket() {
                     setErrors(p => ({ ...p, locationId: validate("locationId", form.locationId) }));
                   }}
                   disabled={locLoading}
-                  className={`ticket-select${touched.locationId && errors.locationId ? " ticket-select--error" : ""}`}
+                  className={`cpt-select${touched.locationId && errors.locationId ? " cpt-input--error" : ""}`}
                 >
-                  <option value="">{locLoading ? "Yüklənir..." : "— Lokasiya seçin —"}</option>
+                  <option value="">{locLoading ? "Loading..." : "— Select location —"}</option>
                   {locations.map(l => (
                     <option key={l.id} value={l.id}>{l.name}{l.country ? ` (${l.country})` : ""}</option>
                   ))}
                 </select>
-                {touched.locationId && errors.locationId && (
-                  <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {errors.locationId}</span>
-                )}
+                {touched.locationId && errors.locationId && <span className="cpt-field-error">⚠ {errors.locationId}</span>}
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>
-                  Haraya (To) <span style={{ color: "#ff6b6b" }}>*</span>
-                </label>
+              <div className="cpt-field">
+                <label>To</label>
                 <select
                   value={form.toLocationId}
                   onChange={handleToLocation}
@@ -501,224 +403,185 @@ export default function CreatePlaneTicket() {
                     setErrors(p => ({ ...p, toLocationId: validate("toLocationId", form.toLocationId, form) }));
                   }}
                   disabled={locLoading}
-                  className={`ticket-select${touched.toLocationId && errors.toLocationId ? " ticket-select--error" : ""}`}
+                  className={`cpt-select${touched.toLocationId && errors.toLocationId ? " cpt-input--error" : ""}`}
                 >
-                  <option value="">{locLoading ? "Yüklənir..." : "— Lokasiya seçin —"}</option>
+                  <option value="">{locLoading ? "Loading..." : "— Select location —"}</option>
                   {locations.map(l => (
                     <option key={l.id} value={l.id}>{l.name}{l.country ? ` (${l.country})` : ""}</option>
                   ))}
                 </select>
-                {touched.toLocationId && errors.toLocationId && (
-                  <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {errors.toLocationId}</span>
-                )}
+                {touched.toLocationId && errors.toLocationId && <span className="cpt-field-error">⚠ {errors.toLocationId}</span>}
               </div>
             </div>
 
-            <SectionTitle icon="💺" text="Oturacaq Konfiqurasiyası" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8a7fa8" }}>
-                  Variant (Sinif) <span style={{ color: "#ff6b6b" }}>*</span>
-                </label>
+            <SectionTitle icon="💺" text="Seat Configuration" />
+            <div className="cpt-grid-3">
+              <div className="cpt-field">
+                <label>Class (Variant)</label>
                 <select
                   value={form.variantId}
-                  onChange={handleVariantChange}
-                  onBlur={handleVariantBlur}
+                  onChange={e => {
+                    setForm(p => ({ ...p, variantId: e.target.value }));
+                    if (touched.variantId) setErrors(p => ({ ...p, variantId: validate("variantId", e.target.value) }));
+                  }}
+                  onBlur={() => {
+                    setTouched(p => ({ ...p, variantId: true }));
+                    setErrors(p => ({ ...p, variantId: validate("variantId", form.variantId) }));
+                  }}
                   disabled={varLoading}
-                  className={`ticket-select${touched.variantId && errors.variantId ? " ticket-select--error" : ""}`}
+                  className={`cpt-select${touched.variantId && errors.variantId ? " cpt-input--error" : ""}`}
                 >
-                  <option value="">{varLoading ? "Yüklənir..." : variants.length === 0 ? "— Variant yoxdur —" : "— Variant seçin —"}</option>
+                  <option value="">{varLoading ? "Loading..." : variants.length === 0 ? "— No variants —" : "— Select variant —"}</option>
                   {variants.map(v => (
-                    <option key={v.id} value={v.id}>{v.name} — {v.price} AZN</option>
+                    <option key={v.id} value={v.id}>{v.name} — {v.price} ₼</option>
                   ))}
                 </select>
-                {touched.variantId && errors.variantId && (
-                  <span style={{ color: "#ff6b6b", fontSize: 11, fontWeight: 600 }}>⚠ {errors.variantId}</span>
-                )}
+                {touched.variantId && errors.variantId && <span className="cpt-field-error">⚠ {errors.variantId}</span>}
                 {variants.length === 0 && !varLoading && (
-                  <span style={{ color: "#f59e0b", fontSize: 11, fontWeight: 600 }}>⚠ Əvvəlcə Admin paneldən Variant yaradın!</span>
+                  <span className="cpt-field-error" style={{ color: "#f59e0b" }}>⚠ Create a Variant in Admin panel first!</span>
                 )}
               </div>
 
-              <Field label="Sıra Sayı (maks. 50)" name="rowCount" type="number" min="1" max="50"
+              <Field label="Row Count (max 50)" name="rowCount" type="number" min="1" max="50"
                 value={form.rowCount} onChange={handleChange} onBlur={handleBlur}
                 error={errors.rowCount} touched={touched.rowCount} />
 
-              <Field label="Sıradakı Oturacaq (maks. 12)" name="seatsPerRow" type="number" min="1" max="12"
+              <Field label="Seats / Row (max 12)" name="seatsPerRow" type="number" min="1" max="12"
                 value={form.seatsPerRow} onChange={handleChange} onBlur={handleBlur}
                 error={errors.seatsPerRow} touched={touched.seatsPerRow} />
             </div>
 
             {!errors.rowCount && !errors.seatsPerRow && form.rowCount && form.seatsPerRow && (
-              <div style={{
-                marginTop: 10, padding: "10px 16px",
-                background: "rgba(167,139,250,0.08)",
-                border: "1px solid rgba(167,139,250,0.2)",
-                borderRadius: 10, display: "flex", alignItems: "center", gap: 10,
-              }}>
-                <span>💺</span>
-                <span style={{ color: "#c4b5fd", fontSize: 13, fontWeight: 600 }}>
-                  Cəmi {Number(form.rowCount) * Number(form.seatsPerRow)} oturacaq yaranacaq
-                  ({form.rowCount} sıra × {form.seatsPerRow} oturacaq)
-                </span>
+              <div className="cpt-hint-banner" style={{ marginTop: 10 }}>
+                💺 {Number(form.rowCount) * Number(form.seatsPerRow)} seats will be created
+                ({form.rowCount} rows × {form.seatsPerRow} seats)
               </div>
             )}
 
-            {serverError && (
-              <div style={{
-                background: "rgba(255,80,80,0.12)", border: "1px solid rgba(255,80,80,0.3)",
-                borderRadius: 10, padding: "12px 16px", marginTop: 20,
-                color: "#ff8888", fontSize: 13, fontWeight: 600,
-              }}>
-                ⚠️ {serverError}
-              </div>
-            )}
-
-            <button
-              type="submit" disabled={loading}
-              style={{
-                width: "100%", marginTop: 28, padding: "15px 0",
-                background: loading ? "rgba(109,40,217,0.5)" : "linear-gradient(135deg, #7c3aed, #4f46e5)",
-                border: "none", borderRadius: 12, color: "#fff",
-                fontSize: 15, fontWeight: 700, letterSpacing: "0.05em",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "all 0.25s", boxShadow: "0 8px 32px rgba(109,40,217,0.35)",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                fontFamily: "inherit",
-              }}
-            >
-              {loading ? (
-                <>
-                  <span style={{
-                    width: 18, height: 18,
-                    border: "2.5px solid rgba(255,255,255,0.3)",
-                    borderTopColor: "#fff", borderRadius: "50%",
-                    animation: "spin 0.7s linear infinite", display: "inline-block",
-                  }} />
-                  Yaradılır...
-                </>
-              ) : "✈  Bilet Yarat"}
+            <button type="submit" className="cpt-submit-btn" disabled={loading}>
+              {loading ? <><span className="cpt-spinner" /> Creating...</> : "✈ Create Ticket"}
             </button>
+
           </form>
         </div>
+      </div>
+    </div>
+  );
 
-      ) : (
-        <div style={{ animation: "pop 0.6s cubic-bezier(0.34,1.56,0.64,1) both", display: "flex", flexDirection: "column", alignItems: "center", gap: 28 }}>
-          <div style={{
-            display: "flex", borderRadius: 20, overflow: "hidden",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08)",
-            maxWidth: 720, width: "100%",
-          }}>
-            <div style={{
-              flex: 1, background: "linear-gradient(160deg, #1e1537 0%, #0f1a35 100%)",
-              padding: "36px 36px 36px 40px", position: "relative", overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", top: -20, right: -20, fontSize: 160, opacity: 0.04, fontWeight: 900 }}>✈</div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+  /* ══ Success / Boarding pass view ══ */
+  return (
+    <div className="cpt-page">
+      <div className="cpt-wrapper" style={{ maxWidth: 760 }}>
+
+        <div className="cpt-header">
+          <div className="cpt-header-icon">✈️</div>
+          <div>
+            <h1 className="cpt-title">Ticket Created</h1>
+            <p className="cpt-subtitle">Your boarding pass is ready</p>
+          </div>
+        </div>
+
+        <div className="cpt-success-wrap">
+          <div className="cpt-boarding-pass">
+
+            {/* Left */}
+            <div className="cpt-pass-left">
+              <div className="cpt-pass-header">
                 <div>
-                  <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "#a78bfa", fontWeight: 700, textTransform: "uppercase" }}>
-                    {createdTicket?.airline || form.airline}
-                  </div>
-                  <div style={{ fontSize: 9, letterSpacing: "0.15em", color: "#555", textTransform: "uppercase", marginTop: 3 }}>Boarding Pass</div>
+                  <div className="cpt-pass-airline">{createdTicket?.airline || form.airline}</div>
+                  <div className="cpt-pass-type">Boarding Pass</div>
                 </div>
-                <div style={{ background: "linear-gradient(135deg, #7c3aed, #4f46e5)", borderRadius: 8, padding: "4px 12px", fontSize: 10, color: "#fff", fontWeight: 800, letterSpacing: "0.1em" }}>
-                  ID #{createdTicket?.id ?? "—"}
+                <div className="cpt-pass-id">ID #{createdTicket?.id ?? "—"}</div>
+              </div>
+
+              <div className="cpt-pass-route">
+                <div className="cpt-route-city">
+                  <div className="cpt-route-code">{(displayFrom || "—").slice(0, 3).toUpperCase()}</div>
+                  <div className="cpt-route-name">{displayFrom}</div>
+                </div>
+                <div className="cpt-route-middle">
+                  <div className="cpt-route-dot" />
+                  <div className="cpt-route-dash" />
+                  <span className="cpt-route-plane">✈</span>
+                  <div className="cpt-route-dash" />
+                  <div className="cpt-route-dot" />
+                </div>
+                <div className="cpt-route-city cpt-route-city--right">
+                  <div className="cpt-route-code">{(displayTo || "—").slice(0, 3).toUpperCase()}</div>
+                  <div className="cpt-route-name">{displayTo}</div>
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
-                <div>
-                  <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                    {(displayFrom || "—").slice(0, 3).toUpperCase()}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#666", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.1em" }}>{displayFrom}</div>
-                </div>
-                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(167,139,250,0.4))" }} />
-                  <div style={{ fontSize: 20, color: "#a78bfa", animation: "fly 3s ease-in-out infinite" }}>✈</div>
-                  <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, rgba(167,139,250,0.4), transparent)" }} />
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>
-                    {(displayTo || "—").slice(0, 3).toUpperCase()}
-                  </div>
-                  <div style={{ fontSize: 10, color: "#666", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.1em" }}>{displayTo}</div>
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+              <div className="cpt-pass-info-grid">
                 {[
-                  ["GATE",     createdTicket?.gate || form.gate],
-                  ["PLANE",    createdTicket?.plane || form.plane],
-                  ["MEAL",     createdTicket?.meal || form.meal],
-                  ["BAGAJ",    `${createdTicket?.luggageKg ?? form.luggageKg} kg`],
-                  ["TARİX",    formatDateFromLocal(displayDate)],
-                  ["SAAT",     formatTimeFromLocal(displayDate)],
-                  ["OTURACAQ", createdTicket?.totalTicketsCreated ?? "—"],
-                  ["STATUS",   "ACTIVE"],
+                  ["GATE",    createdTicket?.gate    || form.gate],
+                  ["PLANE",   createdTicket?.plane   || form.plane],
+                  ["MEAL",    createdTicket?.meal    || form.meal],
+                  ["LUGGAGE", `${createdTicket?.luggageKg ?? form.luggageKg} kg`],
+                  ["DATE",    fmtDate(displayDate)],
+                  ["TIME",    fmtTime(displayDate)],
+                  ["SEATS",   totalSeats],
+                  ["STATUS",  "ACTIVE"],
                 ].map(([label, val]) => (
-                  <div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "10px 12px", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <div style={{ fontSize: 8, letterSpacing: "0.15em", color: "#6b7280", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#e5e7eb" }}>{val}</div>
+                  <div key={label} className="cpt-info-box">
+                    <span>{label}</span>
+                    <strong>{val}</strong>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div style={{ width: 24, background: "linear-gradient(160deg, #1a1537, #0c1628)", display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "20px 0", borderLeft: "1px dashed rgba(255,255,255,0.1)", borderRight: "1px dashed rgba(255,255,255,0.1)" }}>
-              {Array.from({ length: 14 }).map((_, i) => (
-                <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: "rgba(0,0,0,0.6)" }} />
+            {/* Perforation */}
+            <div className="cpt-perforation">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="cpt-perf-dot" />
               ))}
             </div>
 
-            <div style={{ width: 180, background: "linear-gradient(160deg, #1a1537 0%, #0c1628 100%)", padding: "36px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#a78bfa", letterSpacing: "0.1em" }}>{createdTicket?.airline || form.airline}</div>
-                <div style={{ fontSize: 9, color: "#555", marginTop: 2 }}>BOARDING PASS</div>
-              </div>
-              <div style={{ fontSize: 12, color: "#d1d5db", fontWeight: 600, lineHeight: 1.5 }}>
+            {/* Stub */}
+            <div className="cpt-pass-right">
+              <div className="cpt-stub-airline">{createdTicket?.airline || form.airline}</div>
+              <div className="cpt-stub-route">
                 {(displayFrom || "—").slice(0, 3).toUpperCase()} → {(displayTo || "—").slice(0, 3).toUpperCase()}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {[
-                  ["Gate",  createdTicket?.gate || form.gate],
-                  ["Plane", createdTicket?.plane || form.plane],
-                  ["Date",  formatDateFromLocal(displayDate)],
-                  ["Time",  formatTimeFromLocal(displayDate)],
-                  ["Seats", createdTicket?.totalTicketsCreated ?? "—"],
-                ].map(([k, v]) => (
-                  <div key={k} style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 9, color: "#555", textTransform: "uppercase", letterSpacing: "0.1em" }}>{k}</span>
-                    <span style={{ fontSize: 10, color: "#d1d5db", fontWeight: 600 }}>{v}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 52, marginTop: "auto", animation: "barcode-in 0.6s ease both" }}>
+              {[
+                ["Gate",  createdTicket?.gate  || form.gate],
+                ["Plane", createdTicket?.plane || form.plane],
+                ["Date",  fmtDate(displayDate)],
+                ["Time",  fmtTime(displayDate)],
+                ["Seats", totalSeats],
+              ].map(([k, v]) => (
+                <div key={k} className="cpt-stub-row">
+                  <span className="cpt-stub-key">{k}</span>
+                  <span className="cpt-stub-val">{v}</span>
+                </div>
+              ))}
+              <div className="cpt-barcode">
                 {Array.from({ length: 18 }).map((_, i) => (
-                  <div key={i} style={{ flex: i % 3 === 0 ? 2 : 1, height: `${45 + Math.sin(i * 1.9) * 20}%`, background: `rgba(167,139,250,${0.5 + (i % 4) * 0.12})`, borderRadius: 1 }} />
+                  <div
+                    key={i}
+                    className="cpt-bar"
+                    style={{ height: `${45 + Math.sin(i * 1.9) * 20}%`, opacity: 0.5 + (i % 4) * 0.12 }}
+                  />
                 ))}
               </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-            {[
-              { label: "＋ Yeni Bilet",    onClick: resetForm,                      bg: "linear-gradient(135deg,#7c3aed,#4f46e5)" },
-              { label: "✈ Biletlərə Bax", onClick: () => navigate("/Show-Ticket"), bg: "rgba(255,255,255,0.08)" },
-              { label: "🏠 Ana Səhifə",    onClick: () => navigate("/"),            bg: "rgba(255,255,255,0.05)" },
-            ].map(({ label, onClick, bg }) => (
-              <button key={label} onClick={onClick} className="action-btn" style={{
-                padding: "12px 24px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)",
-                background: bg, color: "#fff", fontWeight: 700, fontSize: 13,
-                cursor: "pointer", transition: "transform 0.15s, opacity 0.15s",
-                letterSpacing: "0.03em", fontFamily: "inherit",
-              }}>
-                {label}
-              </button>
-            ))}
+          {/* Actions */}
+          <div className="cpt-actions">
+            <button className="cpt-action-btn cpt-action-btn--primary" onClick={resetForm}>
+              + New Ticket
+            </button>
+            <button className="cpt-action-btn" onClick={() => navigate("/Show-Ticket")}>
+              ✈ View Tickets
+            </button>
+            <button className="cpt-action-btn" onClick={() => navigate("/")}>
+              🏠 Home
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

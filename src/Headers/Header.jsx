@@ -82,10 +82,6 @@ const Header = () => {
               <button className="myprofile-btn myprofile-color" onClick={() => handleNavigation("/User-Profile")}>
                 My Profile
               </button>
-              
-              <button className="signin-btn logout-color" onClick={handleLogout}>
-                Log Out
-              </button>
 
               {(isAdmin || isCompany) && (
                 <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/Show-Ticket")}>
