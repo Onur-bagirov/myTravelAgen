@@ -1,139 +1,198 @@
+/* ── Wrapper ── */
 .addlc-wrapper {
   min-height: 100vh;
-  background: radial-gradient(circle at top right, rgba(124, 58, 237, 0.08), transparent 600px),
-              radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.05), transparent 600px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 24px;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  padding: 40px 24px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
+/* ── Header ── */
 .addlc-header {
   text-align: center;
-  margin-bottom: 56px;
+  margin-bottom: 48px;
 }
 
 .addlc-header h2 {
-  font-size: 38px;
+  font-size: 2.4rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
-  background: linear-gradient(to right, #ffffff, #94a3b8);
+  letter-spacing: -0.03em;
+  background: linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0.55));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin: 0 0 12px 0;
+  margin-bottom: 10px;
 }
 
 .addlc-header p {
-  font-size: 16px;
-  color: #64748b;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 500;
-  margin: 0;
 }
 
+/* ── Cards Grid ── */
 .addlc-cards {
   display: flex;
-  gap: 28px;
+  gap: 24px;
   flex-wrap: wrap;
   justify-content: center;
-  width: 100%;
-  max-width: 800px;
 }
 
+/* ── Single Card ── */
 .addlc-card {
-  flex: 1;
-  min-width: 280px;
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 32px 28px;
-  background: rgba(30, 41, 59, 0.4);
+  width: 340px;
+  padding: 28px 28px;
+  border-radius: 24px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.35);
+  text-align: left;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
+/* Hover glow sweep */
 .addlc-card::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
-  pointer-events: none;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  border-radius: inherit;
 }
 
 .addlc-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  border-color: rgba(139, 92, 246, 0.4);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
-              0 0 20px rgba(139, 92, 246, 0.1);
+  transform: translateY(-6px);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
 }
 
-.addlc-card:active {
-  transform: scale(0.97);
+/* ── Country card accent ── */
+.addlc-card--country {
+  border-color: rgba(255, 77, 77, 0.2);
 }
 
+.addlc-card--country::before {
+  background: radial-gradient(ellipse at top left, rgba(255, 77, 77, 0.12), transparent 70%);
+}
+
+.addlc-card--country:hover {
+  border-color: rgba(255, 77, 77, 0.45);
+  background: rgba(255, 77, 77, 0.06);
+  box-shadow: 0 30px 60px -15px rgba(255, 77, 77, 0.2);
+}
+
+.addlc-card--country:hover::before { opacity: 1; }
+
+.addlc-card--country .addlc-card__icon {
+  background: linear-gradient(145deg, #ff4d4d, #cc1a1a);
+  box-shadow: 0 12px 28px -6px rgba(255, 77, 77, 0.5);
+}
+
+.addlc-card--country .addlc-card__arrow {
+  color: #ff4d4d;
+}
+
+/* ── Location card accent ── */
+.addlc-card--location {
+  border-color: rgba(252, 211, 77, 0.2);
+}
+
+.addlc-card--location::before {
+  background: radial-gradient(ellipse at top left, rgba(252, 211, 77, 0.1), transparent 70%);
+}
+
+.addlc-card--location:hover {
+  border-color: rgba(252, 211, 77, 0.45);
+  background: rgba(252, 211, 77, 0.05);
+  box-shadow: 0 30px 60px -15px rgba(252, 211, 77, 0.15);
+}
+
+.addlc-card--location:hover::before { opacity: 1; }
+
+.addlc-card--location .addlc-card__icon {
+  background: linear-gradient(145deg, #fcd34d, #d97706);
+  box-shadow: 0 12px 28px -6px rgba(252, 211, 77, 0.4);
+}
+
+.addlc-card--location .addlc-card__arrow {
+  color: #fcd34d;
+}
+
+/* ── Icon Box ── */
 .addlc-card__icon {
+  flex-shrink: 0;
   width: 64px;
   height: 64px;
-  border-radius: 20px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  font-size: 24px;
-  transition: all 0.3s ease;
-}
-
-.addlc-card--country .addlc-card__icon {
-  background: rgba(59, 130, 246, 0.1);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.addlc-card--location .addlc-card__icon {
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.3s ease;
 }
 
 .addlc-card:hover .addlc-card__icon {
-  transform: rotate(-10deg) scale(1.1);
+  transform: scale(1.08) rotate(-3deg);
 }
 
+/* ── Body text ── */
 .addlc-card__body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   flex: 1;
 }
 
 .addlc-card__title {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   color: #fff;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .addlc-card__desc {
-  font-size: 14px;
-  color: #94a3b8;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 500;
   line-height: 1.4;
 }
 
+/* ── Arrow ── */
 .addlc-card__arrow {
   font-size: 22px;
-  color: rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+  font-weight: 700;
+  opacity: 0.5;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  flex-shrink: 0;
 }
 
 .addlc-card:hover .addlc-card__arrow {
-  color: #8b5cf6;
-  transform: translateX(6px);
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .addlc-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .addlc-card {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .addlc-header h2 {
+    font-size: 1.8rem;
+  }
 }
