@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./allMyP.css";
 
 const API_BASE = "http://localhost:5251/api";
-const getToken = () => localStorage.getItem("userToken");
+const getToken  = () => localStorage.getItem("userToken");
 const getHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
   "Content-Type": "application/json",
@@ -15,48 +15,55 @@ function fmtDate(d) {
 }
 function fmtTime(d) {
   const dt = new Date(d);
-  return `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
+  return `${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
 }
 function fmtArrival(d) {
   const dt = new Date(d);
   dt.setHours(dt.getHours() + 2);
-  return `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
+  return `${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
 }
 function countdown(d) {
   const days = Math.ceil((new Date(d) - new Date()) / 86400000);
-  if (days < 0) return null;
-  if (days === 0) return "Today";
-  if (days === 1) return "Tomorrow";
+  if (days < 0)   return null;
+  if (days === 0)  return "Today";
+  if (days === 1)  return "Tomorrow";
   return `${days} days left`;
 }
-function isExpired(t) {
-  return new Date(t.dueDate) < new Date();
-}
-function finalPrice(t) {
-  return (t.price * (t.discount || 1)).toFixed(2);
-}
+function isExpired(t) { return new Date(t.dueDate) < new Date(); }
+function finalPrice(t) { return (t.price * (t.discount || 1)).toFixed(2); }
 
 const STATE_MAP = {
-  Booked:   { cls: "s-booked",   label: "Booked"    },
-  Pending:  { cls: "s-pending",  label: "Pending"   },
-  Canceled: { cls: "s-canceled", label: "Canceled"  },
-  Expired:  { cls: "s-expired",  label: "Expired"   },
-  Delayed:  { cls: "s-delayed",  label: "Delayed"   },
+  Booked:   { cls: "s-booked",   label: "Booked"   },
+  Pending:  { cls: "s-pending",  label: "Pending"  },
+  Canceled: { cls: "s-canceled", label: "Canceled" },
+  Expired:  { cls: "s-expired",  label: "Expired"  },
+  Delayed:  { cls: "s-delayed",  label: "Delayed"  },
 };
 
+function MetaBox({ label, value }) {
+  return (
+    <div className="amp-meta-item">
+      <span className="amp-meta-label">{label}</span>
+      <span className="amp-meta-value">{value}</span>
+    </div>
+  );
+}
+
 function TicketCard({ t, idx }) {
-  const exp = isExpired(t);
-  const cd  = countdown(t.dueDate);
-  const st  = STATE_MAP[t.state] ?? { cls: "s-expired", label: t.state };
+  const exp    = isExpired(t);
+  const cd     = countdown(t.dueDate);
+  const st     = STATE_MAP[t.state] ?? { cls: "s-expired", label: t.state };
   const hasDsc = t.discount > 0 && t.discount < 1;
 
   return (
-    <div className={`amp-card${exp ? " amp-card--exp" : ""}`}
-         style={{ animationDelay: `${idx * 0.07}s` }}>
-
+    <div
+      className={`amp-card${exp ? " amp-card--exp" : ""}`}
+      style={{ animationDelay: `${idx * 0.07}s` }}
+    >
       <div className="amp-stripe" />
 
       <div className="amp-body">
+
         <div className="amp-top">
           <div className="amp-airline">
             <span className="amp-plane-ico">✈</span>
@@ -66,7 +73,9 @@ function TicketCard({ t, idx }) {
             </div>
           </div>
           <div className="amp-badges">
-            {t.variant?.isPriority && <span className="amp-badge amp-badge--pri">Priority</span>}
+            {t.variant?.isPriority && (
+              <span className="amp-badge amp-badge--pri">Priority</span>
+            )}
             <span className={`amp-badge ${st.cls}`}>{st.label}</span>
           </div>
         </div>
@@ -74,6 +83,7 @@ function TicketCard({ t, idx }) {
         <div className="amp-route">
           <div className="amp-loc">
             <span className="amp-city">{t.from ?? "—"}</span>
+            {t.fromCity && <span className="amp-city-label">{t.fromCity}</span>}
             <span className="amp-time">{fmtTime(t.dueDate)}</span>
           </div>
 
@@ -86,24 +96,26 @@ function TicketCard({ t, idx }) {
               <span className="amp-dot" />
             </div>
             {cd && !exp && <span className="amp-cd">{cd}</span>}
-            {exp && <span className="amp-cd amp-cd--exp">Completed</span>}
+            {exp        && <span className="amp-cd amp-cd--exp">Completed</span>}
           </div>
 
           <div className="amp-loc amp-loc--r">
             <span className="amp-city">{t.to ?? "—"}</span>
+            {t.toCity && <span className="amp-city-label">{t.toCity}</span>}
             <span className="amp-time">{fmtArrival(t.dueDate)}</span>
           </div>
         </div>
 
         <div className="amp-meta">
-          <span className="amp-meta-item">📅 {fmtDate(t.dueDate)}</span>
-          {t.gate && <span className="amp-meta-item">🚪 Gate {t.gate}</span>}
-          {t.meal && <span className="amp-meta-item">🍽 {t.meal}</span>}
-          {t.seat?.name && <span className="amp-meta-item">💺 {t.seat.name}</span>}
-          {t.variant?.name && <span className="amp-meta-item">🎫 {t.variant.name}</span>}
-          <span className="amp-meta-item">🧳 {t.luggageCount} bags · {t.totalLuggageKg} kg</span>
-          {t.hasPet   && <span className="amp-meta-item">🐾 Pet</span>}
-          {t.hasChild && <span className="amp-meta-item">👶 Child</span>}
+          <MetaBox label="Date"  value={fmtDate(t.dueDate)} />
+          <MetaBox label="Time"  value={fmtTime(t.dueDate)} />
+          {t.gate       && <MetaBox label="Gate"   value={t.gate} />}
+          {t.seat?.name && <MetaBox label="Seat"   value={t.seat.name} />}
+          {t.meal       && <MetaBox label="Meal"   value={t.meal} />}
+          {t.variant?.name && <MetaBox label="Class" value={t.variant.name} />}
+          <MetaBox label="Bags"  value={`${t.luggageCount} · ${t.totalLuggageKg} kg`} />
+          {t.hasPet   && <MetaBox label="Pet"   value="Yes" />}
+          {t.hasChild && <MetaBox label="Child" value="Yes" />}
         </div>
 
         <div className="amp-footer">
@@ -127,8 +139,8 @@ function TicketCard({ t, idx }) {
 export default function AllMyP() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState("");
-  const [filter, setFilter]   = useState("all");
+  const [error,   setError]   = useState("");
+  const [filter,  setFilter]  = useState("all");
 
   useEffect(() => {
     fetch(`${API_BASE}/PlaneTicket/my-tickets`, { headers: getHeaders() })
@@ -151,25 +163,23 @@ export default function AllMyP() {
     filter === "expired" ?  isExpired(t) : true
   );
 
-  const activeCount  = tickets.filter(t => !isExpired(t)).length;
+  const activeCount = tickets.filter(t => !isExpired(t)).length;
 
   return (
     <div className="amp-page">
-      <div className="amp-noise" />
-
       <div className="amp-inner">
         <div className="amp-header">
           <div>
-            <h1 className="amp-title">My Tickets</h1>
+            <h1 className="amp-title">My Plane Tickets</h1>
             <p className="amp-sub">
               {activeCount} active · {tickets.length} total
             </p>
           </div>
           <div className="amp-filters">
             {[
-              { key: "all",     label: "All"     },
-              { key: "active",  label: "Active"  },
-              { key: "expired", label: "Past"    },
+              { key: "all",     label: "All"    },
+              { key: "active",  label: "Active" },
+              { key: "expired", label: "Past"   },
             ].map(f => (
               <button
                 key={f.key}
@@ -185,7 +195,8 @@ export default function AllMyP() {
         {loading && (
           <div className="amp-list">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="amp-skeleton" style={{ animationDelay: `${i * 0.1}s` }} />
+              <div key={i} className="amp-skeleton"
+                   style={{ animationDelay: `${i * 0.1}s` }} />
             ))}
           </div>
         )}
@@ -201,8 +212,8 @@ export default function AllMyP() {
           <div className="amp-empty">
             <span className="amp-empty-ico">✈</span>
             <p>
-              {filter === "active"  ? "No active tickets." :
-               filter === "expired" ? "No past tickets." :
+              {filter === "active"  ? "No active tickets."  :
+               filter === "expired" ? "No past tickets."    :
                "You haven't purchased any tickets yet."}
             </p>
           </div>
@@ -215,6 +226,7 @@ export default function AllMyP() {
             ))}
           </div>
         )}
+
       </div>
     </div>
   );
