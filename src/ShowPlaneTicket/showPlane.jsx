@@ -70,7 +70,42 @@ function stateBadge(state) {
 }
 
 const STATE_MAP = { Pending: 0, Available: 1, Booked: 2, Canceled: 4 };
-const STATE_OPTIONS = Object.keys(STATE_MAP);
+
+// ── Confirm Delete Modal ─────────────────────────────────────
+function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-box confirm-modal-box" onClick={e => e.stopPropagation()}>
+        <div className="confirm-icon">🗑️</div>
+        <div className="confirm-title">Delete Ticket</div>
+        <div className="confirm-desc">
+          Are you sure you want to delete <strong>Ticket #{ticketId}</strong>?<br />
+          This action cannot be undone.
+        </div>
+        <div className="confirm-actions">
+          <button className="confirm-cancel-btn" onClick={onCancel}>Cancel</button>
+          <button className="confirm-delete-btn" onClick={onConfirm}>Yes, Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Success Toast ────────────────────────────────────────────
+function Toast({ message, type = "success", onClose }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 3000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <div className={`spt-toast spt-toast--${type}`}>
+      <span>{type === "success" ? "✅" : "❌"}</span>
+      <span>{message}</span>
+      <button className="spt-toast-close" onClick={onClose}>✕</button>
+    </div>
+  );
+}
 
 // ── Edit Modal ───────────────────────────────────────────────
 function EditModal({ ticket, onClose, onSaved }) {
@@ -81,36 +116,93 @@ function EditModal({ ticket, onClose, onSaved }) {
     plane:     ticket.plane    || "",
     meal:      ticket.meal     || "",
     luggageKg: ticket.luggageKg ?? 0,
-    state:     ticket.state    || "Available",
   });
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const handleChange = e => {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value }));
   };
 
+  const validate = () => {
+    const errs = {};
+    if (!form.airline.trim()) {
+      errs.airline = "Airline is required.";
+    } else if (form.airline.trim().length < 2) {
+      errs.airline = "Airline must be at least 2 characters.";
+    } else if (form.airline.trim().length > 60) {
+      errs.airline = "Airline must be at most 60 characters.";
+    } else if (!/^[a-zA-Z0-9 .'\-&]+$/.test(form.airline.trim())) {
+      errs.airline = "Airline contains invalid characters.";
+    }
+    if (!form.gate.trim()) {
+      errs.gate = "Gate is required.";
+    } else if (form.gate.trim().length > 10) {
+      errs.gate = "Gate must be at most 10 characters.";
+    } else if (!/^[A-Za-z0-9\-]+$/.test(form.gate.trim())) {
+      errs.gate = "Gate must be letters and numbers only (e.g. A12).";
+    }
+    if (!form.plane.trim()) {
+      errs.plane = "Plane is required.";
+    } else if (form.plane.trim().length < 2) {
+      errs.plane = "Plane must be at least 2 characters.";
+    } else if (form.plane.trim().length > 60) {
+      errs.plane = "Plane must be at most 60 characters.";
+    }
+    if (form.meal.trim().length > 60) {
+      errs.meal = "Meal must be at most 60 characters.";
+    }
+    const kg = Number(form.luggageKg);
+    if (String(form.luggageKg).trim() === "" || isNaN(kg)) {
+      errs.luggageKg = "Luggage must be a number.";
+    } else if (kg < 0) {
+      errs.luggageKg = "Luggage cannot be negative.";
+    } else if (kg > 500) {
+      errs.luggageKg = "Luggage cannot exceed 500 kg.";
+    } else if (!Number.isInteger(kg * 10)) {
+      errs.luggageKg = "Max 1 decimal place allowed (e.g. 23.5).";
+    }
+    return errs;
+  };
+
   const handleSubmit = async () => {
-    setSaving(true);
     setError(null);
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setValidationErrors(errs);
+      return;
+    }
+    setValidationErrors({});
+    setSaving(true);
     try {
       const body = {
         id:        form.id,
-        airline:   form.airline,
-        gate:      form.gate,
-        plane:     form.plane,
-        meal:      form.meal,
+        airline:   form.airline.trim(),
+        gate:      form.gate.trim(),
+        plane:     form.plane.trim(),
+        meal:      form.meal.trim(),
         luggageKg: parseFloat(form.luggageKg) || 0,
-        state:     STATE_MAP[form.state] ?? 1,
+        state:     0,
       };
       const res = await fetch(`${BASE_URL}/PlaneTicket`, {
         method:  "PUT",
         headers: authHeaders(),
         body:    JSON.stringify(body),
       });
-      if (!res.ok) throw new Error(`Error: ${res.status}`);
-      onSaved();
+
+      // ✅ FIX: Backend uğursuzluqda { data: null } + HTTP 200 qaytarır.
+      // res.ok yoxlamaq kifayət deyil — data-nı da yoxlamaq lazımdır.
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.data) {
+        throw new Error(
+          json?.message ||
+          "Update failed. The ticket may be in a non-editable state (Used / Expired / Missed)."
+        );
+      }
+
+      onSaved(body);
       onClose();
     } catch (err) {
       setError(err.message);
@@ -129,30 +221,34 @@ function EditModal({ ticket, onClose, onSaved }) {
 
         <div className="edit-form">
           <div className="edit-field">
-            <label>Airline</label>
-            <input name="airline" value={form.airline} onChange={handleChange} placeholder="e.g. AZAL" />
+            <label>Airline <span className="edit-required">*</span></label>
+            <input name="airline" value={form.airline} onChange={handleChange} placeholder="e.g. AZAL"
+              className={validationErrors.airline ? "edit-input--error" : ""} />
+            {validationErrors.airline && <span className="edit-field-error">{validationErrors.airline}</span>}
           </div>
           <div className="edit-field">
-            <label>Gate</label>
-            <input name="gate" value={form.gate} onChange={handleChange} placeholder="e.g. A12" />
+            <label>Gate <span className="edit-required">*</span></label>
+            <input name="gate" value={form.gate} onChange={handleChange} placeholder="e.g. A12"
+              className={validationErrors.gate ? "edit-input--error" : ""} />
+            {validationErrors.gate && <span className="edit-field-error">{validationErrors.gate}</span>}
           </div>
           <div className="edit-field">
-            <label>Plane</label>
-            <input name="plane" value={form.plane} onChange={handleChange} placeholder="e.g. Boeing 737" />
+            <label>Plane <span className="edit-required">*</span></label>
+            <input name="plane" value={form.plane} onChange={handleChange} placeholder="e.g. Boeing 737"
+              className={validationErrors.plane ? "edit-input--error" : ""} />
+            {validationErrors.plane && <span className="edit-field-error">{validationErrors.plane}</span>}
           </div>
           <div className="edit-field">
             <label>Meal</label>
-            <input name="meal" value={form.meal} onChange={handleChange} placeholder="e.g. Vegetarian" />
+            <input name="meal" value={form.meal} onChange={handleChange} placeholder="e.g. Vegetarian"
+              className={validationErrors.meal ? "edit-input--error" : ""} />
+            {validationErrors.meal && <span className="edit-field-error">{validationErrors.meal}</span>}
           </div>
           <div className="edit-field">
             <label>Luggage (kg)</label>
-            <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange} />
-          </div>
-          <div className="edit-field">
-            <label>State</label>
-            <select name="state" value={form.state} onChange={handleChange} className="edit-select">
-              {STATE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange}
+              className={validationErrors.luggageKg ? "edit-input--error" : ""} />
+            {validationErrors.luggageKg && <span className="edit-field-error">{validationErrors.luggageKg}</span>}
           </div>
         </div>
 
@@ -270,7 +366,7 @@ function SeatMapModal({ ticket, onClose }) {
           </div>
         )}
 
-        {loading && <div className="seatmap-loading">Loading...</div>}
+        {loading && <div className="seatmap-loading">Loading seats...</div>}
         {error   && <div className="seatmap-error">⚠ {error}</div>}
 
         {!loading && !error && seats.length > 0 && (
@@ -310,27 +406,37 @@ function SeatMapModal({ ticket, onClose }) {
 }
 
 // ── Ticket Card ──────────────────────────────────────────────
-function TicketCard({ ticket, isNew, role, onDeleted, onEdited }) {
-  const [showSeats, setShowSeats] = useState(false);
-  const [showEdit,  setShowEdit]  = useState(false);
-  const [deleting,  setDeleting]  = useState(false);
+function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
+  const [showSeats,    setShowSeats]    = useState(false);
+  const [showEdit,     setShowEdit]     = useState(false);
+  const [showConfirm,  setShowConfirm]  = useState(false);
+  const [deleting,     setDeleting]     = useState(false);
 
   const isAdmin   = role === "Admin";
   const isCompany = role === "Company";
   const sb        = stateBadge(ticket.state);
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Ticket #${ticket.id} silinsin?`)) return;
+  const handleDeleteConfirmed = async () => {
+    setShowConfirm(false);
     setDeleting(true);
     try {
-      const res = await fetch(`${BASE_URL}/PlaneTicket?id=${ticket.id}`, {
+      // ✅ FIX: URL parametri işlədirik — DELETE body bəzi clientlərdə strip olunur
+      const res = await fetch(`${BASE_URL}/PlaneTicket/${ticket.id}`, {
         method:  "DELETE",
         headers: authHeaders(),
       });
-      if (!res.ok) throw new Error(`Error: ${res.status}`);
+
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.data) {
+        throw new Error(
+          json?.message || `Failed to delete ticket #${ticket.id}. It may not exist.`
+        );
+      }
+
+      onToast(`Ticket #${ticket.id} has been successfully deleted.`, "success");
       onDeleted(ticket.id);
     } catch (err) {
-      alert(err.message);
+      onToast(`Failed to delete ticket: ${err.message}`, "error");
       setDeleting(false);
     }
   };
@@ -340,7 +446,7 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited }) {
       <div className={`spt-card ${isNew ? "spt-card--new" : ""}`}>
         {isNew && <div className="spt-card-new-badge">NEW</div>}
 
-        {/* ── TOP BAR: airline (sol) + action buttons (sağ) ── */}
+        {/* ── TOP BAR ── */}
         <div className="spt-card-topbar">
           <div className="spt-card-airline">{ticket.airline}</div>
 
@@ -349,21 +455,21 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited }) {
               <button
                 className="spt-action-btn spt-action-btn--edit"
                 onClick={() => setShowEdit(true)}
-                title="Edit"
+                title="Edit Ticket"
               >✏️</button>
               {isAdmin && (
                 <button
                   className="spt-action-btn spt-action-btn--delete"
-                  onClick={handleDelete}
+                  onClick={() => setShowConfirm(true)}
                   disabled={deleting}
-                  title="Delete"
+                  title="Delete Ticket"
                 >{deleting ? "…" : "🗑️"}</button>
               )}
             </div>
           )}
         </div>
 
-        {/* ── STATE BADGE — airline-in altında, ayrı sıra ── */}
+        {/* ── STATE BADGE ── */}
         <div className="spt-card-state-row">
           <span
             className="spt-state-badge"
@@ -442,11 +548,20 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited }) {
       </div>
 
       {showSeats && <SeatMapModal ticket={ticket} onClose={() => setShowSeats(false)} />}
-      {showEdit  && (
+
+      {showEdit && (
         <EditModal
           ticket={ticket}
           onClose={() => setShowEdit(false)}
           onSaved={onEdited}
+        />
+      )}
+
+      {showConfirm && (
+        <ConfirmDeleteModal
+          ticketId={ticket.id}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirm(false)}
         />
       )}
     </>
@@ -462,6 +577,7 @@ export default function ShowPlaneTicket() {
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [toast,      setToast]      = useState(null);
 
   const [airline,    setAirline]    = useState("");
   const [fromId,     setFromId]     = useState("");
@@ -522,8 +638,18 @@ export default function ShowPlaneTicket() {
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
+  const showToast = (message, type = "success") => setToast({ message, type });
+
   return (
     <div className="spt-page">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <div className="spt-header">
         <div className="spt-title-block">
           <span className="spt-icon">✈️</span>
@@ -533,12 +659,6 @@ export default function ShowPlaneTicket() {
           </div>
         </div>
       </div>
-
-      {newTicketId && (
-        <div className="spt-new-banner">
-          ✅ Ticket <strong>#{newTicketId}</strong> created successfully!
-        </div>
-      )}
 
       <div className="spt-filters">
         <div className="spt-filter-grid">
@@ -600,8 +720,27 @@ export default function ShowPlaneTicket() {
                 ticket={ticket}
                 isNew={ticket.id === highlightId}
                 role={role}
-                onDeleted={id  => setTickets(prev => prev.filter(t => t.id !== id))}
-                onEdited={fetchTickets}
+                onDeleted={id => {
+                  setTickets(prev => prev.filter(t => t.id !== id));
+                  setTotalCount(prev => prev - 1);
+                }}
+                onEdited={updatedBody => {
+                  setTickets(prev => prev.map(t =>
+                    t.id === updatedBody.id
+                      ? {
+                          ...t,
+                          airline:   updatedBody.airline,
+                          gate:      updatedBody.gate,
+                          plane:     updatedBody.plane,
+                          meal:      updatedBody.meal,
+                          luggageKg: updatedBody.luggageKg,
+                          state:     Object.keys(STATE_MAP).find(k => STATE_MAP[k] === updatedBody.state) || t.state,
+                        }
+                      : t
+                  ));
+                  showToast(`Ticket #${updatedBody.id} updated successfully.`, "success");
+                }}
+                onToast={showToast}
               />
             ))}
           </div>

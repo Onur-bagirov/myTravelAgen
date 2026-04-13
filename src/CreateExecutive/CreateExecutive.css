@@ -38,14 +38,16 @@ body {
   margin: 0 auto;
   padding: 60px 20px;
   font-family: var(--font-sans);
-  color: var(--text-primary);
+  color: #ff4d4d;
+  
 }
 
 /* ── Header ── */
 .ce-header {
   margin-bottom: 35px;
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid ;
   padding-left: 20px;
+  color: white;
 }
 
 .ce-eyebrow {
@@ -55,15 +57,17 @@ body {
   color: var(--accent);
   font-weight: 700;
   margin-bottom: 6px;
+  color: #ff4d4d;
 }
 
 .ce-title {
   font-size: 32px;
   font-weight: 800;
   margin: 0;
+  color: #ff4d4d;
 }
 
-.ce-title span { color: var(--accent); }
+.ce-title span { color: white; }
 
 .ce-desc {
   color: var(--text-secondary);

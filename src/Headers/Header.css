@@ -1,5 +1,15 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── Body offset for fixed header ── */
+body {
+    padding-top: 60px;
+    transition: padding-top 0.4s ease;
+}
+
+body.scrolled {
+    padding-top: 70px;
+}
+
 .header {
     position: fixed;
     top: 0; left: 0;
@@ -273,11 +283,16 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 
 /* Responsive */
 @media (max-width: 768px) {
+    body {
+        padding-top: 60px;
+    }
+
     .user-profile-container {
         width: 200px;
         justify-content: center;
     }
 }
+
 @keyframes avatarSpin {
     from { filter: hue-rotate(0deg); }
     to   { filter: hue-rotate(360deg); }

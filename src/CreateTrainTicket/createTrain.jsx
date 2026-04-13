@@ -133,7 +133,7 @@ export default function CreateTrainTicket({ onCreated }) {
           <div>
             <h1 className="ct-title">Create Train Ticket</h1>
             <p className="ct-subtitle">
-              Total: <strong>{totalSeats} seats</strong> will be created
+              Fill in travel details — seats will be generated automatically
             </p>
           </div>
         </div>

@@ -10,20 +10,22 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
-const isAdmin = () => {
+function getUserRole() {
   try {
     const token = getToken();
-    if (!token) return false;
+    if (!token) return null;
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const role =
+    return (
       payload["role"] ||
       payload["roles"] ||
       payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
-      "";
-    if (Array.isArray(role)) return role.includes("Admin");
-    return role === "Admin";
-  } catch { return false; }
-};
+      null
+    );
+  } catch { return null; }
+}
+
+const isAdmin = (role) => role === "Admin";
+const isCompany = (role) => role === "Company";
 
 const getUserId = () => {
   try {
@@ -62,6 +64,197 @@ function parseSeatName(name) {
   const m = name?.match(/^(\d+)([A-K])$/);
   if (!m) return { row: 0, col: 0 };
   return { row: parseInt(m[1], 10), col: m[2].charCodeAt(0) - 65 };
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function Toast({ message, type = "success", onClose }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 3000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <div className={`st-toast st-toast--${type}`}>
+      <span>{type === "success" ? "✅" : "❌"}</span>
+      <span>{message}</span>
+      <button className="st-toast-close" onClick={onClose}>✕</button>
+    </div>
+  );
+}
+
+// ── Confirm Delete Modal ─────────────────────────────────────
+function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
+  return (
+    <div className="st-modal-overlay" onClick={onCancel}>
+      <div className="st-confirm-modal" onClick={e => e.stopPropagation()}>
+        <div className="st-confirm-icon">🗑️</div>
+        <div className="st-confirm-title">Delete Ticket</div>
+        <div className="st-confirm-desc">
+          Are you sure you want to delete <strong>Ticket #{ticketId}</strong>?<br />
+          This action cannot be undone.
+        </div>
+        <div className="st-confirm-actions">
+          <button className="st-confirm-cancel-btn" onClick={onCancel}>Cancel</button>
+          <button className="st-confirm-delete-btn" onClick={onConfirm}>Yes, Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Edit Modal ───────────────────────────────────────────────
+function EditModal({ ticket, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    id:           ticket.id,
+    trainCompany: ticket.trainCompany || "",
+    trainNumber:  ticket.trainNumber  || "",
+    vagonNumber:  ticket.vagonNumber  ?? "",
+  });
+  const [saving, setSaving]                   = useState(false);
+  const [error, setError]                     = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setForm(f => ({ ...f, [name]: value }));
+  };
+
+  const validate = () => {
+    const errs = {};
+
+    // Train Company
+    if (!form.trainCompany.trim()) {
+      errs.trainCompany = "Train company is required.";
+    } else if (form.trainCompany.trim().length < 2) {
+      errs.trainCompany = "Train company must be at least 2 characters.";
+    } else if (form.trainCompany.trim().length > 60) {
+      errs.trainCompany = "Train company must be at most 60 characters.";
+    } else if (!/^[a-zA-Z0-9 .'\-&]+$/.test(form.trainCompany.trim())) {
+      errs.trainCompany = "Train company contains invalid characters.";
+    }
+
+    // Train Number
+    if (!form.trainNumber.trim()) {
+      errs.trainNumber = "Train number is required.";
+    } else if (form.trainNumber.trim().length > 20) {
+      errs.trainNumber = "Train number must be at most 20 characters.";
+    } else if (!/^[A-Za-z0-9\-]+$/.test(form.trainNumber.trim())) {
+      errs.trainNumber = "Train number must be letters and numbers only.";
+    }
+
+    // Vagon Number
+    if (form.vagonNumber !== "" && form.vagonNumber !== null) {
+      const v = Number(form.vagonNumber);
+      if (isNaN(v) || !Number.isInteger(v)) {
+        errs.vagonNumber = "Vagon number must be a whole number.";
+      } else if (v < 1) {
+        errs.vagonNumber = "Vagon number must be at least 1.";
+      } else if (v > 999) {
+        errs.vagonNumber = "Vagon number cannot exceed 999.";
+      }
+    }
+
+    return errs;
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setValidationErrors(errs);
+      return;
+    }
+    setValidationErrors({});
+    setSaving(true);
+    try {
+      const body = {
+        id:           form.id,
+        trainCompany: form.trainCompany.trim(),
+        trainNumber:  form.trainNumber.trim(),
+        vagonNumber:  form.vagonNumber !== "" ? parseInt(form.vagonNumber) : null,
+        state:        0, // Always Pending
+      };
+      const res = await fetch(`${BASE_URL}/TrainTicket`, {
+        method:  "PUT",
+        headers: authHeaders(),
+        body:    JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Server error: ${res.status}`);
+      }
+      onSaved(body);
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="st-modal-overlay" onClick={onClose}>
+      <div className="st-edit-modal" onClick={e => e.stopPropagation()}>
+        <button className="st-modal-close" onClick={onClose}>✕</button>
+        <div className="st-edit-modal-title">✏️ Edit Ticket #{ticket.id}</div>
+
+        {error && <div className="st-error-banner">⚠ {error}</div>}
+
+        <div className="st-edit-form">
+          <div className="st-edit-field">
+            <label>Train Company <span className="st-edit-required">*</span></label>
+            <input
+              name="trainCompany"
+              value={form.trainCompany}
+              onChange={handleChange}
+              placeholder="e.g. ADY"
+              className={validationErrors.trainCompany ? "st-edit-input--error" : ""}
+            />
+            {validationErrors.trainCompany && (
+              <span className="st-edit-field-error">{validationErrors.trainCompany}</span>
+            )}
+          </div>
+          <div className="st-edit-field">
+            <label>Train Number <span className="st-edit-required">*</span></label>
+            <input
+              name="trainNumber"
+              value={form.trainNumber}
+              onChange={handleChange}
+              placeholder="e.g. T-101"
+              className={validationErrors.trainNumber ? "st-edit-input--error" : ""}
+            />
+            {validationErrors.trainNumber && (
+              <span className="st-edit-field-error">{validationErrors.trainNumber}</span>
+            )}
+          </div>
+          <div className="st-edit-field">
+            <label>Vagon Number</label>
+            <input
+              name="vagonNumber"
+              type="number"
+              min={1}
+              value={form.vagonNumber}
+              onChange={handleChange}
+              placeholder="e.g. 5"
+              className={validationErrors.vagonNumber ? "st-edit-input--error" : ""}
+            />
+            {validationErrors.vagonNumber && (
+              <span className="st-edit-field-error">{validationErrors.vagonNumber}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="st-edit-actions">
+          <button className="st-edit-cancel-btn" onClick={onClose} disabled={saving}>
+            Cancel
+          </button>
+          <button className="st-edit-save-btn" onClick={handleSubmit} disabled={saving}>
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ─── Seat Map ─── */
@@ -166,7 +359,6 @@ function BookingModal({ ticket, onClose }) {
   const [success, setSuccess]           = useState(false);
   const [showPayment, setShowPayment]   = useState(false);
 
-  // ── Düzəliş: qiymət yalnız seat-in variantPrice-ından gəlir ──
   const totalPrice = selectedSeat
     ? Number(selectedSeat.variantPrice ?? 0).toFixed(2)
     : "—";
@@ -304,25 +496,25 @@ function BookingModal({ ticket, onClose }) {
 }
 
 /* ─── Ticket Card ─── */
-function TicketCard({ ticket, onClick, onDelete, adminMode }) {
+function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
+  const [showEdit,    setShowEdit]    = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting,    setDeleting]    = useState(false);
+
+  const adminMode   = isAdmin(role);
+  const companyMode = isCompany(role);
+
   const seats = ticket.availableSeats;
   const seatsClass =
     seats <= 5  ? "st-info-val--low" :
     seats <= 15 ? "st-info-val--warn" :
                   "st-info-val--ok";
 
-  const handleDelete = (e) => {
-    e.stopPropagation();
-    if (window.confirm(`Delete ticket "${ticket.trainCompany} — ${ticket.trainNumber}"?`))
-      onDelete(ticket.id);
-  };
-
   const fromCode = (ticket.from?.split(",")[0] ?? "???").slice(0, 3).toUpperCase();
   const toCode   = (ticket.to?.split(",")[0]   ?? "???").slice(0, 3).toUpperCase();
   const fromFull = ticket.from?.split(",")[0] ?? "";
   const toFull   = ticket.to?.split(",")[0]   ?? "";
 
-  // Qiymət 0-dırsa "—" göstər
   const displayPrice =
     ticket.minPrice && Number(ticket.minPrice) > 0
       ? `from ${Number(ticket.minPrice).toFixed(2)} ₼`
@@ -330,66 +522,124 @@ function TicketCard({ ticket, onClick, onDelete, adminMode }) {
         ? `${ticket.price} ₼`
         : "—";
 
+  const handleDeleteConfirmed = async () => {
+    setShowConfirm(false);
+    setDeleting(true);
+    try {
+      const res = await fetch(`${BASE_URL}/TrainTicket`, {
+        method:  "DELETE",
+        headers: authHeaders(),
+        body:    JSON.stringify({ id: ticket.id }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Server error: ${res.status}`);
+      }
+      onToast(`Ticket #${ticket.id} has been successfully deleted.`, "success");
+      onDeleted(ticket.id);
+    } catch (err) {
+      onToast(`Failed to delete ticket: ${err.message}`, "error");
+      setDeleting(false);
+    }
+  };
+
   return (
-    <div className="st-card">
-      <div className="st-card-header">
-        <div className="st-card-company">{ticket.trainCompany}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="st-card-status">⏳ Pending</span>
-          {adminMode && (
-            <button className="st-delete-btn" onClick={handleDelete} title="Delete">🗑</button>
-          )}
+    <>
+      <div className="st-card">
+        <div className="st-card-header">
+          <div className="st-card-company">{ticket.trainCompany}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="st-card-status">⏳ Pending</span>
+
+            {/* Edit button — Admin or Company */}
+            {(adminMode || companyMode) && (
+              <button
+                className="st-action-btn st-action-btn--edit"
+                onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
+                title="Edit Ticket"
+              >✏️</button>
+            )}
+
+            {/* Delete button — Admin only */}
+            {adminMode && (
+              <button
+                className="st-action-btn st-action-btn--delete"
+                onClick={(e) => { e.stopPropagation(); setShowConfirm(true); }}
+                disabled={deleting}
+                title="Delete Ticket"
+              >{deleting ? "…" : "🗑️"}</button>
+            )}
+          </div>
         </div>
+
+        <div className="st-card-route">
+          <div className="st-card-city">
+            <span className="st-card-code">{fromCode}</span>
+            <span className="st-card-city-name">{fromFull}</span>
+          </div>
+          <div className="st-card-route-line">
+            <div className="st-card-route-dot" />
+            <div className="st-card-route-dash" />
+            <span className="st-card-train-icon">🚆</span>
+            <div className="st-card-route-dash" />
+            <div className="st-card-route-dot" />
+          </div>
+          <div className="st-card-city st-card-city--right">
+            <span className="st-card-code">{toCode}</span>
+            <span className="st-card-city-name">{toFull}</span>
+          </div>
+        </div>
+
+        <div className="st-card-info">
+          <div className="st-info-item">
+            <span className="st-info-label">DATE</span>
+            <span className="st-info-val">{fmtDate(ticket.dueDate)}</span>
+          </div>
+          <div className="st-info-item">
+            <span className="st-info-label">TIME</span>
+            <span className="st-info-val">{fmtTime(ticket.dueDate)}</span>
+          </div>
+          <div className="st-info-item">
+            <span className="st-info-label">WAGON</span>
+            <span className="st-info-val">{ticket.vagonNumber ?? "—"}</span>
+          </div>
+        </div>
+
+        <div className="st-card-info st-card-info--2col">
+          <div className="st-info-item">
+            <span className="st-info-label">PRICE</span>
+            <span className="st-info-val st-info-val--price">{displayPrice}</span>
+          </div>
+          <div className="st-info-item">
+            <span className="st-info-label">SEATS</span>
+            <span className={`st-info-val ${seatsClass}`}>{seats}</span>
+          </div>
+        </div>
+
+        <button className="st-seatmap-btn" onClick={onClick}>
+          💺 Seat Map
+        </button>
       </div>
 
-      <div className="st-card-route">
-        <div className="st-card-city">
-          <span className="st-card-code">{fromCode}</span>
-          <span className="st-card-city-name">{fromFull}</span>
-        </div>
-        <div className="st-card-route-line">
-          <div className="st-card-route-dot" />
-          <div className="st-card-route-dash" />
-          <span className="st-card-train-icon">🚆</span>
-          <div className="st-card-route-dash" />
-          <div className="st-card-route-dot" />
-        </div>
-        <div className="st-card-city st-card-city--right">
-          <span className="st-card-code">{toCode}</span>
-          <span className="st-card-city-name">{toFull}</span>
-        </div>
-      </div>
+      {showEdit && (
+        <EditModal
+          ticket={ticket}
+          onClose={() => setShowEdit(false)}
+          onSaved={(updatedBody) => {
+            onEdited(updatedBody);
+            onToast(`Ticket #${updatedBody.id} updated successfully.`, "success");
+          }}
+        />
+      )}
 
-      <div className="st-card-info">
-        <div className="st-info-item">
-          <span className="st-info-label">DATE</span>
-          <span className="st-info-val">{fmtDate(ticket.dueDate)}</span>
-        </div>
-        <div className="st-info-item">
-          <span className="st-info-label">TIME</span>
-          <span className="st-info-val">{fmtTime(ticket.dueDate)}</span>
-        </div>
-        <div className="st-info-item">
-          <span className="st-info-label">WAGON</span>
-          <span className="st-info-val">{ticket.vagonNumber ?? "—"}</span>
-        </div>
-      </div>
-
-      <div className="st-card-info st-card-info--2col">
-        <div className="st-info-item">
-          <span className="st-info-label">PRICE</span>
-          <span className="st-info-val st-info-val--price">{displayPrice}</span>
-        </div>
-        <div className="st-info-item">
-          <span className="st-info-label">SEATS</span>
-          <span className={`st-info-val ${seatsClass}`}>{seats}</span>
-        </div>
-      </div>
-
-      <button className="st-seatmap-btn" onClick={onClick}>
-        💺 Seat Map
-      </button>
-    </div>
+      {showConfirm && (
+        <ConfirmDeleteModal
+          ticketId={ticket.id}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -406,10 +656,13 @@ export default function ShowTrainTickets() {
   const [totalPages, setTotalPages]     = useState(1);
   const [locations, setLocations]       = useState([]);
   const [activeTicket, setActiveTicket] = useState(null);
-  const [deleteError, setDeleteError]   = useState(null);
-  const adminMode = isAdmin();
+  const [toast, setToast]               = useState(null);
+
+  const role = getUserRole();
 
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+
+  const showToast = (message, type = "success") => setToast({ message, type });
 
   useEffect(() => {
     fetch(`${BASE_URL}/Location?Limit=200&Page=1`)
@@ -450,20 +703,16 @@ export default function ShowTrainTickets() {
     fetchTickets(1);
   };
 
-  const handleDelete = async (id) => {
-    setDeleteError(null);
-    try {
-      const res = await fetch(`${BASE_URL}/TrainTicket?id=${id}`, {
-        method: "DELETE", headers: authHeaders(),
-      });
-      if (!res.ok) throw new Error("Failed to delete ticket.");
-      setTickets((prev) => prev.filter((t) => t.id !== id));
-      setTotalCount((c) => c - 1);
-    } catch (e) { setDeleteError(e.message); }
-  };
-
   return (
     <div className="st-page">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="st-header">
         <div className="st-title-block">
@@ -524,8 +773,6 @@ export default function ShowTrainTickets() {
         </div>
       </div>
 
-      {deleteError && <div className="st-error-banner">{deleteError}</div>}
-
       <div className="st-content">
         {loading && (
           <div className="st-state">
@@ -555,9 +802,25 @@ export default function ShowTrainTickets() {
               <TicketCard
                 key={t.id}
                 ticket={t}
+                role={role}
                 onClick={() => setActiveTicket(t)}
-                onDelete={handleDelete}
-                adminMode={adminMode}
+                onDeleted={(id) => {
+                  setTickets(prev => prev.filter(tk => tk.id !== id));
+                  setTotalCount(c => c - 1);
+                }}
+                onEdited={(updatedBody) => {
+                  setTickets(prev => prev.map(tk =>
+                    tk.id === updatedBody.id
+                      ? {
+                          ...tk,
+                          trainCompany: updatedBody.trainCompany,
+                          trainNumber:  updatedBody.trainNumber,
+                          vagonNumber:  updatedBody.vagonNumber,
+                        }
+                      : tk
+                  ));
+                }}
+                onToast={showToast}
               />
             ))}
           </div>
