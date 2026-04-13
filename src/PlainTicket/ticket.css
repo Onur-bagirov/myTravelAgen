@@ -1,23 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-/* ─── Base ─── */
 .fs-page {
   min-height: 100vh;
-  background: #060910;
-  font-family: 'Manrope', sans-serif;
+  background: transparent;
+  font-family: 'Syne', sans-serif;
   padding: 2.5rem 1rem 4rem;
-  color: #e8eaf0;
+  color: #f1f5f9;
   position: relative;
   overflow-x: hidden;
 }
 
-.fs-noise {
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-}
+.fs-noise { display: none; }
 
 .fs-inner {
   max-width: 580px;
@@ -26,7 +19,6 @@
   z-index: 1;
 }
 
-/* ─── Header ─── */
 .fs-header {
   margin-bottom: 2rem;
 }
@@ -35,9 +27,10 @@
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.2em;
-  color: #5b8df6;
+  color: #ef4444;
   display: block;
   margin-bottom: 0.6rem;
+  text-transform: uppercase;
 }
 
 .fs-title {
@@ -47,33 +40,33 @@
   line-height: 1.1;
   color: #fff;
   margin: 0 0 0.5rem;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.5);
 }
 
 .fs-title-accent {
-  background: linear-gradient(135deg, #5b8df6 0%, #a78bfa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ef4444;
+  -webkit-text-fill-color: #ef4444;
 }
 
 .fs-subtitle {
   font-size: 13px;
-  color: #3d4660;
+  color: rgba(255,255,255,0.3);
   margin: 0;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
 }
 
-/* ─── Card ─── */
 .fs-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
   padding: 1.5rem;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   margin-bottom: 1rem;
 }
 
-/* ─── Route Row ─── */
 .fs-route-row {
   display: flex;
   align-items: flex-end;
@@ -81,9 +74,7 @@
   margin-bottom: 1.25rem;
 }
 
-.fs-field {
-  flex: 1;
-}
+.fs-field { flex: 1; }
 
 .fs-label {
   display: flex;
@@ -93,7 +84,7 @@
   font-family: 'DM Mono', monospace;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #3d4660;
+  color: rgba(255,255,255,0.28);
   margin-bottom: 0.5rem;
 }
 
@@ -102,12 +93,12 @@
   height: 6px;
   border-radius: 50%;
 }
-.from-dot { background: #5b8df6; }
-.to-dot { background: #a78bfa; }
+.from-dot { background: #ef4444; }
+.to-dot   { background: #f87171; }
 
 .fs-label-icon {
   font-size: 12px;
-  color: #5b8df6;
+  color: #ef4444;
 }
 
 .fs-select-wrap {
@@ -118,12 +109,12 @@
 
 .fs-select {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
   padding: 11px 36px 11px 14px;
-  color: #e8eaf0;
-  font-family: 'Manrope', sans-serif;
+  color: #f1f5f9;
+  font-family: 'Syne', sans-serif;
   font-size: 14px;
   font-weight: 500;
   outline: none;
@@ -134,37 +125,41 @@
 
 .fs-select:hover,
 .fs-select:focus {
-  border-color: rgba(91, 141, 246, 0.4);
-  background: rgba(91, 141, 246, 0.06);
+  border-color: rgba(239,68,68,0.4);
+  background: rgba(0,0,0,0.45);
+}
+
+.fs-select option {
+  background: #0f1520;
+  color: #f1f5f9;
 }
 
 .fs-chevron {
   position: absolute;
   right: 12px;
   pointer-events: none;
-  color: #3d4660;
+  color: rgba(255,255,255,0.25);
   font-size: 11px;
 }
 
 .fs-skeleton {
   height: 42px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.3);
   animation: pulse 1.4s ease infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+  0%,100% { opacity: 0.2; }
+  50%      { opacity: 0.55; }
 }
 
-/* ─── Swap ─── */
 .fs-swap {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.3);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -172,51 +167,46 @@
   flex-shrink: 0;
   margin-bottom: 2px;
   transition: all 0.2s;
-  color: #5b8df6;
+  color: #ef4444;
+  backdrop-filter: blur(8px);
 }
 
 .fs-swap:hover {
-  background: rgba(91, 141, 246, 0.12);
-  border-color: rgba(91, 141, 246, 0.3);
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.35);
   transform: rotate(180deg);
 }
 
-.fs-swap-icon {
-  font-size: 16px;
-}
+.fs-swap-icon { font-size: 16px; }
 
-/* ─── Date ─── */
-.fs-date-row {
-  margin-bottom: 1.25rem;
-}
+.fs-date-row { margin-bottom: 1.25rem; }
 
 .fs-date {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
   padding: 11px 14px;
-  color: #e8eaf0;
-  font-family: 'Manrope', sans-serif;
+  color: #f1f5f9;
+  font-family: 'Syne', sans-serif;
   font-size: 14px;
   font-weight: 500;
   outline: none;
   cursor: pointer;
-  colorScheme: dark;
+  color-scheme: dark;
   transition: border-color 0.2s;
 }
 
 .fs-date:focus {
-  border-color: rgba(91, 141, 246, 0.4);
+  border-color: rgba(239,68,68,0.4);
 }
 
-/* ─── Button ─── */
 .fs-btn {
   width: 100%;
   padding: 14px;
   border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #5b8df6 0%, #7c3aed 100%);
+  border-radius: 12px;
+  background: #ef4444;
   color: #fff;
   font-family: 'Syne', sans-serif;
   font-size: 15px;
@@ -228,27 +218,20 @@
   justify-content: center;
   gap: 8px;
   transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 28px rgba(91, 141, 246, 0.3);
+  box-shadow: 0 4px 24px rgba(239,68,68,0.3);
 }
 
 .fs-btn:hover:not(:disabled) {
-  opacity: 0.92;
+  opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 8px 36px rgba(91, 141, 246, 0.4);
+  box-shadow: 0 8px 32px rgba(239,68,68,0.4);
 }
 
-.fs-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
+.fs-btn:active:not(:disabled) { transform: translateY(0); }
+.fs-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.fs-btn-icon { font-size: 16px; }
 
-.fs-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.fs-btn-icon {
-  font-size: 16px;
-}
+.fs-btn--loading { background: #b91c1c; }
 
 .fs-spinner {
   width: 16px;
@@ -259,32 +242,25 @@
   animation: spin 0.7s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ─── Error ─── */
 .fs-error {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 12px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 10px;
   padding: 12px 16px;
-  color: #f87171;
+  color: #fca5a5;
   font-size: 13px;
+  font-family: 'DM Mono', monospace;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.fs-error-icon {
-  font-size: 16px;
-}
+.fs-error-icon { font-size: 16px; }
 
-/* ─── Results ─── */
-.fs-results {
-  margin-top: 1.5rem;
-}
+.fs-results { margin-top: 1.5rem; }
 
 .fs-results-header {
   display: flex;
@@ -303,35 +279,33 @@
   font-weight: 700;
 }
 
-.fs-results-from { color: #5b8df6; }
-.fs-results-arrow { color: #3d4660; font-size: 14px; }
-.fs-results-to { color: #a78bfa; }
+.fs-results-from  { color: #ef4444; }
+.fs-results-arrow { color: rgba(255,255,255,0.2); font-size: 14px; }
+.fs-results-to    { color: #fca5a5; }
 
 .fs-results-count {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: #3d4660;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: 999px;
 }
 
-/* ─── Empty ─── */
 .fs-empty {
   text-align: center;
   padding: 3rem 1rem;
-  color: #3d4660;
+  color: rgba(255,255,255,0.2);
 }
 
 .fs-empty-icon {
   font-size: 2.5rem;
   display: block;
   margin-bottom: 0.75rem;
-  opacity: 0.4;
+  opacity: 0.3;
 }
 
-/* ─── Flight Cards ─── */
 .fs-flight-list {
   display: flex;
   flex-direction: column;
@@ -340,16 +314,18 @@
 
 .fs-flight {
   width: 100%;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 14px;
   padding: 1.1rem 1.25rem;
   cursor: pointer;
   text-align: left;
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
   animation: fadeUp 0.4s ease both;
-  color: #e8eaf0;
-  font-family: 'Manrope', sans-serif;
+  color: #f1f5f9;
+  font-family: 'Syne', sans-serif;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 @keyframes fadeUp {
@@ -358,13 +334,12 @@
 }
 
 .fs-flight:hover {
-  background: rgba(91, 141, 246, 0.07);
-  border-color: rgba(91, 141, 246, 0.25);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(91, 141, 246, 0.12);
+  background: rgba(0,0,0,0.58);
+  border-color: rgba(239,68,68,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
 
-/* Top row */
 .fs-flight-top {
   display: flex;
   justify-content: space-between;
@@ -382,34 +357,34 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #5b8df6;
-  box-shadow: 0 0 6px #5b8df6;
+  background: #ef4444;
+  box-shadow: 0 0 6px rgba(239,68,68,0.6);
 }
 
 .fs-airline-name {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
-  color: #e8eaf0;
+  color: #ef4444;
 }
 
 .fs-plane-badge {
   font-size: 11px;
-  color: #3d4660;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
   padding: 2px 8px;
-  border-radius: 20px;
+  border-radius: 999px;
+  font-family: 'DM Mono', monospace;
 }
 
 .fs-price {
   font-family: 'DM Mono', monospace;
   font-size: 18px;
   font-weight: 500;
-  color: #5b8df6;
+  color: #4ade80;
   letter-spacing: -0.02em;
 }
 
-/* Mid route */
 .fs-flight-mid {
   display: flex;
   align-items: center;
@@ -423,9 +398,7 @@
   align-items: flex-start;
 }
 
-.fs-time-block--right {
-  align-items: flex-end;
-}
+.fs-time-block--right { align-items: flex-end; }
 
 .fs-time {
   font-family: 'Syne', sans-serif;
@@ -434,12 +407,16 @@
   color: #fff;
   letter-spacing: -0.03em;
   line-height: 1;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
 }
 
 .fs-city {
   font-size: 11px;
-  color: #3d4660;
+  color: rgba(255,255,255,0.25);
   margin-top: 2px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .fs-route-line {
@@ -453,14 +430,18 @@
 .fs-duration {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  color: #3d4660;
+  color: rgba(255,255,255,0.2);
 }
 
 .fs-line {
   width: 100%;
   position: relative;
   height: 1px;
-  background: rgba(255,255,255,0.1);
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 4px,
+    transparent 4px, transparent 9px
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -468,19 +449,19 @@
 
 .fs-plane-icon {
   font-size: 12px;
-  color: #5b8df6;
-  background: #060910;
+  color: rgba(255,255,255,0.35);
+  background: transparent;
   padding: 0 4px;
 }
 
 .fs-direct {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  color: #22c55e;
+  color: #4ade80;
   letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-/* Bottom tags */
 .fs-flight-bot {
   display: flex;
   align-items: center;
@@ -490,31 +471,32 @@
 
 .fs-tag {
   font-size: 11px;
-  color: #3d4660;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
   padding: 3px 9px;
-  border-radius: 20px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-family: 'DM Mono', monospace;
 }
 
 .fs-tag-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #22c55e;
+  background: #4ade80;
 }
 
-.fs-tag--meal { color: #9ca3af; }
-.fs-tag--gate { color: #9ca3af; }
+.fs-tag--meal { color: rgba(255,255,255,0.25); }
+.fs-tag--gate { color: rgba(255,255,255,0.25); }
 
 .fs-select-btn {
   margin-left: auto;
   font-family: 'Syne', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: #5b8df6;
+  color: #ef4444;
   letter-spacing: 0.04em;
 }

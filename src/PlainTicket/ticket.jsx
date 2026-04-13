@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import "./ticket.css";
-// ✅ DÜZƏLDİLDİ: CSS faylından deyil, qovluq strukturuna uyğun olaraq .jsx faylından import edilir
 import FlightBooking from "../BookTicket/bookT"; 
 
 const API_BASE = "http://localhost:5251/api";
@@ -28,7 +27,7 @@ export default function PlanetTicket() {
         const res = await fetch(`${API_BASE}/Location?Page=1&Limit=100`, {
           headers: getHeaders(),
         });
-        if (!res.ok) throw new Error("Lokasiyalar yüklənmədi.");
+        if (!res.ok) throw new Error("Locations could not be loaded.");
         const data = await res.json();
         const list = Array.isArray(data.data) ? data.data : [];
         setLocations(list);
@@ -48,11 +47,11 @@ export default function PlanetTicket() {
 
   async function search() {
     if (!fromId || !toId) {
-      setError("Zəhmət olmasa hər iki lokasiyanı seçin.");
+      setError("Please select both locations.");
       return;
     }
     if (fromId === toId) {
-      setError("Çıxış və gəliş lokasiyaları eyni ola bilməz.");
+      setError("Departure and arrival locations cannot be the same.");
       return;
     }
     setSearching(true);
@@ -70,17 +69,17 @@ export default function PlanetTicket() {
         method: "GET",
         headers: getHeaders(),
       });
-      if (!res.ok) throw new Error("Uçuş tapılmadı və ya server xətası.");
+      if (!res.ok) throw new Error("No flights found or server error.");
       const result = await res.json();
       
       setFlights({
         list: result.data || [],
         fromLabel: fromLoc?.name,
         toLabel: toLoc?.name,
-        dateStr: new Date(date).toLocaleDateString("az-AZ"),
+        dateStr: new Date(date).toLocaleDateString("en-US"),
       });
     } catch (e) {
-      setError("Uçuşlar gətirilərkən problem yarandı: " + e.message);
+      setError("An error occurred while fetching flights: " + e.message);
     } finally {
       setSearching(false);
     }
@@ -121,23 +120,20 @@ export default function PlanetTicket() {
     <div className="fs-page">
       <div className="fs-noise" />
       <div className="fs-inner">
-        {/* Header */}
         <div className="fs-header">
           <span className="fs-eyebrow">✦ StepTravel</span>
           <h1 className="fs-title">
-            Uçuşunuzu<br />
-            <span className="fs-title-accent">Planlayın</span>
+            Plan Your<br />
+            <span className="fs-title-accent">Flight</span>
           </h1>
-          <p className="fs-subtitle">Ən yaxşı qiymətlə biletinizi tapın</p>
+          <p className="fs-subtitle">Find your ticket at the best price</p>
         </div>
-
-        {/* Search Card */}
         <div className="fs-card">
           <div className="fs-route-row">
             <div className="fs-field">
               <label className="fs-label">
                 <span className="fs-label-dot from-dot" />
-                Haradan
+                From
               </label>
               <div className="fs-select-wrap">
                 {locLoading ? (
@@ -159,14 +155,14 @@ export default function PlanetTicket() {
               </div>
             </div>
 
-            <button className="fs-swap" onClick={swap} title="Dəyiş">
+            <button className="fs-swap" onClick={swap} title="Swap">
               <span className="fs-swap-icon">⇌</span>
             </button>
 
             <div className="fs-field">
               <label className="fs-label">
                 <span className="fs-label-dot to-dot" />
-                Haraya
+                To
               </label>
               <div className="fs-select-wrap">
                 {locLoading ? (
@@ -191,7 +187,7 @@ export default function PlanetTicket() {
 
           <div className="fs-date-row">
             <label className="fs-label">
-              <span className="fs-label-icon">◈</span> Uçuş Tarixi
+              <span className="fs-label-icon">◈</span> Flight Date
             </label>
             <input
               className="fs-date"
@@ -209,12 +205,12 @@ export default function PlanetTicket() {
             {searching ? (
               <>
                 <span className="fs-spinner" />
-                Axtarılır...
+                Searching...
               </>
             ) : (
               <>
                 <span className="fs-btn-icon">✈</span>
-                Biletləri Tap
+                Find Tickets
               </>
             )}
           </button>
@@ -226,7 +222,6 @@ export default function PlanetTicket() {
           </div>
         )}
 
-        {/* Results */}
         {flights && (
           <div className="fs-results">
             <div className="fs-results-header">
@@ -236,14 +231,14 @@ export default function PlanetTicket() {
                 <span className="fs-results-to">{flights.toLabel}</span>
               </div>
               <span className="fs-results-count">
-                {flights.list.length} uçuş
+                {flights.list.length} flights
               </span>
             </div>
 
             {flights.list.length === 0 ? (
               <div className="fs-empty">
                 <span className="fs-empty-icon">✈</span>
-                <p>Bu tarixə uçuş tapılmadı.</p>
+                <p>No flights found for this date.</p>
               </div>
             ) : (
               <div className="fs-flight-list">
@@ -275,11 +270,11 @@ export default function PlanetTicket() {
                         <span className="fs-city">{f.from}</span>
                       </div>
                       <div className="fs-route-line">
-                        <span className="fs-duration">~2s</span>
+                        <span className="fs-duration">~2h</span>
                         <div className="fs-line">
                           <span className="fs-plane-icon">✈</span>
                         </div>
-                        <span className="fs-direct">Birbaşa</span>
+                        <span className="fs-direct">Direct</span>
                       </div>
                       <div className="fs-time-block fs-time-block--right">
                         <span className="fs-time">{formatArrival(f.dueDate)}</span>
@@ -290,12 +285,12 @@ export default function PlanetTicket() {
                     <div className="fs-flight-bot">
                       <span className="fs-tag">
                         <span className="fs-tag-dot" />
-                        {f.availableSeats} yer
+                        {f.availableSeats} seats
                       </span>
                       <span className="fs-tag fs-tag--meal">🍽 {f.meal}</span>
                       <span className="fs-tag">🧳 {f.luggageKg} kg</span>
                       <span className="fs-tag fs-tag--gate">Gate {f.gate}</span>
-                      <span className="fs-select-btn">Seç →</span>
+                      <span className="fs-select-btn">Select →</span>
                     </div>
                   </button>
                 ))}
