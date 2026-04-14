@@ -50,6 +50,8 @@ const Header = () => {
     navigate("/");
   };
 
+   const logout = () => { localStorage.clear(); window.location.href = "/"; };
+
   // Backend "Admin", "Company", "Customer" string qaytarır
   const isCustomer = userRole === "Customer";
   const isCompany  = userRole === "Company";

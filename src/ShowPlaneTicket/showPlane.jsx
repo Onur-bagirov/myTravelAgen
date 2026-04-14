@@ -44,6 +44,11 @@ function countdown(d) {
   return `${days} days left`;
 }
 
+// ── Vaxtı keçib-keçmədiyini yoxla ───────────────────────────
+function isExpired(dueDate) {
+  return dueDate && new Date(dueDate) < new Date();
+}
+
 const VARIANT_COLORS = {
   "first class": { accent: "#c9a84c", bg: "rgba(201,168,76,0.15)", label: "✦ First Class" },
   business:      { accent: "#7eb8f7", bg: "rgba(126,184,247,0.15)", label: "◈ Business" },
@@ -91,7 +96,7 @@ function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   );
 }
 
-// ── Success Toast ────────────────────────────────────────────
+// ── Toast ────────────────────────────────────────────────────
 function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
@@ -111,15 +116,24 @@ function Toast({ message, type = "success", onClose }) {
 function EditModal({ ticket, onClose, onSaved }) {
   const [form, setForm] = useState({
     id:        ticket.id,
-    airline:   ticket.airline  || "",
-    gate:      ticket.gate     || "",
-    plane:     ticket.plane    || "",
-    meal:      ticket.meal     || "",
+    airline:   ticket.airline   || "",
+    gate:      ticket.gate      || "",
+    plane:     ticket.plane     || "",
+    meal:      ticket.meal      || "",
     luggageKg: ticket.luggageKg ?? 0,
+    variantId: ticket.variantId ?? "",
   });
-  const [saving, setSaving] = useState(false);
-  const [error,  setError]  = useState(null);
+  const [variants, setVariants] = useState([]);
+  const [saving,   setSaving]   = useState(false);
+  const [error,    setError]    = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+
+  useEffect(() => {
+    fetch(`${BASE_URL}/Variant?Limit=50&Page=1`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(d => setVariants(Array.isArray(d?.data) ? d.data : []))
+      .catch(() => {});
+  }, []);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -177,6 +191,9 @@ function EditModal({ ticket, onClose, onSaved }) {
     setValidationErrors({});
     setSaving(true);
     try {
+      // Backend-ə state-i rəqəm olaraq göndərmək lazımdır (Enum)
+      const ticketStateNumeric = STATE_MAP[ticket.state] ?? 1; // Default Available (1)
+
       const body = {
         id:        form.id,
         airline:   form.airline.trim(),
@@ -184,16 +201,16 @@ function EditModal({ ticket, onClose, onSaved }) {
         plane:     form.plane.trim(),
         meal:      form.meal.trim(),
         luggageKg: parseFloat(form.luggageKg) || 0,
-        state:     0,
+        state:     ticketStateNumeric, // ← Düzəliş: string yox, rəqəm göndərilir
+        variantId: form.variantId ? parseInt(form.variantId) : null,
       };
+
       const res = await fetch(`${BASE_URL}/PlaneTicket`, {
         method:  "PUT",
         headers: authHeaders(),
         body:    JSON.stringify(body),
       });
 
-      // ✅ FIX: Backend uğursuzluqda { data: null } + HTTP 200 qaytarır.
-      // res.ok yoxlamaq kifayət deyil — data-nı da yoxlamaq lazımdır.
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.data) {
         throw new Error(
@@ -202,7 +219,8 @@ function EditModal({ ticket, onClose, onSaved }) {
         );
       }
 
-      onSaved(body);
+      const chosenVariant = variants.find(v => v.id === parseInt(form.variantId));
+      onSaved({ ...body, variantName: chosenVariant?.name ?? ticket.variantName });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -249,6 +267,23 @@ function EditModal({ ticket, onClose, onSaved }) {
             <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange}
               className={validationErrors.luggageKg ? "edit-input--error" : ""} />
             {validationErrors.luggageKg && <span className="edit-field-error">{validationErrors.luggageKg}</span>}
+          </div>
+
+          <div className="edit-field">
+            <label>Variant</label>
+            <select
+              name="variantId"
+              value={form.variantId}
+              onChange={handleChange}
+              className="spt-select"
+            >
+              <option value="">— Select Variant —</option>
+              {variants.map(v => (
+                <option key={v.id} value={v.id}>
+                  {v.name.charAt(0).toUpperCase() + v.name.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -407,20 +442,24 @@ function SeatMapModal({ ticket, onClose }) {
 
 // ── Ticket Card ──────────────────────────────────────────────
 function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
-  const [showSeats,    setShowSeats]    = useState(false);
-  const [showEdit,     setShowEdit]     = useState(false);
-  const [showConfirm,  setShowConfirm]  = useState(false);
-  const [deleting,     setDeleting]     = useState(false);
+  const [showSeats,   setShowSeats]   = useState(false);
+  const [showEdit,    setShowEdit]    = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting,    setDeleting]    = useState(false);
 
   const isAdmin   = role === "Admin";
   const isCompany = role === "Company";
   const sb        = stateBadge(ticket.state);
 
+  const variantMeta  = getVariantMeta(ticket.variantName || "");
+  const variantLabel = ticket.variantName
+    ? ticket.variantName.charAt(0).toUpperCase() + ticket.variantName.slice(1)
+    : "—";
+
   const handleDeleteConfirmed = async () => {
     setShowConfirm(false);
     setDeleting(true);
     try {
-      // ✅ FIX: URL parametri işlədirik — DELETE body bəzi clientlərdə strip olunur
       const res = await fetch(`${BASE_URL}/PlaneTicket/${ticket.id}`, {
         method:  "DELETE",
         headers: authHeaders(),
@@ -469,18 +508,27 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
           )}
         </div>
 
-        {/* ── STATE BADGE ── */}
+        {/* ── STATE BADGE + VARIANT BADGE ── */}
         <div className="spt-card-state-row">
           <span
             className="spt-state-badge"
-            style={{
-              color:       sb.color,
-              background:  sb.bg,
-              borderColor: sb.border,
-            }}
+            style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}
           >
             {sb.label}
           </span>
+
+          {ticket.variantName && (
+            <span
+              className="spt-variant-badge"
+              style={{
+                color:       variantMeta.accent,
+                background:  variantMeta.bg,
+                borderColor: variantMeta.accent + "55",
+              }}
+            >
+              {variantMeta.label || variantLabel}
+            </span>
+          )}
         </div>
 
         <div className="spt-card-route">
@@ -538,6 +586,12 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
               {ticket.availableSeats}
             </span>
           </div>
+          <div className="spt-info-item spt-info-item--variant" style={{ "--v-color": variantMeta.accent, "--v-bg": variantMeta.bg }}>
+            <span className="spt-info-label">VARIANT</span>
+            <span className="spt-info-val spt-info-val--variant" style={{ color: variantMeta.accent }}>
+              {variantLabel}
+            </span>
+          </div>
         </div>
 
         <div className="spt-card-countdown">🕐 {countdown(ticket.dueDate)}</div>
@@ -586,6 +640,8 @@ export default function ShowPlaneTicket() {
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
 
+  const [hideExpired, setHideExpired] = useState(true);
+
   const [locations, setLocations] = useState([]);
   const [newTicketId] = useState(() => {
     const v = sessionStorage.getItem("newPlaneTicketId");
@@ -619,14 +675,21 @@ export default function ShowPlaneTicket() {
       const res = await fetch(`${BASE_URL}/PlaneTicket?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error(`Server Error: ${res.status}`);
       const data = await res.json();
-      setTickets(Array.isArray(data?.data) ? data.data : []);
-      setTotalCount(data?.totalDataCount ?? 0);
+
+      const all = Array.isArray(data?.data) ? data.data : [];
+      const filtered = hideExpired ? all.filter(t => !isExpired(t.dueDate)) : all;
+
+      setTickets(filtered);
+      setTotalCount(hideExpired
+        ? (data?.totalDataCount ?? 0) - (all.length - filtered.length)
+        : (data?.totalDataCount ?? 0)
+      );
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [airline, fromId, toId, date, pageNumber]);
+  }, [airline, fromId, toId, date, pageNumber, hideExpired]);
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
@@ -685,6 +748,18 @@ export default function ShowPlaneTicket() {
             <input type="date" value={date} onChange={e => setDate(e.target.value)} />
           </div>
         </div>
+
+        <div className="spt-filter-toggle">
+          <label className="spt-toggle-label">
+            <input
+              type="checkbox"
+              checked={hideExpired}
+              onChange={e => { setHideExpired(e.target.checked); setPageNumber(1); }}
+            />
+            <span>Hide expired tickets</span>
+          </label>
+        </div>
+
         <div className="spt-filter-actions">
           <button className="spt-search-btn" onClick={() => { setPageNumber(1); fetchTickets(); }}>Search</button>
           <button className="spt-reset-btn"  onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); }}>Reset</button>
@@ -729,12 +804,15 @@ export default function ShowPlaneTicket() {
                     t.id === updatedBody.id
                       ? {
                           ...t,
-                          airline:   updatedBody.airline,
-                          gate:      updatedBody.gate,
-                          plane:     updatedBody.plane,
-                          meal:      updatedBody.meal,
-                          luggageKg: updatedBody.luggageKg,
-                          state:     Object.keys(STATE_MAP).find(k => STATE_MAP[k] === updatedBody.state) || t.state,
+                          airline:     updatedBody.airline,
+                          gate:        updatedBody.gate,
+                          plane:       updatedBody.plane,
+                          meal:        updatedBody.meal,
+                          luggageKg:   updatedBody.luggageKg,
+                          variantId:   updatedBody.variantId,
+                          variantName: updatedBody.variantName ?? t.variantName,
+                          // STATE_MAP rəqəmi geri string-ə çeviririk ki card-da düzgün görünsün
+                          state:       Object.keys(STATE_MAP).find(k => STATE_MAP[k] === updatedBody.state) || t.state,
                         }
                       : t
                   ));

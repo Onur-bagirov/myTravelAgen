@@ -21,6 +21,118 @@ const getHeaders = () => ({
   "Content-Type": "application/json",
 });
 
+// ─── Seat Map Sub-component ───────────────────────────────────────────────────
+function SeatMapGrid({ seats, selectedSeat, onSelect }) {
+  // Build a lookup: "rowNum+col" -> seat object
+  // Seat names expected like "1A", "2F", "10C" etc.
+  const seatByKey = {};
+  seats.forEach((s) => {
+    seatByKey[s.name] = s;
+  });
+
+  // Detect all unique variant groups to show class label + price
+  const variantGroups = seats.reduce((acc, s) => {
+    if (!acc[s.variantName]) acc[s.variantName] = { name: s.variantName, price: s.variantPrice };
+    return acc;
+  }, {});
+
+  // Detect row count dynamically from seat names
+  const rows = [...new Set(seats.map((s) => parseInt(s.name)))].sort((a, b) => a - b);
+  const COLS = ["A", "B", "C", "D", "E", "F"];
+
+  return (
+    <div className="sm-wrap">
+      {/* Per-variant class labels */}
+      {Object.values(variantGroups).map((vg) => (
+        <div key={vg.name} className="sm-variant-header">
+          <span className="sm-class-name">{vg.name}</span>
+          <span className="sm-price-tag">+{vg.price} ₼</span>
+        </div>
+      ))}
+
+      {/* Front label */}
+      <div className="sm-front">
+        <span className="sm-front-line" />
+        <span className="sm-front-label">✈ ÖN</span>
+        <span className="sm-front-line" />
+      </div>
+
+      {/* Column headers */}
+      <div className="sm-col-headers">
+        <div className="sm-row-num-cell" />
+        <div className="sm-col-h">A</div>
+        <div className="sm-col-h">B</div>
+        <div className="sm-col-h">C</div>
+        <div className="sm-aisle-spacer" />
+        <div className="sm-col-h">D</div>
+        <div className="sm-col-h">E</div>
+        <div className="sm-col-h">F</div>
+      </div>
+
+      {/* Seat rows */}
+      {rows.map((row) => (
+        <div key={row} className="sm-row">
+          <div className="sm-row-num-cell">{row}</div>
+          {COLS.map((col, ci) => {
+            const seatId = `${row}${col}`;
+            const seat = seatByKey[seatId];
+
+            if (ci === 3) {
+              // Insert aisle spacer before col D
+              return [
+                <div key="aisle" className="sm-aisle-spacer" />,
+                <SeatButton key={seatId} seat={seat} seatId={seatId} selectedSeat={selectedSeat} onSelect={onSelect} />,
+              ];
+            }
+            return (
+              <SeatButton key={seatId} seat={seat} seatId={seatId} selectedSeat={selectedSeat} onSelect={onSelect} />
+            );
+          })}
+        </div>
+      ))}
+
+      {/* Legend */}
+      <div className="sm-legend">
+        <span className="sm-legend-item">
+          <span className="sm-legend-dot sm-legend-dot--free" /> Free
+        </span>
+        <span className="sm-legend-item">
+          <span className="sm-legend-dot sm-legend-dot--taken" /> Occupied
+        </span>
+        <span className="sm-legend-item">
+          <span className="sm-legend-dot sm-legend-dot--selected" /> Selected
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function SeatButton({ seat, seatId, selectedSeat, onSelect }) {
+  if (!seat) {
+    // Empty cell (no seat data for this position)
+    return <div className="sm-seat sm-seat--empty" />;
+  }
+
+  const isSelected = selectedSeat?.id === seat.id;
+  const isTaken = seat.isOccupied;
+
+  let stateClass = "sm-seat--free";
+  if (isTaken) stateClass = "sm-seat--taken";
+  else if (isSelected) stateClass = "sm-seat--selected";
+
+  return (
+    <button
+      className={`sm-seat ${stateClass}`}
+      disabled={isTaken}
+      onClick={() => !isTaken && onSelect(seat)}
+      aria-label={`Oturacaq ${seatId}`}
+    >
+      {seatId}
+    </button>
+  );
+}
+
+// ─── Main FlightBooking Component ─────────────────────────────────────────────
 export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSuccess }) {
   const [seats, setSeats] = useState([]);
   const [seatsLoading, setSeatsLoading] = useState(true);
@@ -35,13 +147,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const [showPayment, setShowPayment] = useState(false);
 
   const isExpired = flight?.dueDate ? new Date(flight.dueDate) < new Date() : false;
-
-  const variantGroups = seats.reduce((acc, s) => {
-    const key = s.variantName;
-    if (!acc[key]) acc[key] = { name: key, price: s.variantPrice, seats: [] };
-    acc[key].seats.push(s);
-    return acc;
-  }, {});
 
   useEffect(() => {
     const fetchSeats = async () => {
@@ -116,9 +221,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           errMsg = Object.values(result.errors).flat().join(", ");
         }
         setSeats((prev) =>
-          prev.map((s) =>
-            s.id === selectedSeat.id ? { ...s, isOccupied: true } : s
-          )
+          prev.map((s) => (s.id === selectedSeat.id ? { ...s, isOccupied: true } : s))
         );
         setSelectedSeat(null);
         throw new Error(errMsg);
@@ -126,9 +229,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
 
       if (!result?.data) {
         setSeats((prev) =>
-          prev.map((s) =>
-            s.id === selectedSeat.id ? { ...s, isOccupied: true } : s
-          )
+          prev.map((s) => (s.id === selectedSeat.id ? { ...s, isOccupied: true } : s))
         );
         setSelectedSeat(null);
         throw new Error("This seat is already taken. Please choose another seat.");
@@ -162,15 +263,15 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     });
   }
 
-  const basePrice   = Number(flight.price || 0);
-  const seatExtra   = Number(selectedSeat?.variantPrice || 0);
+  const basePrice    = Number(flight.price || 0);
+  const seatExtra    = Number(selectedSeat?.variantPrice || 0);
   const luggageExtra = luggageKg > (flight.luggageKg || 20) ? 10 : 0;
-  const totalPrice  = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
+  const totalPrice   = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
 
+  // ── Success screen ──
   if (success) {
     return (
       <div className="fb-page">
-        <div className="fb-noise" />
         <div className="fb-inner fb-success-screen">
           <div className="fb-success-circle">✓</div>
           <h2 className="fb-success-title">Ticket Booked!</h2>
@@ -185,12 +286,13 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     );
   }
 
+  // ── Main screen ──
   return (
     <div className="fb-page">
-      <div className="fb-noise" />
       <div className="fb-inner">
         <button className="fb-back" onClick={onBack}>← Back</button>
 
+        {/* Expired banner */}
         {isExpired && (
           <div className="fb-expired-banner">
             <span className="fb-expired-icon">🕐</span>
@@ -201,6 +303,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
+        {/* Flight summary card */}
         <div className={`fb-summary${isExpired ? " fb-summary--expired" : ""}`}>
           <div className="fb-summary-top">
             <span className="fb-eyebrow">✦ {flight.airline}</span>
@@ -213,9 +316,11 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
             </div>
             <div className="fb-route-mid">
               <span className="fb-flight-dot-line">
-                <span className="fb-dot" /><span className="fb-dash" />
+                <span className="fb-dot" />
+                <span className="fb-dash" />
                 <span className="fb-plane-fly">✈</span>
-                <span className="fb-dash" /><span className="fb-dot" />
+                <span className="fb-dash" />
+                <span className="fb-dot" />
               </span>
               <span className="fb-dur-tag">~2h · Direct</span>
             </div>
@@ -232,6 +337,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         </div>
 
+        {/* Section 01: Seat selection */}
         <div className={`fb-section${isExpired ? " fb-section--disabled" : ""}`}>
           <h3 className="fb-section-title">
             <span className="fb-section-num">01</span>Select a Seat
@@ -243,64 +349,50 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
             </div>
           ) : seatsLoading ? (
             <div className="fb-seats-loading">
-              {[...Array(12)].map((_, i) => <div key={i} className="fb-seat-skeleton" />)}
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="fb-seat-skeleton" />
+              ))}
             </div>
           ) : seats.length === 0 ? (
             <div className="fb-seats-empty">No seat data found.</div>
           ) : (
             <div className="fb-cabin">
-              <div className="fb-cabin-nose"><span>✈ Front</span></div>
-              {Object.values(variantGroups).map((group) => (
-                <div key={group.name} className="fb-variant-group">
-                  <div className="fb-variant-label">
-                    <span className="fb-variant-name">{group.name}</span>
-                    <span className="fb-variant-price">+{group.price} ₼</span>
-                  </div>
-                  <div className="fb-seats-grid">
-                    {group.seats.map((seat) => (
-                      <button
-                        key={seat.id}
-                        disabled={seat.isOccupied}
-                        className={`fb-seat ${seat.isOccupied ? "fb-seat--occupied" : "fb-seat--free"} ${selectedSeat?.id === seat.id ? "fb-seat--selected" : ""}`}
-                        onClick={() => !seat.isOccupied && setSelectedSeat(seat)}
-                      >
-                        <span className="fb-seat-num">{seat.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              <div className="fb-legend">
-                <span className="fb-legend-item"><span className="fb-legend-dot fb-legend-dot--free" />Available</span>
-                <span className="fb-legend-item"><span className="fb-legend-dot fb-legend-dot--occupied" />Taken</span>
-                <span className="fb-legend-item"><span className="fb-legend-dot fb-legend-dot--selected" />Selected</span>
-              </div>
+              <SeatMapGrid
+                seats={seats}
+                selectedSeat={selectedSeat}
+                onSelect={setSelectedSeat}
+              />
             </div>
           )}
         </div>
 
+        {/* Section 02: Extras */}
         {!isExpired && (
           <div className="fb-section">
             <h3 className="fb-section-title">
               <span className="fb-section-num">02</span>Extras
             </h3>
             <div className="fb-options">
-              <div className="fb-option">
+              <div className="fb-option" onClick={() => setHasPet(!hasPet)}>
                 <div className="fb-option-info">
                   <span className="fb-option-icon">🐾</span>
-                  <div><span className="fb-option-name">Pet on board</span></div>
+                  <div>
+                    <span className="fb-option-name">Pet on board</span>
+                  </div>
                 </div>
-                <div className={`fb-toggle${hasPet ? " fb-toggle--on" : ""}`} onClick={() => setHasPet(!hasPet)}>
+                <div className={`fb-toggle${hasPet ? " fb-toggle--on" : ""}`}>
                   <span className="fb-toggle-knob" />
                 </div>
               </div>
 
-              <div className="fb-option">
+              <div className="fb-option" onClick={() => setHasChild(!hasChild)}>
                 <div className="fb-option-info">
                   <span className="fb-option-icon">👶</span>
-                  <div><span className="fb-option-name">Travelling with child</span></div>
+                  <div>
+                    <span className="fb-option-name">Travelling with child</span>
+                  </div>
                 </div>
-                <div className={`fb-toggle${hasChild ? " fb-toggle--on" : ""}`} onClick={() => setHasChild(!hasChild)}>
+                <div className={`fb-toggle${hasChild ? " fb-toggle--on" : ""}`}>
                   <span className="fb-toggle-knob" />
                 </div>
               </div>
@@ -308,17 +400,31 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
               <div className="fb-option fb-option--luggage">
                 <div className="fb-option-info">
                   <span className="fb-option-icon">🧳</span>
-                  <div><span className="fb-option-name">Luggage weight</span></div>
+                  <div>
+                    <span className="fb-option-name">Luggage weight</span>
+                  </div>
                 </div>
                 <div className="fb-counter">
-                  <button className="fb-counter-btn" onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}>−</button>
+                  <button
+                    className="fb-counter-btn"
+                    onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}
+                  >
+                    −
+                  </button>
                   <span className="fb-counter-val">{luggageKg} kg</span>
-                  <button className="fb-counter-btn" onClick={() => setLuggageKg(luggageKg + 5)}>+</button>
+                  <button
+                    className="fb-counter-btn"
+                    onClick={() => setLuggageKg(Math.min(50, luggageKg + 5))}
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             </div>
+
             <textarea
               className="fb-note"
+              rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Special requests or notes..."
@@ -326,6 +432,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
+        {/* Order summary */}
         {selectedSeat && !isExpired && (
           <div className="fb-order-summary">
             <div className="fb-order-row">
@@ -346,8 +453,14 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
-        {error && <div className="fb-error"><span>⚠</span> {error}</div>}
+        {/* Error */}
+        {error && (
+          <div className="fb-error">
+            <span>⚠</span> {error}
+          </div>
+        )}
 
+        {/* CTA button */}
         {isExpired ? (
           <button className="fb-buy-btn fb-buy-btn--expired" disabled>
             🕐 Flight has departed
@@ -359,7 +472,9 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
             disabled={buying || !selectedSeat}
           >
             {buying ? (
-              <><span className="fb-spinner" /> Processing...</>
+              <>
+                <span className="fb-spinner" /> Processing...
+              </>
             ) : (
               <>Book Now · {totalPrice} ₼</>
             )}

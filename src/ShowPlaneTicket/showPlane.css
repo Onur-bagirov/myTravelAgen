@@ -322,8 +322,12 @@
   transform: none;
 }
 
-/* ── State Badge ── */
+/* ── State + Variant Badge Row ── */
 .spt-card-state-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 14px;
 }
 
@@ -337,6 +341,25 @@
   border-radius: 20px;
   border: 1px solid;
   letter-spacing: 0.04em;
+}
+
+/* ── Variant Badge ── */
+.spt-variant-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.04em;
+  animation: fadeSlideIn 0.3s ease both;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 /* ── Route ── */
@@ -409,6 +432,12 @@
   gap: 3px;
 }
 
+/* ── Variant info item — subtle colored border ── */
+.spt-info-item--variant {
+  background: var(--v-bg, rgba(160,168,192,0.08));
+  border-color: color-mix(in srgb, var(--v-color, #a0a8c0) 30%, transparent);
+}
+
 .spt-info-label {
   font-size: 8px;
   letter-spacing: 0.12em;
@@ -423,9 +452,10 @@
   color: rgba(255,255,255,0.85);
 }
 
-.spt-info-val--price { color: #6ee7b7; }
-.spt-info-val--low   { color: #ff8080; }
-.spt-info-val--ok    { color: #6ee7b7; }
+.spt-info-val--price   { color: #6ee7b7; }
+.spt-info-val--low     { color: #ff8080; }
+.spt-info-val--ok      { color: #6ee7b7; }
+.spt-info-val--variant { font-weight: 800; letter-spacing: 0.03em; }
 
 .spt-card-countdown {
   font-size: 11px;
@@ -618,7 +648,6 @@
   color: #f1f5f9;
 }
 
-/* Validation states */
 .edit-input--error {
   border-color: rgba(248, 113, 113, 0.7) !important;
   background: rgba(248, 113, 113, 0.06) !important;

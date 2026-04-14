@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./ticket.css";
-import FlightBooking from "../BookTicket/bookT"; 
+import FlightBooking from "../BookTicket/bookT";
 
 const API_BASE = "http://localhost:5251/api";
 const getToken = () => localStorage.getItem("userToken");
@@ -12,6 +12,7 @@ const getHeaders = () => ({
 export default function PlanetTicket() {
   const [locations, setLocations] = useState([]);
   const [locLoading, setLocLoading] = useState(true);
+  const [variants, setVariants] = useState([]);
   const [fromId, setFromId] = useState("");
   const [toId, setToId] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -39,7 +40,21 @@ export default function PlanetTicket() {
         setLocLoading(false);
       }
     };
+
+    const fetchVariants = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/Variant?Page=1&Limit=100`, {
+          headers: getHeaders(),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        setVariants(list);
+      } catch (_) {}
+    };
+
     fetchLocations();
+    fetchVariants();
   }, []);
 
   const fromLoc = locations.find((l) => String(l.id) === fromId);
@@ -71,7 +86,7 @@ export default function PlanetTicket() {
       });
       if (!res.ok) throw new Error("No flights found or server error.");
       const result = await res.json();
-      
+
       setFlights({
         list: result.data || [],
         fromLabel: fromLoc?.name,
@@ -102,6 +117,13 @@ export default function PlanetTicket() {
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
 
+  function getVariantStyle(name) {
+    const n = (name || "").toLowerCase();
+    if (n.includes("business")) return "fs-vbadge--business";
+    if (n.includes("first")) return "fs-vbadge--first";
+    return "fs-vbadge--economy";
+  }
+
   if (selectedFlight) {
     return (
       <FlightBooking
@@ -128,6 +150,7 @@ export default function PlanetTicket() {
           </h1>
           <p className="fs-subtitle">Find your ticket at the best price</p>
         </div>
+
         <div className="fs-card">
           <div className="fs-route-row">
             <div className="fs-field">
@@ -255,6 +278,7 @@ export default function PlanetTicket() {
                       })
                     }
                   >
+                    {/* TOP ROW */}
                     <div className="fs-flight-top">
                       <div className="fs-airline">
                         <span className="fs-airline-dot" />
@@ -264,6 +288,25 @@ export default function PlanetTicket() {
                       <span className="fs-price">{Number(f.price).toFixed(2)} ₼</span>
                     </div>
 
+                    {/* VARIANT BADGES ROW */}
+                    {variants.length > 0 && (
+                      <div className="fs-variants-row">
+                        <span className="fs-variants-label">Available classes</span>
+                        <div className="fs-variants-list">
+                          {variants.map((v) => (
+                            <span
+                              key={v.id}
+                              className={`fs-vbadge ${getVariantStyle(v.name)}`}
+                            >
+                              {v.name}
+                              <span className="fs-vbadge-price">{Number(v.price).toFixed(0)} ₼</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* MID ROW */}
                     <div className="fs-flight-mid">
                       <div className="fs-time-block">
                         <span className="fs-time">{formatTime(f.dueDate)}</span>
@@ -282,6 +325,7 @@ export default function PlanetTicket() {
                       </div>
                     </div>
 
+                    {/* BOTTOM ROW */}
                     <div className="fs-flight-bot">
                       <span className="fs-tag">
                         <span className="fs-tag-dot" />

@@ -24,12 +24,13 @@ function fmtArrival(d) {
 }
 function countdown(d) {
   const days = Math.ceil((new Date(d) - new Date()) / 86400000);
-  if (days < 0)   return null;
-  if (days === 0)  return "Today";
-  if (days === 1)  return "Tomorrow";
+  if (days < 0)  return null;
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
   return `${days} days left`;
 }
-function isExpired(t) { return new Date(t.dueDate) < new Date(); }
+function isExpired(t)  { return new Date(t.dueDate) < new Date(); }
+function isCanceled(t) { return t.state === "Canceled"; }
 function finalPrice(t) { return (t.price * (t.discount || 1)).toFixed(2); }
 
 const STATE_MAP = {
@@ -109,11 +110,11 @@ function TicketCard({ t, idx }) {
         <div className="amp-meta">
           <MetaBox label="Date"  value={fmtDate(t.dueDate)} />
           <MetaBox label="Time"  value={fmtTime(t.dueDate)} />
-          {t.gate       && <MetaBox label="Gate"   value={t.gate} />}
-          {t.seat?.name && <MetaBox label="Seat"   value={t.seat.name} />}
-          {t.meal       && <MetaBox label="Meal"   value={t.meal} />}
+          {t.gate          && <MetaBox label="Gate"  value={t.gate} />}
+          {t.seat?.name    && <MetaBox label="Seat"  value={t.seat.name} />}
+          {t.meal          && <MetaBox label="Meal"  value={t.meal} />}
           {t.variant?.name && <MetaBox label="Class" value={t.variant.name} />}
-          <MetaBox label="Bags"  value={`${t.luggageCount} · ${t.totalLuggageKg} kg`} />
+          <MetaBox label="Bags" value={`${t.luggageCount} · ${t.totalLuggageKg} kg`} />
           {t.hasPet   && <MetaBox label="Pet"   value="Yes" />}
           {t.hasChild && <MetaBox label="Child" value="Yes" />}
         </div>
@@ -158,12 +159,14 @@ export default function AllMyP() {
       });
   }, []);
 
-  const visible = tickets.filter(t =>
-    filter === "active"  ? !isExpired(t) :
-    filter === "expired" ?  isExpired(t) : true
-  );
+  const visible = tickets.filter(t => {
+    if (isCanceled(t)) return false;
+    if (filter === "active")  return !isExpired(t);
+    if (filter === "expired") return  isExpired(t);
+    return true;
+  });
 
-  const activeCount = tickets.filter(t => !isExpired(t)).length;
+  const activeCount = tickets.filter(t => !isExpired(t) && !isCanceled(t)).length;
 
   return (
     <div className="amp-page">
@@ -172,7 +175,7 @@ export default function AllMyP() {
           <div>
             <h1 className="amp-title">My Plane Tickets</h1>
             <p className="amp-sub">
-              {activeCount} active · {tickets.length} total
+              {activeCount} active · {tickets.filter(t => !isCanceled(t)).length} total
             </p>
           </div>
           <div className="amp-filters">
