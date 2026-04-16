@@ -44,7 +44,6 @@ function countdown(d) {
   return `${days} days left`;
 }
 
-// ── Vaxtı keçib-keçmədiyini yoxla ───────────────────────────
 function isExpired(dueDate) {
   return dueDate && new Date(dueDate) < new Date();
 }
@@ -191,8 +190,10 @@ function EditModal({ ticket, onClose, onSaved }) {
     setValidationErrors({});
     setSaving(true);
     try {
-      // Backend-ə state-i rəqəm olaraq göndərmək lazımdır (Enum)
-      const ticketStateNumeric = STATE_MAP[ticket.state] ?? 1; // Default Available (1)
+      const ticketStateNumeric = STATE_MAP[ticket.state] ?? 1;
+
+      // FIX: variantId string → number, boş string → null
+      const variantIdNum = form.variantId !== "" ? parseInt(form.variantId) : null;
 
       const body = {
         id:        form.id,
@@ -201,8 +202,8 @@ function EditModal({ ticket, onClose, onSaved }) {
         plane:     form.plane.trim(),
         meal:      form.meal.trim(),
         luggageKg: parseFloat(form.luggageKg) || 0,
-        state:     ticketStateNumeric, // ← Düzəliş: string yox, rəqəm göndərilir
-        variantId: form.variantId ? parseInt(form.variantId) : null,
+        state:     ticketStateNumeric,
+        variantId: variantIdNum,
       };
 
       const res = await fetch(`${BASE_URL}/PlaneTicket`, {
@@ -219,8 +220,10 @@ function EditModal({ ticket, onClose, onSaved }) {
         );
       }
 
-      const chosenVariant = variants.find(v => v.id === parseInt(form.variantId));
-      onSaved({ ...body, variantName: chosenVariant?.name ?? ticket.variantName });
+      // FIX: variantName düzgün tapılır
+      const chosenVariant = variants.find(v => v.id === variantIdNum);
+      const resolvedVariantName = chosenVariant?.name ?? (variantIdNum ? ticket.variantName : null);
+      onSaved({ ...body, variantName: resolvedVariantName });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -268,15 +271,9 @@ function EditModal({ ticket, onClose, onSaved }) {
               className={validationErrors.luggageKg ? "edit-input--error" : ""} />
             {validationErrors.luggageKg && <span className="edit-field-error">{validationErrors.luggageKg}</span>}
           </div>
-
           <div className="edit-field">
             <label>Variant</label>
-            <select
-              name="variantId"
-              value={form.variantId}
-              onChange={handleChange}
-              className="spt-select"
-            >
+            <select name="variantId" value={form.variantId} onChange={handleChange} className="spt-select">
               <option value="">— Select Variant —</option>
               {variants.map(v => (
                 <option key={v.id} value={v.id}>
@@ -451,9 +448,10 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
   const isCompany = role === "Company";
   const sb        = stateBadge(ticket.state);
 
-  const variantMeta  = getVariantMeta(ticket.variantName || "");
-  const variantLabel = ticket.variantName
-    ? ticket.variantName.charAt(0).toUpperCase() + ticket.variantName.slice(1)
+  const variantName  = ticket.variantName && ticket.variantName.trim() !== "" ? ticket.variantName : null;
+  const variantMeta  = getVariantMeta(variantName || "");
+  const variantLabel = variantName
+    ? variantName.charAt(0).toUpperCase() + variantName.slice(1)
     : "—";
 
   const handleDeleteConfirmed = async () => {
@@ -485,7 +483,6 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
       <div className={`spt-card ${isNew ? "spt-card--new" : ""}`}>
         {isNew && <div className="spt-card-new-badge">NEW</div>}
 
-        {/* ── TOP BAR ── */}
         <div className="spt-card-topbar">
           <div className="spt-card-airline">{ticket.airline}</div>
 
@@ -508,23 +505,14 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
           )}
         </div>
 
-        {/* ── STATE BADGE + VARIANT BADGE ── */}
         <div className="spt-card-state-row">
-          <span
-            className="spt-state-badge"
-            style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}
-          >
+          <span className="spt-state-badge" style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}>
             {sb.label}
           </span>
-
-          {ticket.variantName && (
+          {variantName && (
             <span
               className="spt-variant-badge"
-              style={{
-                color:       variantMeta.accent,
-                background:  variantMeta.bg,
-                borderColor: variantMeta.accent + "55",
-              }}
+              style={{ color: variantMeta.accent, background: variantMeta.bg, borderColor: variantMeta.accent + "55" }}
             >
               {variantMeta.label || variantLabel}
             </span>
@@ -586,9 +574,18 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
               {ticket.availableSeats}
             </span>
           </div>
-          <div className="spt-info-item spt-info-item--variant" style={{ "--v-color": variantMeta.accent, "--v-bg": variantMeta.bg }}>
+          <div
+            className="spt-info-item spt-info-item--variant"
+            style={{
+              "--v-color": variantName ? variantMeta.accent : "#a0a8c0",
+              "--v-bg":    variantName ? variantMeta.bg     : "rgba(160,168,192,0.1)",
+            }}
+          >
             <span className="spt-info-label">VARIANT</span>
-            <span className="spt-info-val spt-info-val--variant" style={{ color: variantMeta.accent }}>
+            <span
+              className="spt-info-val spt-info-val--variant"
+              style={{ color: variantName ? variantMeta.accent : "#ffffff" }}
+            >
               {variantLabel}
             </span>
           </div>
@@ -601,23 +598,9 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
         </button>
       </div>
 
-      {showSeats && <SeatMapModal ticket={ticket} onClose={() => setShowSeats(false)} />}
-
-      {showEdit && (
-        <EditModal
-          ticket={ticket}
-          onClose={() => setShowEdit(false)}
-          onSaved={onEdited}
-        />
-      )}
-
-      {showConfirm && (
-        <ConfirmDeleteModal
-          ticketId={ticket.id}
-          onConfirm={handleDeleteConfirmed}
-          onCancel={() => setShowConfirm(false)}
-        />
-      )}
+      {showSeats   && <SeatMapModal ticket={ticket} onClose={() => setShowSeats(false)} />}
+      {showEdit    && <EditModal ticket={ticket} onClose={() => setShowEdit(false)} onSaved={onEdited} />}
+      {showConfirm && <ConfirmDeleteModal ticketId={ticket.id} onConfirm={handleDeleteConfirmed} onCancel={() => setShowConfirm(false)} />}
     </>
   );
 }
@@ -639,8 +622,6 @@ export default function ShowPlaneTicket() {
   const [date,       setDate]       = useState("");
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
-
-  const [hideExpired, setHideExpired] = useState(true);
 
   const [locations, setLocations] = useState([]);
   const [newTicketId] = useState(() => {
@@ -672,24 +653,27 @@ export default function ShowPlaneTicket() {
         const d = new Date(date);
         if (!isNaN(d.getTime())) params.set("Date", d.toISOString());
       }
+
       const res = await fetch(`${BASE_URL}/PlaneTicket?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error(`Server Error: ${res.status}`);
       const data = await res.json();
 
-      const all = Array.isArray(data?.data) ? data.data : [];
-      const filtered = hideExpired ? all.filter(t => !isExpired(t.dueDate)) : all;
+      // FIX: variantName field adını normalize et (backend camelCase qaytarır)
+      const all = (Array.isArray(data?.data) ? data.data : []).map(t => ({
+        ...t,
+        variantId:   t.variantId   ?? t.VariantId   ?? null,
+        variantName: t.variantName ?? t.VariantName ?? null,
+      }));
+      const filtered = all.filter(t => !isExpired(t.dueDate));
 
       setTickets(filtered);
-      setTotalCount(hideExpired
-        ? (data?.totalDataCount ?? 0) - (all.length - filtered.length)
-        : (data?.totalDataCount ?? 0)
-      );
+      setTotalCount((data?.totalDataCount ?? 0) - (all.length - filtered.length));
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [airline, fromId, toId, date, pageNumber, hideExpired]);
+  }, [airline, fromId, toId, date, pageNumber]);
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
@@ -700,17 +684,12 @@ export default function ShowPlaneTicket() {
   }, [highlightId]);
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
-
-  const showToast = (message, type = "success") => setToast({ message, type });
+  const showToast  = (message, type = "success") => setToast({ message, type });
 
   return (
     <div className="spt-page">
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
 
       <div className="spt-header">
@@ -747,17 +726,6 @@ export default function ShowPlaneTicket() {
             <label>Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} />
           </div>
-        </div>
-
-        <div className="spt-filter-toggle">
-          <label className="spt-toggle-label">
-            <input
-              type="checkbox"
-              checked={hideExpired}
-              onChange={e => { setHideExpired(e.target.checked); setPageNumber(1); }}
-            />
-            <span>Hide expired tickets</span>
-          </label>
         </div>
 
         <div className="spt-filter-actions">
@@ -810,8 +778,10 @@ export default function ShowPlaneTicket() {
                           meal:        updatedBody.meal,
                           luggageKg:   updatedBody.luggageKg,
                           variantId:   updatedBody.variantId,
-                          variantName: updatedBody.variantName ?? t.variantName,
-                          // STATE_MAP rəqəmi geri string-ə çeviririk ki card-da düzgün görünsün
+                          // FIX: undefined yox, explicit undefined check
+                          variantName: updatedBody.variantName !== undefined
+                            ? updatedBody.variantName
+                            : t.variantName,
                           state:       Object.keys(STATE_MAP).find(k => STATE_MAP[k] === updatedBody.state) || t.state,
                         }
                       : t

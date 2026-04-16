@@ -1,30 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* ═══════════════════════════════════════════
+   PAGE
+═══════════════════════════════════════════ */
 .fs-page {
   min-height: 100vh;
-  background: transparent;
-  font-family: 'Syne', sans-serif;
+  background: linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 100%),
+    url("/MainScreen.png") no-repeat center center / cover;
+  background-attachment: fixed;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   padding: 2.5rem 1rem 4rem;
   color: #f1f5f9;
   position: relative;
   overflow-x: hidden;
 }
 
-.fs-noise { display: none; }
+.fs-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.36);
+  z-index: 0;
+  pointer-events: none;
+}
 
 .fs-inner {
-  max-width: 580px;
+  max-width: 640px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
 }
 
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
 .fs-header {
   margin-bottom: 2rem;
 }
 
 .fs-eyebrow {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.2em;
   color: #ef4444;
@@ -34,36 +49,36 @@
 }
 
 .fs-title {
-  font-family: 'Syne', sans-serif;
   font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 800;
   line-height: 1.1;
   color: #fff;
   margin: 0 0 0.5rem;
   letter-spacing: -0.03em;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.5);
 }
 
 .fs-title-accent {
   color: #ef4444;
-  -webkit-text-fill-color: #ef4444;
 }
 
 .fs-subtitle {
   font-size: 13px;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.4);
   margin: 0;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.04em;
 }
 
+/* ═══════════════════════════════════════════
+   SEARCH CARD
+═══════════════════════════════════════════ */
 .fs-card {
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 20px;
   padding: 1.5rem;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   margin-bottom: 1rem;
 }
 
@@ -74,17 +89,19 @@
   margin-bottom: 1.25rem;
 }
 
-.fs-field { flex: 1; }
+.fs-field {
+  flex: 1;
+}
 
 .fs-label {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 10px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.28);
+  color: rgba(255,255,255,0.4);
   margin-bottom: 0.5rem;
 }
 
@@ -93,8 +110,9 @@
   height: 6px;
   border-radius: 50%;
 }
+
 .from-dot { background: #ef4444; }
-.to-dot   { background: #f87171; }
+.to-dot   { background: #fca5a5; }
 
 .fs-label-icon {
   font-size: 12px;
@@ -109,12 +127,12 @@
 
 .fs-select {
   width: 100%;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 12px;
   padding: 11px 36px 11px 14px;
   color: #f1f5f9;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px;
   font-weight: 500;
   outline: none;
@@ -125,12 +143,12 @@
 
 .fs-select:hover,
 .fs-select:focus {
-  border-color: rgba(239,68,68,0.4);
-  background: rgba(0,0,0,0.45);
+  border-color: rgba(239,68,68,0.5);
+  background: rgba(255,255,255,0.11);
 }
 
 .fs-select option {
-  background: #0f1520;
+  background: #1a1f2e;
   color: #f1f5f9;
 }
 
@@ -138,100 +156,103 @@
   position: absolute;
   right: 12px;
   pointer-events: none;
-  color: rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.3);
   font-size: 11px;
 }
 
 .fs-skeleton {
-  height: 42px;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.3);
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
   animation: pulse 1.4s ease infinite;
 }
 
 @keyframes pulse {
-  0%,100% { opacity: 0.2; }
-  50%      { opacity: 0.55; }
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.6; }
 }
 
 .fs-swap {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.07);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   margin-bottom: 2px;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
   color: #ef4444;
-  backdrop-filter: blur(8px);
 }
 
 .fs-swap:hover {
-  background: rgba(239,68,68,0.12);
-  border-color: rgba(239,68,68,0.35);
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.4);
   transform: rotate(180deg);
 }
 
-.fs-swap-icon { font-size: 16px; }
+.fs-swap-icon {
+  font-size: 16px;
+}
 
-.fs-date-row { margin-bottom: 1.25rem; }
+.fs-date-row {
+  margin-bottom: 1.25rem;
+}
 
 .fs-date {
   width: 100%;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.13);
+  border-radius: 12px;
   padding: 11px 14px;
   color: #f1f5f9;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px;
   font-weight: 500;
   outline: none;
   cursor: pointer;
   color-scheme: dark;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .fs-date:focus {
-  border-color: rgba(239,68,68,0.4);
+  border-color: rgba(239,68,68,0.5);
 }
 
 .fs-btn {
   width: 100%;
   padding: 14px;
   border: none;
-  border-radius: 12px;
+  border-radius: 13px;
   background: #ef4444;
   color: #fff;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 24px rgba(239,68,68,0.3);
+  box-shadow: 0 4px 20px rgba(239,68,68,0.35);
 }
 
 .fs-btn:hover:not(:disabled) {
   opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: 0 8px 32px rgba(239,68,68,0.4);
+  box-shadow: 0 8px 30px rgba(239,68,68,0.45);
 }
 
 .fs-btn:active:not(:disabled) { transform: translateY(0); }
-.fs-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.fs-btn-icon { font-size: 16px; }
-
-.fs-btn--loading { background: #b91c1c; }
+.fs-btn:disabled              { opacity: 0.55; cursor: not-allowed; }
+.fs-btn-icon                  { font-size: 16px; }
+.fs-btn--loading              { background: #c53030; }
 
 .fs-spinner {
   width: 16px;
@@ -244,14 +265,17 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ═══════════════════════════════════════════
+   ERROR
+═══════════════════════════════════════════ */
 .fs-error {
-  background: rgba(239,68,68,0.08);
-  border: 1px solid rgba(239,68,68,0.2);
-  border-radius: 10px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 12px;
   padding: 12px 16px;
   color: #fca5a5;
   font-size: 13px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
@@ -260,35 +284,39 @@
 
 .fs-error-icon { font-size: 16px; }
 
-.fs-results { margin-top: 1.5rem; }
+/* ═══════════════════════════════════════════
+   RESULTS HEADER
+═══════════════════════════════════════════ */
+.fs-results {
+  margin-top: 1.5rem;
+}
 
 .fs-results-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 .fs-results-route {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Syne', sans-serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
 }
 
 .fs-results-from  { color: #ef4444; }
-.fs-results-arrow { color: rgba(255,255,255,0.2); font-size: 14px; }
-.fs-results-to    { color: #fca5a5; }
+.fs-results-arrow { color: rgba(255,255,255,0.25); font-size: 13px; }
+.fs-results-to    { color: #fff; }
 
 .fs-results-count {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: rgba(255,255,255,0.25);
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
   padding: 4px 10px;
   border-radius: 999px;
 }
@@ -296,7 +324,7 @@
 .fs-empty {
   text-align: center;
   padding: 3rem 1rem;
-  color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.25);
 }
 
 .fs-empty-icon {
@@ -309,758 +337,403 @@
 .fs-flight-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 14px;
 }
 
-.fs-flight {
+/* ═══════════════════════════════════════════
+   FLIGHT CARD — DARK BOARDING PASS STYLE
+═══════════════════════════════════════════ */
+.ft-card {
   width: 100%;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 14px;
-  padding: 1.1rem 1.25rem;
+  background: #111318;
+  border: none;
+  border-radius: 16px;
+  padding: 0;
   cursor: pointer;
   text-align: left;
-  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
-  animation: fadeUp 0.4s ease both;
-  color: #f1f5f9;
-  font-family: 'Syne', sans-serif;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
+  animation: fadeUp 0.35s ease both;
+  position: relative;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.ft-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.fs-flight:hover {
-  background: rgba(0,0,0,0.58);
-  border-color: rgba(239,68,68,0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-}
-
-.fs-flight-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.fs-airline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.fs-airline-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ef4444;
-  box-shadow: 0 0 6px rgba(239,68,68,0.6);
-}
-
-.fs-airline-name {
-  font-weight: 700;
-  font-size: 14px;
-  color: #ef4444;
-}
-
-.fs-plane-badge {
-  font-size: 11px;
-  color: rgba(255,255,255,0.25);
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-family: 'DM Mono', monospace;
-}
-
-.fs-price {
-  font-family: 'DM Mono', monospace;
-  font-size: 18px;
-  font-weight: 500;
-  color: #4ade80;
-  letter-spacing: -0.02em;
-}
-
-/* ── Variant badges row ── */
-.fs-variants-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 0.85rem;
-  flex-wrap: wrap;
-}
-
-.fs-variants-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.2);
-  white-space: nowrap;
-}
-
-.fs-variants-list {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-
-.fs-vbadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid;
-  transition: opacity 0.15s;
-}
-
-.fs-vbadge-price {
-  font-size: 9px;
-  opacity: 0.7;
-  letter-spacing: 0;
-}
-
-.fs-vbadge--economy {
-  color: #4ade80;
-  border-color: rgba(74,222,128,0.3);
-  background: rgba(74,222,128,0.07);
-}
-
-.fs-vbadge--business {
-  color: #60a5fa;
-  border-color: rgba(96,165,250,0.3);
-  background: rgba(96,165,250,0.07);
-}
-
-.fs-vbadge--first {
-  color: #fbbf24;
-  border-color: rgba(251,191,36,0.3);
-  background: rgba(251,191,36,0.07);
-}
-
-/* ── Flight mid ── */
-.fs-flight-mid {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 1rem;
-}
-
-.fs-time-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.fs-time-block--right { align-items: flex-end; }
-
-.fs-time {
-  font-family: 'Syne', sans-serif;
-  font-size: 24px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
-}
-
-.fs-city {
-  font-size: 11px;
-  color: rgba(255,255,255,0.25);
-  margin-top: 2px;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.fs-route-line {
+/* ── MAIN BODY (left) ── */
+.ft-card-body {
   flex: 1;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.fs-duration {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: rgba(255,255,255,0.2);
-}
-
-.fs-line {
-  width: 100%;
+  gap: 0;
   position: relative;
-  height: 1px;
+}
+
+/* ── SIDE STRIP (right) ── */
+.ft-card-side {
+  width: 110px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px;
+  gap: 14px;
+  position: relative;
+}
+
+.ft-card--business .ft-card-side { background: #ef4444; }
+.ft-card--first    .ft-card-side { background: #d97706; }
+.ft-card--economy  .ft-card-side { background: #16a34a; }
+
+/* Notch separator between body and side */
+.ft-card-body::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: calc(100% - 32px);
   background: repeating-linear-gradient(
-    90deg,
-    rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 4px,
-    transparent 4px, transparent 9px
+    to bottom,
+    transparent,
+    transparent 4px,
+    rgba(255,255,255,0.08) 4px,
+    rgba(255,255,255,0.08) 8px
   );
+}
+
+/* ── TOP ROW ── */
+.ft-top {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.fs-plane-icon {
-  font-size: 12px;
-  color: rgba(255,255,255,0.35);
-  background: transparent;
-  padding: 0 4px;
-}
-
-.fs-direct {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  color: #4ade80;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.fs-flight-bot {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.fs-tag {
-  font-size: 11px;
-  color: rgba(255,255,255,0.3);
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 3px 9px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-family: 'DM Mono', monospace;
-}
-
-.fs-tag-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #4ade80;
-}
-
-.fs-tag--meal { color: rgba(255,255,255,0.25); }
-.fs-tag--gate { color: rgba(255,255,255,0.25); }
-
-.fs-select-btn {
-  margin-left: auto;
-  font-family: 'Syne', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  color: #ef4444;
-  letter-spacing: 0.04em;
-}
-
-/* ── CreatePlaneTicket styles ── */
-.cpt-page {
-  min-height: 100vh;
-  background: transparent;
-  padding: 100px 24px 80px;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  color: #e2e8f0;
-}
-
-.cpt-wrapper {
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.cpt-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 32px;
-}
-
-.cpt-header-icon {
-  font-size: 32px;
-  background: rgba(255, 77, 77, 0.15);
-  border: 1px solid rgba(255, 77, 77, 0.3);
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.cpt-title {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
-}
-
-.cpt-subtitle {
-  margin: 3px 0 0;
-  font-size: 13px;
-  color: rgba(255,255,255,0.45);
-}
-
-.cpt-alert {
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.cpt-alert--error {
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  color: #f87171;
-}
-
-.cpt-alert--success {
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #6ee7b7;
-}
-
-.cpt-form-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 28px;
-  backdrop-filter: blur(8px);
-}
-
-.cpt-section-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #ff7070;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 22px 0 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.cpt-section-title:first-child {
-  margin-top: 0;
-}
-
-.cpt-grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.cpt-grid-3 {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
-}
-
-.cpt-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.cpt-field label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.5);
-}
-
-.cpt-field input,
-.cpt-field select,
-.cpt-select {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
-  padding: 9px 12px;
-  color: #fff;
-  font-size: 13px;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  color-scheme: dark;
-  width: 100%;
-}
-
-.cpt-field input:focus,
-.cpt-field select:focus,
-.cpt-select:focus {
-  border-color: #ff4d4d;
-  box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.15);
-}
-
-.cpt-field input::placeholder {
-  color: rgba(255,255,255,0.25);
-}
-
-.cpt-field select option,
-.cpt-select option {
-  background-color: #1a1020;
-  color: #f1f5f9;
-}
-
-.cpt-input--error {
-  border-color: #f87171 !important;
-  background: rgba(248, 113, 113, 0.07) !important;
-}
-
-.cpt-field-error {
-  font-size: 11px;
-  color: #f87171;
-  font-weight: 600;
-}
-
-.cpt-hint-banner {
-  margin-top: 10px;
-  padding: 10px 14px;
-  background: rgba(255, 77, 77, 0.06);
-  border: 1px solid rgba(255, 77, 77, 0.2);
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ff9090;
-}
-
-.cpt-submit-btn {
-  width: 100%;
-  padding: 15px;
-  background: #ff4d4d;
-  border: none;
-  border-radius: 50px;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 28px rgba(255, 77, 77, 0.35);
-  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 28px;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-}
-
-.cpt-submit-btn:hover:not(:disabled) {
-  background: #e03e3e;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(255, 77, 77, 0.45);
-}
-
-.cpt-submit-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.cpt-spinner {
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: cpt-spin 0.7s linear infinite;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-@keyframes cpt-spin { to { transform: rotate(360deg); } }
-
-.cpt-success-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-}
-
-.cpt-boarding-pass {
-  display: flex;
-  width: 100%;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
-}
-
-.cpt-pass-left {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 28px;
-  backdrop-filter: blur(12px);
-}
-
-.cpt-pass-header {
-  display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
-.cpt-pass-airline {
-  font-size: 15px;
-  font-weight: 800;
-  color: #ff7070;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.cpt-pass-type {
-  font-size: 9px;
-  color: rgba(255,255,255,0.3);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-top: 2px;
-}
-
-.cpt-pass-id {
-  background: rgba(255, 77, 77, 0.12);
-  border: 1px solid rgba(255, 77, 77, 0.3);
-  border-radius: 7px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #ff8080;
-}
-
-.cpt-pass-route {
+.ft-airline-block {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
 }
 
-.cpt-route-city {
+.ft-airline-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
-.cpt-route-city--right { align-items: flex-end; }
-
-.cpt-route-code {
-  font-size: 30px;
-  font-weight: 900;
+.ft-airline-initial {
+  font-size: 15px;
+  font-weight: 800;
   color: #fff;
-  letter-spacing: -0.03em;
   line-height: 1;
 }
 
-.cpt-route-name {
-  font-size: 10px;
-  color: rgba(255,255,255,0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.cpt-route-middle {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.cpt-route-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 77, 77, 0.5);
-  flex-shrink: 0;
-}
-
-.cpt-route-dash {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(255,77,77,0.4), rgba(255,77,77,0.1));
-}
-
-.cpt-route-plane {
-  font-size: 18px;
-  color: #ff7070;
-  flex-shrink: 0;
-}
-
-.cpt-pass-info-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.cpt-info-box {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 8px;
-  padding: 8px 10px;
+.ft-airline-info {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.cpt-info-box span {
-  font-size: 8px;
-  letter-spacing: 0.12em;
-  color: rgba(255,255,255,0.3);
-  text-transform: uppercase;
+.ft-airline-name {
+  font-size: 14px;
   font-weight: 700;
+  color: #fff;
+  line-height: 1;
 }
 
-.cpt-info-box strong {
-  font-size: 12px;
-  font-weight: 700;
-  color: #e2e8f0;
+.ft-plane-model {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.04em;
 }
 
-.cpt-perforation {
-  width: 24px;
-  background: rgba(255,255,255,0.03);
+.ft-flight-meta {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.ft-flight-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.03em;
+}
+
+.ft-flight-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.06em;
+}
+
+/* ── ROUTE ROW ── */
+.ft-route {
+  display: flex;
   align-items: center;
-  border-left: 1px dashed rgba(255,255,255,0.1);
-  border-right: 1px dashed rgba(255,255,255,0.1);
-  padding: 16px 0;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
-.cpt-perf-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.5);
-}
-
-.cpt-pass-right {
-  width: 175px;
-  flex-shrink: 0;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-left: none;
-  padding: 28px 16px;
+.ft-time-block {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
 }
 
-.cpt-stub-airline {
-  font-size: 12px;
+.ft-time-block--right {
+  align-items: flex-end;
+}
+
+.ft-time {
+  font-size: 36px;
   font-weight: 800;
-  color: #ff7070;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  color: #fff;
+  letter-spacing: -2px;
+  line-height: 1;
 }
 
-.cpt-stub-route {
-  font-size: 13px;
-  color: rgba(255,255,255,0.7);
-  font-weight: 700;
-}
-
-.cpt-stub-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cpt-stub-key {
+.ft-city {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
   color: rgba(255,255,255,0.3);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
+  letter-spacing: 1px;
 }
 
-.cpt-stub-val {
-  font-size: 11px;
-  color: #e2e8f0;
-  font-weight: 700;
-}
-
-.cpt-barcode {
+.ft-route-center {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.ft-duration {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.ft-line {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.ft-line-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ft-line-bar {
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.12);
+}
+
+.ft-plane-fly {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.ft-card--business .ft-line-dot { background: #ef4444; }
+.ft-card--business .ft-plane-fly { color: #ef4444; }
+.ft-card--first    .ft-line-dot  { background: #d97706; }
+.ft-card--first    .ft-plane-fly { color: #d97706; }
+.ft-card--economy  .ft-line-dot  { background: #16a34a; }
+.ft-card--economy  .ft-plane-fly { color: #16a34a; }
+
+/* ── DIVIDER ── */
+.ft-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 0 -22px;
+}
+
+/* ── BOTTOM ROW ── */
+.ft-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.ft-bottom-left {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── TAGS ── */
+.ft-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ft-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.ft-tag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.ft-tag-dot.green { background: #22c55e; }
+
+/* ── PRICE BLOCK (in body) ── */
+.ft-price-block {
+  display: flex;
+  flex-direction: column;
   align-items: flex-end;
   gap: 2px;
-  height: 52px;
-  margin-top: auto;
+  flex-shrink: 0;
 }
 
-.cpt-bar {
-  flex: 1;
-  background: rgba(255, 77, 77, 0.5);
-  border-radius: 1px;
-  min-width: 2px;
+.ft-price-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.9px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
 }
 
-.cpt-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
+.ft-price {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
+  line-height: 1;
 }
 
-.cpt-action-btn {
-  padding: 11px 22px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.8);
+.ft-price-currency {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+}
+
+.ft-select-arrow {
   font-size: 13px;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, transform 0.15s, color 0.15s;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  margin-top: 2px;
+  color: rgba(255,255,255,0.3);
 }
 
-.cpt-action-btn:hover {
-  background: rgba(255,255,255,0.12);
+/* ── SIDE STRIP CONTENT ── */
+.ft-side-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ft-side-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
+}
+
+.ft-side-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
   color: #fff;
-  transform: translateY(-1px);
+  letter-spacing: 0.03em;
 }
 
-.cpt-action-btn--primary {
-  background: #ff4d4d;
-  border-color: #ff4d4d;
+/* Barcode-like decoration at bottom of side */
+.ft-barcode {
+  margin-top: auto;
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 28px;
+}
+
+.ft-barcode-bar {
+  background: rgba(255,255,255,0.5);
+  border-radius: 1px;
+  width: 2px;
+}
+
+/* ── VARIANT PILL (in side strip) ── */
+.ft-variant-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.ft-promo-badge {
+  background: rgba(0,0,0,0.3);
   color: #fff;
-  box-shadow: 0 6px 20px rgba(255,77,77,0.3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
 }
 
-.cpt-action-btn--primary:hover {
-  background: #e03e3e;
-  box-shadow: 0 8px 26px rgba(255,77,77,0.4);
-}
-
-@media (max-width: 640px) {
-  .cpt-page { padding: 20px 14px 60px; }
-  .cpt-form-card { padding: 20px 16px; }
-  .cpt-grid-2, .cpt-grid-3 { grid-template-columns: 1fr; }
-  .cpt-boarding-pass { flex-direction: column; }
-  .cpt-perforation { flex-direction: row; width: 100%; height: 20px; }
-  .cpt-pass-right {
-    width: 100%;
-    border-left: 1px solid rgba(255,255,255,0.08);
-    border-top: none;
-  }
-  .cpt-pass-info-grid { grid-template-columns: repeat(2, 1fr); }
-  .cpt-route-code { font-size: 22px; }
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .ft-time       { font-size: 26px; }
+  .ft-price      { font-size: 22px; }
+  .ft-card-body  { padding: 16px 16px; }
+  .ft-card-side  { width: 90px; padding: 14px 10px; }
+  .ft-divider    { margin: 0 -16px; }
+  .fs-route-row  { flex-wrap: wrap; }
 }

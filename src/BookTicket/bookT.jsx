@@ -114,11 +114,12 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
         <div className="bp-meta-row">
           <div className="bp-meta-item">
             <span className="bp-meta-label">Airline</span>
-            <span className="bp-meta-value">{flight.airline}</span>
+            {/* FIX: boş deyilsə göstər, yoxsa "—" */}
+            <span className="bp-meta-value">{flight.airline || "—"}</span>
           </div>
           <div className="bp-meta-item">
             <span className="bp-meta-label">Flight</span>
-            <span className="bp-meta-value">{flight.plane}</span>
+            <span className="bp-meta-value">{flight.plane || "—"}</span>
           </div>
           <div className="bp-meta-item">
             <span className="bp-meta-label">Date</span>
@@ -142,11 +143,16 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
               <div className="bp-dash" />
               <span className="bp-dot" />
             </div>
-            <span className="bp-dur">~2h · Direct</span>
+            {/* FIX: duration API-dan gəlirsə göstər, yoxsa ~2h */}
+            <span className="bp-dur">
+              {flight.durationMinutes
+                ? `~${Math.floor(flight.durationMinutes / 60)}h${flight.durationMinutes % 60 > 0 ? ` ${flight.durationMinutes % 60}m` : ""} · Direct`
+                : "~2h · Direct"}
+            </span>
           </div>
 
           <div className="bp-city-block bp-city-block--right">
-            <span className="bp-time">{formatArrival(flight.dueDate)}</span>
+            <span className="bp-time">{formatArrival(flight.dueDate, flight.durationMinutes)}</span>
             <span className="bp-city">{toLabel}</span>
           </div>
         </div>
@@ -172,6 +178,13 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
               <span className="bp-info-val">{flight.luggageKg} kg</span>
             </div>
           )}
+          {/* FIX: seçilmiş oturacaq boarding pass-da göstərilir */}
+          {flight.seatNo && (
+            <div className="bp-info-item">
+              <span className="bp-meta-label">Seat</span>
+              <span className="bp-info-val bp-info-val--accent">{flight.seatNo}</span>
+            </div>
+          )}
         </div>
 
         <div className="bp-divider" />
@@ -180,15 +193,9 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
           <div className="bp-meta-item">
             <span className="bp-meta-label">Passenger Name</span>
             <span className="bp-meta-value" style={{ fontSize: "15px", color: "#fff", fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>
-              {flight.passengerName ?? "—"}
+              {flight.passengerName || "—"}
             </span>
           </div>
-          {flight.seatNo && (
-            <div className="bp-meta-item">
-              <span className="bp-meta-label">Seat</span>
-              <span className="bp-info-val bp-info-val--accent">{flight.seatNo}</span>
-            </div>
-          )}
         </div>
 
         <p className="bp-notice">Gate closes 40 minutes before departure</p>
@@ -201,12 +208,12 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
       <div className="bp-stub">
         <div className="bp-stub-meta">
           <span className="bp-stub-label">Airline</span>
-          <span className="bp-stub-value">{flight.airline}</span>
+          <span className="bp-stub-value">{flight.airline || "—"}</span>
         </div>
         <div className="bp-stub-divider" />
         <div className="bp-stub-meta">
           <span className="bp-stub-label">Flight</span>
-          <span className="bp-stub-value">{flight.plane}</span>
+          <span className="bp-stub-value">{flight.plane || "—"}</span>
         </div>
         <div className="bp-stub-divider" />
         <div className="bp-stub-meta">
@@ -218,10 +225,20 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
           <span className="bp-stub-label">Gate</span>
           <span className="bp-stub-value" style={{ fontSize: "20px", fontWeight: 700 }}>{flight.gate ?? "—"}</span>
         </div>
+        {/* FIX: stub-da da seat göstər */}
+        {flight.seatNo && (
+          <>
+            <div className="bp-stub-divider" />
+            <div className="bp-stub-meta">
+              <span className="bp-stub-label">Seat</span>
+              <span className="bp-stub-value" style={{ fontSize: "20px", fontWeight: 700 }}>{flight.seatNo}</span>
+            </div>
+          </>
+        )}
         <div className="bp-stub-divider" />
         <div className="bp-stub-meta">
           <span className="bp-stub-label">Passenger</span>
-          <span className="bp-stub-pax">{flight.passengerName ?? "—"}</span>
+          <span className="bp-stub-pax">{flight.passengerName || "—"}</span>
         </div>
         <div className="bp-stub-route">{fromLabel} → {toLabel}</div>
         <BarcodeSVG vertical />
@@ -313,16 +330,19 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const [seats, setSeats] = useState([]);
   const [seatsLoading, setSeatsLoading] = useState(true);
   const [selectedSeat, setSelectedSeat] = useState(null);
-  // ticketClass: seçilmiş oturacağın variantName-i BoardingPassCard-a ötürülür
   const [hasPet, setHasPet] = useState(false);
   const [hasChild, setHasChild] = useState(false);
-  const [luggageKg, setLuggageKg] = useState(0);
+  // FIX: luggageKg başlanğıcda flight.luggageKg-dan götür (0 deyil)
+  const [luggageKg, setLuggageKg] = useState(flight?.luggageKg ?? 0);
   const [note, setNote] = useState("");
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [passengerName, setPassengerName] = useState(flight?.passengerName ?? "");
+
+  // FIX: displayClass — seats gəlməmişdən əvvəl flight.variantName-dən başla
+  const [displayClass, setDisplayClass] = useState(flight?.variantName ?? null);
 
   const isExpired = flight?.dueDate ? new Date(flight.dueDate) < new Date() : false;
 
@@ -338,7 +358,14 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         );
         if (!res.ok) throw new Error("Seats could not be loaded.");
         const data = await res.json();
-        setSeats(Array.isArray(data.data) ? data.data : []);
+        const fetchedSeats = Array.isArray(data.data) ? data.data : [];
+        setSeats(fetchedSeats);
+
+        // FIX: displayClass yalnız hələ null-dursa seats-dən götür,
+        // flight.variantName varsa üzərinə yazma
+        if (!flight?.variantName && fetchedSeats.length > 0) {
+          setDisplayClass(fetchedSeats[0].variantName ?? null);
+        }
       } catch (e) {
         setError(e.message);
       } finally {
@@ -352,6 +379,15 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
       if (name) setPassengerName(name);
     });
   }, [flight?.id]);
+
+  // FIX: seat seçiləndə displayClass və seatNo boarding pass-a yazılır
+  useEffect(() => {
+    if (selectedSeat) {
+      setDisplayClass(selectedSeat.variantName ?? displayClass);
+    } else {
+      setDisplayClass(flight?.variantName ?? seats[0]?.variantName ?? null);
+    }
+  }, [selectedSeat]);
 
   async function handleBuy() {
     if (isExpired) { setError("This flight has already departed. Please select another flight."); return; }
@@ -414,12 +450,15 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     const d = new Date(dateStr);
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
-  function formatArrival(dateStr) {
+
+  // FIX: durationMinutes varsa ondan hesabla, yoxsa default 120 dəq (2 saat)
+  function formatArrival(dateStr, durationMinutes = 120) {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
-    d.setHours(d.getHours() + 2);
+    d.setMinutes(d.getMinutes() + (durationMinutes || 120));
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
+
   function formatDate(dateStr) {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
@@ -427,7 +466,9 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
 
   const basePrice    = Number(flight?.price || 0);
   const seatExtra    = Number(selectedSeat?.variantPrice || 0);
-  const luggageExtra = luggageKg > (flight?.luggageKg || 20) ? 10 : 0;
+  // FIX: flight.luggageKg-dan artıq hissəyə extra ücret tətbiq et
+  const includedLuggage = flight?.luggageKg ?? 20;
+  const luggageExtra = luggageKg > includedLuggage ? (luggageKg - includedLuggage) * 2 : 0;
   const totalPrice   = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
 
   // ── Guard ──
@@ -472,8 +513,14 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
+        {/* FIX: seatNo — selectedSeat.name boarding pass-a ötürülür */}
         <BoardingPassCard
-          flight={{ ...flight, passengerName, ticketClass: selectedSeat?.variantName ?? null }}
+          flight={{
+            ...flight,
+            passengerName,
+            ticketClass: displayClass,
+            seatNo: selectedSeat?.name ?? null,
+          }}
           fromLabel={fromLabel}
           toLabel={toLabel}
           isExpired={isExpired}
@@ -534,7 +581,13 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
               <div className="fb-option fb-option--luggage">
                 <div className="fb-option-info">
                   <span className="fb-option-icon">🧳</span>
-                  <div><span className="fb-option-name">Luggage weight</span></div>
+                  <div>
+                    <span className="fb-option-name">Luggage weight</span>
+                    {/* FIX: neçə kg-ın daxil olduğunu göstər */}
+                    <span style={{ fontSize: "12px", color: "#888", display: "block" }}>
+                      Included: {includedLuggage} kg
+                    </span>
+                  </div>
                 </div>
                 <div className="fb-counter">
                   <button className="fb-counter-btn" onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}>−</button>
@@ -555,15 +608,21 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         )}
 
         {selectedSeat && !isExpired && (
-          <div className="fb-order-summary"> 
+          <div className="fb-order-summary">
             <div className="fb-order-row">
-              <span>Base + Class</span>
-              <span>{(basePrice + seatExtra).toFixed(2)} ₼</span>
+              <span>Base price</span>
+              <span>{basePrice.toFixed(2)} ₼</span>
             </div>
+            {seatExtra > 0 && (
+              <div className="fb-order-row">
+                <span>Seat class ({displayClass})</span>
+                <span>+{seatExtra.toFixed(2)} ₼</span>
+              </div>
+            )}
             {luggageExtra > 0 && (
               <div className="fb-order-row">
-                <span>Extra luggage</span>
-                <span>+{luggageExtra} ₼</span>
+                <span>Extra luggage ({luggageKg - includedLuggage} kg)</span>
+                <span>+{luggageExtra.toFixed(2)} ₼</span>
               </div>
             )}
             <div className="fb-order-divider" />

@@ -9,6 +9,22 @@ const getHeaders = () => ({
   "Content-Type": "application/json",
 });
 
+/* Barcode decoration — random-ish bars seeded by flight id */
+function Barcode({ seed = 0 }) {
+  const heights = [14,20,10,28,16,22,12,26,18,14,24,10,20,16,28,12,22,18,10,26];
+  return (
+    <div className="ft-barcode">
+      {heights.map((h, i) => (
+        <div
+          key={i}
+          className="ft-barcode-bar"
+          style={{ height: `${((h + seed) % 24) + 6}px` }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function PlanetTicket() {
   const [locations, setLocations] = useState([]);
   const [locLoading, setLocLoading] = useState(true);
@@ -48,7 +64,11 @@ export default function PlanetTicket() {
         });
         if (!res.ok) return;
         const data = await res.json();
-        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        const list = Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data)
+          ? data
+          : [];
         setVariants(list);
       } catch (_) {}
     };
@@ -58,7 +78,7 @@ export default function PlanetTicket() {
   }, []);
 
   const fromLoc = locations.find((l) => String(l.id) === fromId);
-  const toLoc = locations.find((l) => String(l.id) === toId);
+  const toLoc   = locations.find((l) => String(l.id) === toId);
 
   async function search() {
     if (!fromId || !toId) {
@@ -86,12 +106,12 @@ export default function PlanetTicket() {
       });
       if (!res.ok) throw new Error("No flights found or server error.");
       const result = await res.json();
-
+      const now = new Date();
       setFlights({
-        list: result.data || [],
+        list: (result.data || []).filter((f) => new Date(f.dueDate) >= now),
         fromLabel: fromLoc?.name,
-        toLabel: toLoc?.name,
-        dateStr: new Date(date).toLocaleDateString("en-US"),
+        toLabel:   toLoc?.name,
+        dateStr:   new Date(date).toLocaleDateString("en-US"),
       });
     } catch (e) {
       setError("An error occurred while fetching flights: " + e.message);
@@ -111,19 +131,37 @@ export default function PlanetTicket() {
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
 
-  function formatArrival(dateStr) {
+  function formatArrival(dateStr, durationHours = 2) {
     const d = new Date(dateStr);
-    d.setHours(d.getHours() + 2);
+    d.setHours(d.getHours() + durationHours);
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
 
-  function getVariantStyle(name) {
-    const n = (name || "").toLowerCase();
-    if (n.includes("business")) return "fs-vbadge--business";
-    if (n.includes("first")) return "fs-vbadge--first";
-    return "fs-vbadge--economy";
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
   }
 
+  function getFlightVariant(flight) {
+    if (!variants.length) return null;
+    const matched = flight.variantId
+      ? variants.find((v) => v.id === flight.variantId)
+      : null;
+    return matched || variants[0];
+  }
+
+  function getCardModifier(name) {
+    const n = (name || "").toLowerCase();
+    if (n.includes("first"))    return "ft-card--first";
+    if (n.includes("economy"))  return "ft-card--economy";
+    return "ft-card--business";
+  }
+
+  /* ── Booking view ── */
   if (selectedFlight) {
     return (
       <FlightBooking
@@ -138,21 +176,25 @@ export default function PlanetTicket() {
     );
   }
 
+  /* ── Main view ── */
   return (
     <div className="fs-page">
-      <div className="fs-noise" />
       <div className="fs-inner">
+
+        {/* ── HEADER ── */}
         <div className="fs-header">
           <span className="fs-eyebrow">✦ StepTravel</span>
           <h1 className="fs-title">
-            Plan Your<br />
-            <span className="fs-title-accent">Flight</span>
+            Plan Your <span className="fs-title-accent">Flight</span>
           </h1>
           <p className="fs-subtitle">Find your ticket at the best price</p>
         </div>
 
+        {/* ── SEARCH CARD ── */}
         <div className="fs-card">
           <div className="fs-route-row">
+
+            {/* FROM */}
             <div className="fs-field">
               <label className="fs-label">
                 <span className="fs-label-dot from-dot" />
@@ -178,10 +220,12 @@ export default function PlanetTicket() {
               </div>
             </div>
 
+            {/* SWAP */}
             <button className="fs-swap" onClick={swap} title="Swap">
               <span className="fs-swap-icon">⇌</span>
             </button>
 
+            {/* TO */}
             <div className="fs-field">
               <label className="fs-label">
                 <span className="fs-label-dot to-dot" />
@@ -208,6 +252,7 @@ export default function PlanetTicket() {
             </div>
           </div>
 
+          {/* DATE */}
           <div className="fs-date-row">
             <label className="fs-label">
               <span className="fs-label-icon">◈</span> Flight Date
@@ -220,6 +265,7 @@ export default function PlanetTicket() {
             />
           </div>
 
+          {/* SEARCH BUTTON */}
           <button
             className={`fs-btn${searching ? " fs-btn--loading" : ""}`}
             onClick={search}
@@ -239,12 +285,14 @@ export default function PlanetTicket() {
           </button>
         </div>
 
+        {/* ── ERROR ── */}
         {error && (
           <div className="fs-error">
             <span className="fs-error-icon">⚠</span> {error}
           </div>
         )}
 
+        {/* ── RESULTS ── */}
         {flights && (
           <div className="fs-results">
             <div className="fs-results-header">
@@ -265,83 +313,139 @@ export default function PlanetTicket() {
               </div>
             ) : (
               <div className="fs-flight-list">
-                {flights.list.map((f, i) => (
-                  <button
-                    key={f.id}
-                    className="fs-flight"
-                    style={{ animationDelay: `${i * 0.06}s` }}
-                    onClick={() =>
-                      setSelectedFlight({
-                        flight: f,
-                        fromLabel: flights.fromLabel,
-                        toLabel: flights.toLabel,
-                      })
-                    }
-                  >
-                    {/* TOP ROW */}
-                    <div className="fs-flight-top">
-                      <div className="fs-airline">
-                        <span className="fs-airline-dot" />
-                        <span className="fs-airline-name">{f.airline}</span>
-                        <span className="fs-plane-badge">{f.plane}</span>
-                      </div>
-                      <span className="fs-price">{Number(f.price).toFixed(2)} ₼</span>
-                    </div>
+                {flights.list.map((f, i) => {
+                  const variant      = getFlightVariant(f);
+                  const cardModifier = variant ? getCardModifier(variant.name) : "ft-card--business";
+                  const totalPrice   = variant
+                    ? Math.round(Number(f.price) + Number(variant.price))
+                    : Math.round(Number(f.price));
+                  const isPromo = variant?.isPromo || false;
 
-                    {/* VARIANT BADGES ROW */}
-                    {variants.length > 0 && (
-                      <div className="fs-variants-row">
-                        <span className="fs-variants-label">Available classes</span>
-                        <div className="fs-variants-list">
-                          {variants.map((v) => (
-                            <span
-                              key={v.id}
-                              className={`fs-vbadge ${getVariantStyle(v.name)}`}
-                            >
-                              {v.name}
-                              <span className="fs-vbadge-price">{Number(v.price).toFixed(0)} ₼</span>
+                  return (
+                    <button
+                      key={f.id}
+                      className={`ft-card ${cardModifier}`}
+                      style={{ animationDelay: `${i * 0.07}s` }}
+                      onClick={() =>
+                        setSelectedFlight({
+                          flight:    f,
+                          fromLabel: flights.fromLabel,
+                          toLabel:   flights.toLabel,
+                        })
+                      }
+                    >
+                      {/* ── LEFT BODY ── */}
+                      <div className="ft-card-body">
+
+                        {/* TOP */}
+                        <div className="ft-top">
+                          <div className="ft-airline-block">
+                            <div className="ft-airline-logo">
+                              <span className="ft-airline-initial">
+                                {(f.airline || "A")[0]}
+                              </span>
+                            </div>
+                            <div className="ft-airline-info">
+                              <span className="ft-airline-name">{f.airline}</span>
+                              <span className="ft-plane-model">{f.plane}</span>
+                            </div>
+                          </div>
+                          <div className="ft-flight-meta">
+                            <span className="ft-flight-date">{formatDate(f.dueDate)}</span>
+                            <span className="ft-flight-num">{f.flightNumber || "—"}</span>
+                          </div>
+                        </div>
+
+                        {/* ROUTE */}
+                        <div className="ft-route">
+                          <div className="ft-time-block">
+                            <span className="ft-time">{formatTime(f.dueDate)}</span>
+                            <span className="ft-city">{f.from || flights.fromLabel}</span>
+                          </div>
+
+                          <div className="ft-route-center">
+                            <span className="ft-duration">~2h · Direct</span>
+                            <div className="ft-line">
+                              <span className="ft-line-dot" />
+                              <span className="ft-line-bar" />
+                              <span className="ft-plane-fly">✈</span>
+                              <span className="ft-line-bar" />
+                              <span className="ft-line-dot" />
+                            </div>
+                          </div>
+
+                          <div className="ft-time-block ft-time-block--right">
+                            <span className="ft-time">{formatArrival(f.dueDate)}</span>
+                            <span className="ft-city">{f.to || flights.toLabel}</span>
+                          </div>
+                        </div>
+
+                        {/* DIVIDER */}
+                        <div className="ft-divider" />
+
+                        {/* BOTTOM */}
+                        <div className="ft-bottom">
+                          <div className="ft-bottom-left">
+                            <div className="ft-tags">
+                              <span className="ft-tag">
+                                <span className="ft-tag-dot green" />
+                                {f.availableSeats} seats
+                              </span>
+                              <span className="ft-tag">🧳 {f.luggageKg} kg</span>
+                              <span className="ft-tag">🍽 {f.meal}</span>
+                              <span className="ft-tag">Gate {f.gate}</span>
+                            </div>
+                          </div>
+
+                          <div className="ft-price-block">
+                            <span className="ft-price-label">from</span>
+                            <span className="ft-price">
+                              {totalPrice}{" "}
+                              <span className="ft-price-currency">₼</span>
                             </span>
-                          ))}
+                            <span className="ft-select-arrow">→</span>
+                          </div>
                         </div>
-                      </div>
-                    )}
 
-                    {/* MID ROW */}
-                    <div className="fs-flight-mid">
-                      <div className="fs-time-block">
-                        <span className="fs-time">{formatTime(f.dueDate)}</span>
-                        <span className="fs-city">{f.from}</span>
                       </div>
-                      <div className="fs-route-line">
-                        <span className="fs-duration">~2h</span>
-                        <div className="fs-line">
-                          <span className="fs-plane-icon">✈</span>
+
+                      {/* ── RIGHT SIDE STRIP ── */}
+                      <div className="ft-card-side">
+                        {variant && (
+                          <div className="ft-variant-pill">
+                            {variant.name}
+                            {isPromo && (
+                              <span className="ft-promo-badge">promo</span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="ft-side-row">
+                          <span className="ft-side-label">Flight</span>
+                          <span className="ft-side-value">{f.plane}</span>
                         </div>
-                        <span className="fs-direct">Direct</span>
-                      </div>
-                      <div className="fs-time-block fs-time-block--right">
-                        <span className="fs-time">{formatArrival(f.dueDate)}</span>
-                        <span className="fs-city">{f.to}</span>
-                      </div>
-                    </div>
 
-                    {/* BOTTOM ROW */}
-                    <div className="fs-flight-bot">
-                      <span className="fs-tag">
-                        <span className="fs-tag-dot" />
-                        {f.availableSeats} seats
-                      </span>
-                      <span className="fs-tag fs-tag--meal">🍽 {f.meal}</span>
-                      <span className="fs-tag">🧳 {f.luggageKg} kg</span>
-                      <span className="fs-tag fs-tag--gate">Gate {f.gate}</span>
-                      <span className="fs-select-btn">Select →</span>
-                    </div>
-                  </button>
-                ))}
+                        <div className="ft-side-row">
+                          <span className="ft-side-label">Date</span>
+                          <span className="ft-side-value">{formatDate(f.dueDate)}</span>
+                        </div>
+
+                        <div className="ft-side-row">
+                          <span className="ft-side-label">Gate</span>
+                          <span className="ft-side-value">{f.gate}</span>
+                        </div>
+
+                        <Barcode seed={f.id || i} />
+                      </div>
+
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         )}
+
       </div>
     </div>
   );

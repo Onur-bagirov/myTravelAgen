@@ -8,9 +8,8 @@
 .hero-section {
     width: 100%;
     height: 100vh;
-    /* Şəkildəki fon */
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.4)), 
-                url("/MainScreen.png") no-repeat center center/cover;;
+                url("/MainScreen.png") no-repeat center center/cover;
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Kaydırarkən fonun sabit qalması üçün */

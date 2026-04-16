@@ -7,9 +7,14 @@
     justify-content: center;
     align-items: center;
     padding: 100px 20px 40px 20px;
-    background: transparent;
-}
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4)), 
+            url("/MainScreen.png") no-repeat center center/cover;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
 
+}
 .buy-content-wrapper {
     max-width: 1200px;
     width: 100%;

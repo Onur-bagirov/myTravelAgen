@@ -5,7 +5,11 @@
    ════════════════════════════════════════════════ */
 .fb-page {
   min-height: 100vh;
-  background: transparent;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4)), 
+            url("/MainScreen.png") no-repeat center center/cover;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   font-family: 'Syne', sans-serif;
   padding: 2rem 1rem 5rem;
   color: #f1f5f9;
@@ -229,6 +233,10 @@
    ════════════════════════════════════════════════ */
 .sm-wrap {
   font-family: 'DM Mono', monospace;
+  /* ── MƏRKƏZLƏŞDİRMƏ FİKSİ ── */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Variant class header (BIZNEZ / ECONOMY etc.) */
@@ -263,10 +271,12 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 1rem;
+  /* ── MƏRKƏZLƏŞDİRMƏ FİKSİ ── */
+  width: 100%;
+  justify-content: center;
 }
 .sm-front-line {
-  flex: 1;
-  max-width: 60px;
+  width: 60px;
   height: 1px;
   background: rgba(255, 255, 255, 0.10);
 }
@@ -292,18 +302,14 @@
   font-weight: 500;
 }
 
-/* Seat row */
+/* Seat row — DÜZƏLDİLMİŞ */
 .sm-row {
   display: grid;
   grid-template-columns: 24px repeat(3, 44px) 14px repeat(3, 44px);
   gap: 12px;
-  justify-content: center;
-
   align-items: center;
-  margin-left: auto;
-  margin-right: auto;
-  width: max-content; /* İçindəki elementlərin cəmi qədər en tutur */
   margin-bottom: 5px;
+  /* köhnə: width: max-content + margin: auto — silindi */
 }
 
 .sm-row-num-cell {
@@ -500,15 +506,9 @@
 
 .fb-option-name {
   display: block;
-  font-size: 15px; 
-  font-weight: 800; 
-  color: #ffffff;  
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Daha net görünməsi üçün kəskin kölgə */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
 }
 
 /* Toggle */
@@ -578,34 +578,26 @@
 /* Note textarea */
 .fb-note {
   width: 100%;
-  /* Arxa fonu bir az daha tündləşdiririk ki, mətn daha yaxşı seçilsin */
-  background: rgba(0, 0, 0, 0.5); 
-  /* Kənarları daha bəlli edirik */
-  border: 1px solid rgba(255, 255, 255, 0.2); 
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 12px 16px;
-  color: #ffffff; /* Tam ağ rəng daha netdir */
+  color: #ffffff;
   font-family: 'Syne', sans-serif;
-  font-size: 12px; /* Bir az böyütdük */
-  line-height: 1.5; /* Sətir arası məsafə oxunuşu artırır */
+  font-size: 12px;
+  line-height: 1.5;
   resize: none;
   outline: none;
   transition: all 0.3s ease;
   box-sizing: border-box;
-  /* İçəriyə yüngül kölgə (depth) veririk */
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 .fb-note:focus {
-  /* Fokus zamanı border daha parlaq olsun */
   border-color: rgba(239, 68, 68, 0.8);
   background: rgba(0, 0, 0, 0.6);
-  /* Yüngül qırmızı parıltı (glow) */
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
 .fb-note::placeholder {
-  /* Placeholder rəngini bir az daha görünən etdik */
   color: rgba(255, 255, 255, 0.4);
   font-style: italic;
 }
@@ -794,7 +786,6 @@
   margin: 0 0 0.75rem;
   font-family: 'DM Mono', monospace;
 }
-
 .fb-success-seat {
   font-family: 'DM Mono', monospace;
   font-size: 13px;
@@ -803,7 +794,9 @@
   border: 1px solid rgba(239, 68, 68, 0.25);
   padding: 6px 16px;
   border-radius: 999px;
-}/* ════════════════════════════════════════════════
+}
+
+/* ════════════════════════════════════════════════
    BOARDING PASS CARD
    ════════════════════════════════════════════════ */
 .bp-card {
@@ -812,7 +805,7 @@
   overflow: hidden;
   margin-bottom: 1.5rem;
   background: #1a1a1a;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   position: relative;
   min-height: 280px;
 }
@@ -833,7 +826,7 @@
   bottom: -10px;
   width: 200px;
   height: auto;
-  color: rgba(255,255,255,0.03);
+  color: rgba(255, 255, 255, 0.03);
   pointer-events: none;
 }
 
@@ -891,7 +884,7 @@
 .bp-meta-label {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
-  color: rgba(255,255,255,0.28);
+  color: rgba(255, 255, 255, 0.28);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -899,7 +892,7 @@
 .bp-meta-value {
   font-family: 'DM Mono', monospace;
   font-size: 12px;
-  color: rgba(255,255,255,0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* Route hero */
@@ -914,9 +907,9 @@
 .bp-city-block--right { align-items: flex-end; }
 
 .bp-time {
-  font-family: 'Syne', sans-serif;
-  font-size: 32px;
-  font-weight: 800;
+  font-family: sans-serif;
+  font-size: 50px;
+  font-weight: 400;
   color: #fff;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -925,7 +918,7 @@
 .bp-city {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255, 255, 255, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-top: 3px;
@@ -952,7 +945,7 @@
   border-radius: 50%;
   background: #ef4444;
   flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(239,68,68,0.6);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
 }
 
 .bp-dash {
@@ -960,8 +953,8 @@
   height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    rgba(255,255,255,0.15) 0,
-    rgba(255,255,255,0.15) 4px,
+    rgba(255, 255, 255, 0.15) 0,
+    rgba(255, 255, 255, 0.15) 4px,
     transparent 4px,
     transparent 9px
   );
@@ -972,7 +965,7 @@
 .bp-dur {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  color: rgba(255,255,255,0.22);
+  color: rgba(255, 255, 255, 0.22);
 }
 
 /* Info row */
@@ -988,7 +981,7 @@
 .bp-info-val {
   font-family: 'DM Mono', monospace;
   font-size: 13px;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
 
@@ -1000,7 +993,7 @@
 
 .bp-divider {
   height: 1px;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.06);
   margin: 0.6rem 0;
 }
 
@@ -1014,7 +1007,7 @@
 .bp-notice {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
-  color: rgba(255,255,255,0.15);
+  color: rgba(255, 255, 255, 0.15);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 0;
@@ -1025,8 +1018,8 @@
   width: 1px;
   background: repeating-linear-gradient(
     180deg,
-    rgba(255,255,255,0.12) 0,
-    rgba(255,255,255,0.12) 5px,
+    rgba(255, 255, 255, 0.12) 0,
+    rgba(255, 255, 255, 0.12) 5px,
     transparent 5px,
     transparent 10px
   );
@@ -1072,7 +1065,7 @@
 .bp-stub-label {
   font-family: 'DM Mono', monospace;
   font-size: 8px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -1097,14 +1090,14 @@
 .bp-stub-divider {
   width: 100%;
   height: 1px;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   margin: 2px 0;
 }
 
 .bp-stub-route {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
