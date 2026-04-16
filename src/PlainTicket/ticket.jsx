@@ -210,9 +210,7 @@ export default function PlanetTicket() {
                     onChange={(e) => setFromId(e.target.value)}
                   >
                     {locations.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}, {l.country?.name}
-                      </option>
+                        <option key={l.id} value={l.id}>{l.country}, {l.name}</option>
                     ))}
                   </select>
                 )}
@@ -241,9 +239,7 @@ export default function PlanetTicket() {
                     onChange={(e) => setToId(e.target.value)}
                   >
                     {locations.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}, {l.country?.name}
-                      </option>
+                        <option key={l.id} value={l.id}>{l.country}, {l.name}</option>
                     ))}
                   </select>
                 )}

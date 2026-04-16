@@ -91,6 +91,8 @@ const Header = () => {
                 </button>
               )}
 
+                {/* <button onClick={logout}           className="btn-logout">Logout</button> */}
+
               {/* Company üçün nav link */}
               {isLoggedIn && isCompany && (
                 <button className="seatmap-btn" onClick={() => handleNavigation("/Select-Ticket")}>

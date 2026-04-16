@@ -8,14 +8,14 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const validate = (formData) => {
   const errs = {};
   if (!formData.email.trim()) {
-    errs.email = "Email boş ola bilməz";
+    errs.email = "Email can't be empty";
   } else if (!emailRegex.test(formData.email.trim())) {
-    errs.email = "Düzgün email formatı daxil edin (məs. user@mail.com)";
+    errs.email = "Please enter the correct email format (e.g. user@mail.com)";
   }
   if (!formData.password) {
-    errs.password = "Şifrə boş ola bilməz";
+    errs.password = "Password cannot be empty !";
   } else if (formData.password.length < 6) {
-    errs.password = "Şifrə ən azı 6 simvol olmalıdır";
+    errs.password = "Password must be at least 6 characters long";
   }
   return errs;
 };
@@ -71,14 +71,14 @@ const SignIn = () => {
     } catch (err) {
       if (err.response) {
         if (err.response.status === 401 || err.response.status === 400) {
-          setServerError("Email və ya şifrə səhvdir. Yenidən cəhd edin.");
+          setServerError("The email or password is incorrect. Please try again");
         } else if (err.response.data?.message) {
           setServerError(err.response.data.message);
         } else {
-          setServerError("Serverdə xəta baş verdi.");
+          setServerError("An error occurred on the server");
         }
       } else {
-        setServerError("Server bağlantısı alınmadı. Sonra yenidən cəhd edin.");
+        setServerError("Server connection failed. Please try again later");
       }
     } finally {
       setLoading(false);

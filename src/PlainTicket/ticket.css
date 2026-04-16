@@ -123,6 +123,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .fs-select {
@@ -137,7 +138,6 @@
   font-weight: 500;
   outline: none;
   cursor: pointer;
-  appearance: none;
   transition: border-color 0.2s, background 0.2s;
 }
 
@@ -149,7 +149,8 @@
 
 .fs-select option {
   background: #1a1f2e;
-  color: #f1f5f9;
+  color: #ffffff;
+
 }
 
 .fs-chevron {
