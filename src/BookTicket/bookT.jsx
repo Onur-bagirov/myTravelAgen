@@ -114,7 +114,6 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
         <div className="bp-meta-row">
           <div className="bp-meta-item">
             <span className="bp-meta-label">Airline</span>
-            {/* FIX: boş deyilsə göstər, yoxsa "—" */}
             <span className="bp-meta-value">{flight.airline || "—"}</span>
           </div>
           <div className="bp-meta-item">
@@ -143,7 +142,6 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
               <div className="bp-dash" />
               <span className="bp-dot" />
             </div>
-            {/* FIX: duration API-dan gəlirsə göstər, yoxsa ~2h */}
             <span className="bp-dur">
               {flight.durationMinutes
                 ? `~${Math.floor(flight.durationMinutes / 60)}h${flight.durationMinutes % 60 > 0 ? ` ${flight.durationMinutes % 60}m` : ""} · Direct`
@@ -178,7 +176,6 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
               <span className="bp-info-val">{flight.luggageKg} kg</span>
             </div>
           )}
-          {/* FIX: seçilmiş oturacaq boarding pass-da göstərilir */}
           {flight.seatNo && (
             <div className="bp-info-item">
               <span className="bp-meta-label">Seat</span>
@@ -225,7 +222,6 @@ function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, f
           <span className="bp-stub-label">Gate</span>
           <span className="bp-stub-value" style={{ fontSize: "20px", fontWeight: 700 }}>{flight.gate ?? "—"}</span>
         </div>
-        {/* FIX: stub-da da seat göstər */}
         {flight.seatNo && (
           <>
             <div className="bp-stub-divider" />
@@ -332,7 +328,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [hasPet, setHasPet] = useState(false);
   const [hasChild, setHasChild] = useState(false);
-  // FIX: luggageKg başlanğıcda flight.luggageKg-dan götür (0 deyil)
   const [luggageKg, setLuggageKg] = useState(flight?.luggageKg ?? 0);
   const [note, setNote] = useState("");
   const [buying, setBuying] = useState(false);
@@ -340,8 +335,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const [success, setSuccess] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [passengerName, setPassengerName] = useState(flight?.passengerName ?? "");
-
-  // FIX: displayClass — seats gəlməmişdən əvvəl flight.variantName-dən başla
   const [displayClass, setDisplayClass] = useState(flight?.variantName ?? null);
 
   const isExpired = flight?.dueDate ? new Date(flight.dueDate) < new Date() : false;
@@ -361,8 +354,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         const fetchedSeats = Array.isArray(data.data) ? data.data : [];
         setSeats(fetchedSeats);
 
-        // FIX: displayClass yalnız hələ null-dursa seats-dən götür,
-        // flight.variantName varsa üzərinə yazma
         if (!flight?.variantName && fetchedSeats.length > 0) {
           setDisplayClass(fetchedSeats[0].variantName ?? null);
         }
@@ -380,7 +371,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     });
   }, [flight?.id]);
 
-  // FIX: seat seçiləndə displayClass və seatNo boarding pass-a yazılır
   useEffect(() => {
     if (selectedSeat) {
       setDisplayClass(selectedSeat.variantName ?? displayClass);
@@ -422,6 +412,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
       let result = null;
       try { result = rawText ? JSON.parse(rawText) : null; } catch { result = null; }
 
+      // ✅ FIX: Yalnız res.ok yoxla — data field-i null/false ola bilər, bu xəta deyil
       if (!res.ok) {
         let errMsg = result?.message || result?.title || `Server error: ${res.status}`;
         if (result?.errors) errMsg = Object.values(result.errors).flat().join(", ");
@@ -430,12 +421,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         throw new Error(errMsg);
       }
 
-      if (!result?.data) {
-        setSeats((prev) => prev.map((s) => (s.id === selectedSeat.id ? { ...s, isOccupied: true } : s)));
-        setSelectedSeat(null);
-        throw new Error("This seat is already taken. Please choose another seat.");
-      }
-
+      // ✅ res.ok === true → uğurludur, artıq result.data yoxlanmır
       setSuccess(true);
       if (onSuccess) setTimeout(() => onSuccess(result?.data ?? {}), 2000);
     } catch (e) {
@@ -451,7 +437,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
 
-  // FIX: durationMinutes varsa ondan hesabla, yoxsa default 120 dəq (2 saat)
   function formatArrival(dateStr, durationMinutes = 120) {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
@@ -464,12 +449,11 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
     return new Date(dateStr).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
   }
 
-  const basePrice    = Number(flight?.price || 0);
-  const seatExtra    = Number(selectedSeat?.variantPrice || 0);
-  // FIX: flight.luggageKg-dan artıq hissəyə extra ücret tətbiq et
+  const basePrice       = Number(flight?.price || 0);
+  const seatExtra       = Number(selectedSeat?.variantPrice || 0);
   const includedLuggage = flight?.luggageKg ?? 20;
-  const luggageExtra = luggageKg > includedLuggage ? (luggageKg - includedLuggage) * 2 : 0;
-  const totalPrice   = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
+  const luggageExtra    = luggageKg > includedLuggage ? (luggageKg - includedLuggage) * 2 : 0;
+  const totalPrice      = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
 
   // ── Guard ──
   if (!flight) {
@@ -513,7 +497,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
-        {/* FIX: seatNo — selectedSeat.name boarding pass-a ötürülür */}
         <BoardingPassCard
           flight={{
             ...flight,
@@ -583,7 +566,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
                   <span className="fb-option-icon">🧳</span>
                   <div>
                     <span className="fb-option-name">Luggage weight</span>
-                    {/* FIX: neçə kg-ın daxil olduğunu göstər */}
                     <span style={{ fontSize: "12px", color: "#888", display: "block" }}>
                       Included: {includedLuggage} kg
                     </span>

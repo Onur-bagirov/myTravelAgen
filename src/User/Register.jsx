@@ -66,7 +66,6 @@ export default function Register() {
     } catch (err) {
       const data = err.response?.data;
 
-      // 1. Əgər şəkildəki kimi uzun "Validation failed" stringi gəlirsə (məs: Email istifadə olunub)
       if (typeof data === "string" && data.includes("Validation failed")) {
         const match = data.match(/--\s*(.*?)\s*Severity/);
         if (match && match[1]) {
@@ -76,7 +75,6 @@ export default function Register() {
           setError("This email might already be registered.");
         }
       } 
-      // 2. Əgər backend obyekt (errors: {}) qaytarırsa
       else if (data?.errors) {
         const firstKey = Object.keys(data.errors)[0];
         setError(data.errors[firstKey][0]);

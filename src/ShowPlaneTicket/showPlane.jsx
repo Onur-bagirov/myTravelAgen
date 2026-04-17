@@ -48,6 +48,15 @@ function isExpired(dueDate) {
   return dueDate && new Date(dueDate) < new Date();
 }
 
+// Convert a Date/ISO string to "YYYY-MM-DDTHH:mm" for datetime-local input
+function toDatetimeLocal(d) {
+  if (!d) return "";
+  const dt = new Date(d);
+  if (isNaN(dt.getTime())) return "";
+  const pad = n => String(n).padStart(2, "0");
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+
 const VARIANT_COLORS = {
   "first class": { accent: "#c9a84c", bg: "rgba(201,168,76,0.15)", label: "✦ First Class" },
   business:      { accent: "#7eb8f7", bg: "rgba(126,184,247,0.15)", label: "◈ Business" },
@@ -74,6 +83,7 @@ function stateBadge(state) {
 }
 
 const STATE_MAP = { Pending: 0, Available: 1, Booked: 2, Canceled: 4 };
+const STATE_NUM_TO_NAME = { 0: "Pending", 1: "Available", 2: "Booked", 4: "Canceled" };
 
 // ── Confirm Delete Modal ─────────────────────────────────────
 function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
@@ -111,8 +121,13 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
-// ── Edit Modal ───────────────────────────────────────────────
+// ── Edit Modal (now includes State + Date/Time) ──────────────
 function EditModal({ ticket, onClose, onSaved }) {
+  const currentStateName =
+    typeof ticket.state === "number"
+      ? STATE_NUM_TO_NAME[ticket.state] ?? "Available"
+      : ticket.state ?? "Available";
+
   const [form, setForm] = useState({
     id:        ticket.id,
     airline:   ticket.airline   || "",
@@ -121,6 +136,8 @@ function EditModal({ ticket, onClose, onSaved }) {
     meal:      ticket.meal      || "",
     luggageKg: ticket.luggageKg ?? 0,
     variantId: ticket.variantId ?? "",
+    state:     currentStateName,
+    dueDate:   toDatetimeLocal(ticket.dueDate),
   });
   const [variants, setVariants] = useState([]);
   const [saving,   setSaving]   = useState(false);
@@ -177,6 +194,12 @@ function EditModal({ ticket, onClose, onSaved }) {
     } else if (!Number.isInteger(kg * 10)) {
       errs.luggageKg = "Max 1 decimal place allowed (e.g. 23.5).";
     }
+    if (!form.dueDate) {
+      errs.dueDate = "Date & time is required.";
+    } else {
+      const dt = new Date(form.dueDate);
+      if (isNaN(dt.getTime())) errs.dueDate = "Invalid date/time.";
+    }
     return errs;
   };
 
@@ -190,11 +213,6 @@ function EditModal({ ticket, onClose, onSaved }) {
     setValidationErrors({});
     setSaving(true);
     try {
-      const ticketStateNumeric = STATE_MAP[ticket.state] ?? 1;
-
-      // FIX: variantId string → number, boş string → null
-      const variantIdNum = form.variantId !== "" ? parseInt(form.variantId) : null;
-
       const body = {
         id:        form.id,
         airline:   form.airline.trim(),
@@ -202,8 +220,9 @@ function EditModal({ ticket, onClose, onSaved }) {
         plane:     form.plane.trim(),
         meal:      form.meal.trim(),
         luggageKg: parseFloat(form.luggageKg) || 0,
-        state:     ticketStateNumeric,
-        variantId: variantIdNum,
+        state:     STATE_MAP[form.state] ?? 1,
+        variantId: form.variantId ? parseInt(form.variantId) : null,
+        dueDate:   new Date(form.dueDate).toISOString(),
       };
 
       const res = await fetch(`${BASE_URL}/PlaneTicket`, {
@@ -220,10 +239,13 @@ function EditModal({ ticket, onClose, onSaved }) {
         );
       }
 
-      // FIX: variantName düzgün tapılır
-      const chosenVariant = variants.find(v => v.id === variantIdNum);
-      const resolvedVariantName = chosenVariant?.name ?? (variantIdNum ? ticket.variantName : null);
-      onSaved({ ...body, variantName: resolvedVariantName });
+      const chosenVariant = variants.find(v => v.id === parseInt(form.variantId));
+      onSaved({
+        ...body,
+        variantName: chosenVariant?.name ?? ticket.variantName,
+        state: form.state,
+        dueDate: body.dueDate,
+      });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -231,6 +253,8 @@ function EditModal({ ticket, onClose, onSaved }) {
       setSaving(false);
     }
   };
+
+  const stateOptions = Object.keys(STATE_MAP);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -271,6 +295,47 @@ function EditModal({ ticket, onClose, onSaved }) {
               className={validationErrors.luggageKg ? "edit-input--error" : ""} />
             {validationErrors.luggageKg && <span className="edit-field-error">{validationErrors.luggageKg}</span>}
           </div>
+
+          {/* ── DATE & TIME ── */}
+          <div className="edit-field edit-field--full">
+            <label>Date &amp; Time <span className="edit-required">*</span></label>
+            <input
+              name="dueDate"
+              type="datetime-local"
+              value={form.dueDate}
+              onChange={handleChange}
+              className={validationErrors.dueDate ? "edit-input--error" : ""}
+            />
+            {validationErrors.dueDate && <span className="edit-field-error">{validationErrors.dueDate}</span>}
+          </div>
+
+          {/* ── STATE ── */}
+          <div className="edit-field edit-field--full">
+            <label>State</label>
+            <div className="state-option-list state-option-list--inline">
+              {stateOptions.map(opt => {
+                const sb = stateBadge(opt);
+                const isActive = opt === form.state;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={`state-option-btn${isActive ? " state-option-btn--active" : ""}`}
+                    style={{
+                      "--s-color":  sb.color,
+                      "--s-bg":     sb.bg,
+                      "--s-border": sb.border,
+                    }}
+                    onClick={() => setForm(f => ({ ...f, state: opt }))}
+                  >
+                    {sb.label}
+                    {isActive && <span className="state-option-check">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="edit-field">
             <label>Variant</label>
             <select name="variantId" value={form.variantId} onChange={handleChange} className="spt-select">
@@ -438,15 +503,17 @@ function SeatMapModal({ ticket, onClose }) {
 }
 
 // ── Ticket Card ──────────────────────────────────────────────
-function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
+function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, onToast }) {
   const [showSeats,   setShowSeats]   = useState(false);
   const [showEdit,    setShowEdit]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting,    setDeleting]    = useState(false);
 
+  const [currentState, setCurrentState] = useState(ticket.state);
+
   const isAdmin   = role === "Admin";
   const isCompany = role === "Company";
-  const sb        = stateBadge(ticket.state);
+  const sb        = stateBadge(currentState);
 
   const variantName  = ticket.variantName && ticket.variantName.trim() !== "" ? ticket.variantName : null;
   const variantMeta  = getVariantMeta(variantName || "");
@@ -506,7 +573,10 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
         </div>
 
         <div className="spt-card-state-row">
-          <span className="spt-state-badge" style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}>
+          <span
+            className="spt-state-badge"
+            style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}
+          >
             {sb.label}
           </span>
           {variantName && (
@@ -599,8 +669,24 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onToast }) {
       </div>
 
       {showSeats   && <SeatMapModal ticket={ticket} onClose={() => setShowSeats(false)} />}
-      {showEdit    && <EditModal ticket={ticket} onClose={() => setShowEdit(false)} onSaved={onEdited} />}
-      {showConfirm && <ConfirmDeleteModal ticketId={ticket.id} onConfirm={handleDeleteConfirmed} onCancel={() => setShowConfirm(false)} />}
+      {showEdit    && (
+        <EditModal
+          ticket={{ ...ticket, state: currentState }}
+          onClose={() => setShowEdit(false)}
+          onSaved={updatedBody => {
+            // Update local state badge immediately
+            setCurrentState(updatedBody.state);
+            onEdited(updatedBody);
+          }}
+        />
+      )}
+      {showConfirm && (
+        <ConfirmDeleteModal
+          ticketId={ticket.id}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
     </>
   );
 }
@@ -658,12 +744,7 @@ export default function ShowPlaneTicket() {
       if (!res.ok) throw new Error(`Server Error: ${res.status}`);
       const data = await res.json();
 
-      // FIX: variantName field adını normalize et (backend camelCase qaytarır)
-      const all = (Array.isArray(data?.data) ? data.data : []).map(t => ({
-        ...t,
-        variantId:   t.variantId   ?? t.VariantId   ?? null,
-        variantName: t.variantName ?? t.VariantName ?? null,
-      }));
+      const all = Array.isArray(data?.data) ? data.data : [];
       const filtered = all.filter(t => !isExpired(t.dueDate));
 
       setTickets(filtered);
@@ -778,15 +859,18 @@ export default function ShowPlaneTicket() {
                           meal:        updatedBody.meal,
                           luggageKg:   updatedBody.luggageKg,
                           variantId:   updatedBody.variantId,
-                          // FIX: undefined yox, explicit undefined check
-                          variantName: updatedBody.variantName !== undefined
-                            ? updatedBody.variantName
-                            : t.variantName,
-                          state:       Object.keys(STATE_MAP).find(k => STATE_MAP[k] === updatedBody.state) || t.state,
+                          variantName: updatedBody.variantName ?? t.variantName,
+                          state:       updatedBody.state ?? t.state,
+                          dueDate:     updatedBody.dueDate ?? t.dueDate,
                         }
                       : t
                   ));
                   showToast(`Ticket #${updatedBody.id} updated successfully.`, "success");
+                }}
+                onStateChanged={updated => {
+                  setTickets(prev => prev.map(t =>
+                    t.id === updated.id ? { ...t, state: updated.state } : t
+                  ));
                 }}
                 onToast={showToast}
               />
