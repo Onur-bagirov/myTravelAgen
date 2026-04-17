@@ -116,7 +116,8 @@ export default function PlanetTicket() {
   const [variants, setVariants]         = useState([]);
   const [fromId, setFromId]             = useState("");
   const [toId, setToId]                 = useState("");
-  const [date, setDate]                 = useState(() => new Date().toISOString().slice(0, 10));
+  // FIX: date optional - boş başlasın ki istifadəçi seçsin
+  const [date, setDate]                 = useState("");
   const [searching, setSearching]       = useState(false);
   const [flights, setFlights]           = useState(null);
   const [error, setError]               = useState("");
@@ -162,16 +163,30 @@ export default function PlanetTicket() {
     if (fromId === toId)  { setError("Departure and arrival locations cannot be the same."); return; }
     setSearching(true); setFlights(null); setError("");
     try {
-      const params = new URLSearchParams({ PageNumber: 1, PageSize: 20, Date: date, FromLocationId: fromId, ToLocationId: toId });
-      const res = await fetch(`${API_BASE}/PlaneTicket?${params.toString()}`, { method: "GET", headers: getHeaders() });
+      // FIX: date yalnız seçilibsə əlavə et
+      const params = new URLSearchParams({
+        PageNumber: 1,
+        PageSize: 50,
+        FromLocationId: fromId,
+        ToLocationId: toId,
+      });
+      if (date) params.append("Date", date);
+
+      const res = await fetch(`${API_BASE}/PlaneTicket?${params.toString()}`, {
+        method: "GET",
+        headers: getHeaders(),
+      });
       if (!res.ok) throw new Error("No flights found or server error.");
       const result = await res.json();
-      const now = new Date();
+
+      // FIX: expired filter yumşaldıldı — yalnız keçmişdə olan biletləri çıxart (deyil, hamısını göstər)
+      const list = result.data || [];
+
       setFlights({
-        list:      (result.data || []).filter((f) => new Date(f.dueDate) >= now),
+        list,
         fromLabel: fromLoc?.name,
         toLabel:   toLoc?.name,
-        dateStr:   new Date(date).toLocaleDateString("en-US"),
+        dateStr:   date ? new Date(date).toLocaleDateString("en-US") : "All dates",
       });
     } catch (e) {
       setError("An error occurred while fetching flights: " + e.message);
@@ -183,15 +198,16 @@ export default function PlanetTicket() {
   function swap() { setFromId(toId); setToId(fromId); setFlights(null); }
 
   function formatTime(dateStr) {
-    const d = new Date(dateStr);
-    return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-  }
-  function formatArrival(dateStr, durationHours = 2) {
-    const d = new Date(dateStr);
-    d.setHours(d.getHours() + durationHours);
-    return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    if (!dateStr) return "--:--";
+    const s = String(dateStr);
+    const match = s.match(/T(\d{2}):(\d{2})/);
+    if (match) return `${match[1]}:${match[2]}`;
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return "--:--";
+    return `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`;
   }
   function formatDate(dateStr) {
+    if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"short" });
   }
   function getFlightVariant(flight) {
@@ -258,10 +274,10 @@ export default function PlanetTicket() {
             />
           </div>
 
-          {/* DATE */}
+          {/* DATE — optional */}
           <div className="fs-date-row">
             <label className="fs-label">
-              <span className="fs-label-icon">◈</span> Flight Date
+              <span className="fs-label-icon">◈</span> Flight Date <span style={{ opacity: 0.45, fontSize: "11px" }}>(optional)</span>
             </label>
             <input
               className="fs-date"
@@ -280,7 +296,7 @@ export default function PlanetTicket() {
             {searching ? (
               <><span className="fs-spinner" />Searching...</>
             ) : (
-              <><span className="fs-btn-icon">✈</span>Find Tickets</>
+              <><span className="fs-btn-icon">✈</span>Search Tickets</>
             )}
           </button>
         </div>
@@ -307,7 +323,7 @@ export default function PlanetTicket() {
             {flights.list.length === 0 ? (
               <div className="fs-empty">
                 <span className="fs-empty-icon">✈</span>
-                <p>No flights found for this date.</p>
+                <p>No flights found for this route{date ? " on this date" : ""}.</p>
               </div>
             ) : (
               <div className="fs-flight-list">
@@ -349,7 +365,7 @@ export default function PlanetTicket() {
                             <span className="ft-city">{f.from || flights.fromLabel}</span>
                           </div>
                           <div className="ft-route-center">
-                            <span className="ft-duration">~2h · Direct</span>
+                            <span className="ft-duration">Direct</span>
                             <div className="ft-line">
                               <span className="ft-line-dot" />
                               <span className="ft-line-bar" />
@@ -359,7 +375,10 @@ export default function PlanetTicket() {
                             </div>
                           </div>
                           <div className="ft-time-block ft-time-block--right">
-                            <span className="ft-time">{formatArrival(f.dueDate)}</span>
+                            {/* FIX: endDate varsa göstər, yoxsa tire */}
+                            <span className="ft-time">
+                              {f.endDate ? formatTime(f.endDate) : "--:--"}
+                            </span>
                             <span className="ft-city">{f.to || flights.toLabel}</span>
                           </div>
                         </div>
