@@ -159,7 +159,7 @@ const ForgotPassword = () => {
                 {loading ? "Updating..." : "Update Password"}
               </button>
               <p className="change-email-text" onClick={() => setStep(1)}>
-                Change Email Address
+                Change <span>Email Address</span>
               </p>
             </div>
           )}
