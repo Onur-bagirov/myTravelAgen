@@ -1,7 +1,6 @@
-/* Ana Səhifə */
 .main-page {
     width: 100%;
-    background-color: #0a0a0a;
+    background-color: transparent;
 }
 
 .hero-section {
@@ -11,7 +10,7 @@
                 url("/MainScreen.png") no-repeat center center/cover;
     background-size: cover;
     background-position: center;
-    background-attachment: fixed; /* Kaydırarkən fonun sabit qalması üçün */
+    background-attachment: fixed;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -102,13 +101,11 @@
 
 .trending-section {
     padding: 100px 8%;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
+
 .section-title {
     color: white;
     font-size: 2.8rem;
@@ -119,12 +116,12 @@
 
 .destinations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 30px;
 }
 
 .dest-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: #1a1a1a;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 25px;
     overflow: hidden;
@@ -134,7 +131,7 @@
 .dest-card:hover {
     transform: translateY(-12px);
     border-color: #ff4d4d;
-    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .card-image {
@@ -148,7 +145,7 @@
     position: absolute;
     top: 15px;
     right: 15px;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(5px);
     color: #f9cb28;
     padding: 6px 16px;
@@ -160,10 +157,25 @@
 .card-info {
     padding: 25px;
     color: white;
+    background: #1a1a1a;
 }
 
-.card-info h3 { font-size: 1.5rem; margin-bottom: 10px; }
-.card-info span { color: #f9cb28; font-weight: 800; font-size: 1.3rem; }
+.card-info h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.card-info p {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 5px;
+}
+
+.card-info span {
+    color: #f9cb28;
+    font-weight: 800;
+    font-size: 1.3rem;
+}
 
 .book-now-btn {
     width: 100%;
@@ -178,7 +190,10 @@
     transition: 0.3s;
 }
 
-.book-now-btn:hover { background: #ff4d4d; color: white; }
+.book-now-btn:hover {
+    background: #ff4d4d;
+    color: white;
+}
 
 @keyframes fadeInContent {
     from { opacity: 0; transform: translateY(30px); }

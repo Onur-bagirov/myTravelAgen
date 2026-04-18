@@ -2,8 +2,11 @@
 
 .amt-page {
   min-height: 100vh;
-  background: transparent;
-  font-family: 'Syne', sans-serif;
+  background: linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 100%),
+    url("/MainScreen.png") no-repeat center center / cover;
+  background-attachment: fixed;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  padding: 2.5rem 1rem 4rem;
   color: #f1f5f9;
   position: relative;
   overflow-x: hidden;

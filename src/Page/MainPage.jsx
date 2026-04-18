@@ -34,7 +34,6 @@ export default function MainPage() {
 
   return (
     <div className="main-page">
-      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-overlay">
           <div className="main-content">

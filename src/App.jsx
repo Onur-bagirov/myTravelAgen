@@ -27,53 +27,57 @@ import AllMyP from "./MyPlainTicket/allMyP";
 import TrainBooking from "./BookTrainTicket/bookTrainT";
 import AllMyTrainTickets from "./MyTrainTicket/myTrainT";
 import PaymentModal from "./PymetModal/pyMod";
+import Footer from "./Footer/footerP";
 
 function App() {    
   return (
     <Router>
-      <Header />
-      <Routes>
-{/* ========== SHARED (Hamıya aid) ========== */}
-<Route path="/" element={<MainPage />} />
-<Route path="/login" element={<SignIn />} />
-<Route path="/register" element={<Register />} />
-<Route path="/email" element={<Emailcode />} />
-<Route path="/forgot-pass" element={<ForgotPassword />} />
-<Route path="/about" element={<About />} />
+      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <Header />
+        <main style={{ flex: 1 }}>
+          <Routes>
+            {/* ========== SHARED ========== */}
+            <Route path="/" element={<MainPage />} />
+            <Route path="/login" element={<SignIn />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/email" element={<Emailcode />} />
+            <Route path="/forgot-pass" element={<ForgotPassword />} />
+            <Route path="/about" element={<About />} />
 
-{/* ========== USER (İstifadəçi səhifələri) ========== */}
-<Route path="/select-ticket" element={<SelectTicket />} />
-<Route path="/show-ticket" element={<ShowTicket />} />
-<Route path="/show-plane-ticket" element={<ShowPlaneTicket />} />
-<Route path="/Show-Train-T" element={<ShowTrainTickets />} />
-<Route path="/All-My-Train-T" element={<AllMyTrainTickets />} />
-<Route path="/All-My-Tic" element={<AllMyTicket />} />
-<Route path="/All-My-P" element={<AllMyP />} />
-<Route path="/user-profile" element={<Profile />} />
-<Route path="/Pay-Mod" element={<PaymentModal />} />
-<Route path="/buy" element={<Buy />} />
-<Route path="/buy-seats" element={<BuySeats />} />
-<Route path="/ticket/train" element={<TrainTicket />} />
-<Route path="/ticket/plane" element={<PlanetTicket />} />
-<Route path="/Book-Train-T" element={<TrainBooking />} />
+            {/* ========== USER ========== */}
+            <Route path="/select-ticket" element={<SelectTicket />} />
+            <Route path="/show-ticket" element={<ShowTicket />} />
+            <Route path="/show-plane-ticket" element={<ShowPlaneTicket />} />
+            <Route path="/Show-Train-T" element={<ShowTrainTickets />} />
+            <Route path="/All-My-Train-T" element={<AllMyTrainTickets />} />
+            <Route path="/All-My-Tic" element={<AllMyTicket />} />
+            <Route path="/All-My-P" element={<AllMyP />} />
+            <Route path="/user-profile" element={<Profile />} />
+            <Route path="/Pay-Mod" element={<PaymentModal />} />
+            <Route path="/buy" element={<Buy />} />
+            <Route path="/buy-seats" element={<BuySeats />} />
+            <Route path="/ticket/train" element={<TrainTicket />} />
+            <Route path="/ticket/plane" element={<PlanetTicket />} />
+            <Route path="/Book-Train-T" element={<TrainBooking />} />
 
-{/* ========== ADMIN (Admin səhifələri) ========== */}
-<Route path="/create-ticket" element={<CreateTicket />} />
-<Route path="/create-train-ticket" element={<CreateTrainTicket />} />
-<Route path="/create-executive" element={<CreateExecutive />} />
-<Route path="/Add-C-L" element={<AddCountryLocation />} />
-<Route path="/Add-C" element={<AddCountry />} />
-<Route path="/Add-L" element={<AddLocation />} />
+            {/* ========== ADMIN =========== */}
+            <Route path="/create-ticket" element={<CreateTicket />} />
+            <Route path="/create-train-ticket" element={<CreateTrainTicket />} />
+            <Route path="/create-executive" element={<CreateExecutive />} />
+            <Route path="/Add-C-L" element={<AddCountryLocation />} />
+            <Route path="/Add-C" element={<AddCountry />} />
+            <Route path="/Add-L" element={<AddLocation />} />
+            <Route path="/Add-V" element={<AddVariant />} />
 
-
-
-<Route path="/Add-V" element={<AddVariant />} />
-        <Route path="*" element={
-          <div style={{color: 'white', textAlign: 'center', marginTop: '100px'}}>
-            Page Not Found
-          </div>
-        } />
-      </Routes>
+            <Route path="*" element={
+              <div style={{ color: "white", textAlign: "center", marginTop: "100px" }}>
+                Page Not Found
+              </div>
+            } />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
     </Router>
   );
 }
