@@ -64,6 +64,9 @@ function App() {
 <Route path="/Add-C-L" element={<AddCountryLocation />} />
 <Route path="/Add-C" element={<AddCountry />} />
 <Route path="/Add-L" element={<AddLocation />} />
+
+
+
 <Route path="/Add-V" element={<AddVariant />} />
         <Route path="*" element={
           <div style={{color: 'white', textAlign: 'center', marginTop: '100px'}}>

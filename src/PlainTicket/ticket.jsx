@@ -25,7 +25,6 @@ function getFlag(country = "") {
   return key ? COUNTRY_FLAGS[key] : "🌍";
 }
 
-/* ── Custom location dropdown ── */
 function LocationSelect({ locations, value, onChange, loading, label, dotClass }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -96,7 +95,6 @@ function LocationSelect({ locations, value, onChange, loading, label, dotClass }
 
       {open && (
         <div className="ls-dropdown">
-          {/* SEARCH INPUT */}
           <div className="ls-search-wrap">
             <span className="ls-search-icon">🔍</span>
             <input
@@ -113,7 +111,6 @@ function LocationSelect({ locations, value, onChange, loading, label, dotClass }
             )}
           </div>
 
-          {/* OPTIONS */}
           <div className="ls-options-list">
             {filtered.length === 0 ? (
               <div className="ls-no-results">No locations found</div>
@@ -143,7 +140,6 @@ function LocationSelect({ locations, value, onChange, loading, label, dotClass }
   );
 }
 
-/* ── Barcode decoration ── */
 function Barcode({ seed = 0 }) {
   const heights = [14,20,10,28,16,22,12,26,18,14,24,10,20,16,28,12,22,18,10,26];
   return (
@@ -294,18 +290,13 @@ export default function PlanetTicket() {
     <div className="fs-page">
       <div className="fs-inner">
 
-        {/* HEADER */}
         <div className="fs-header">
           <span className="fs-eyebrow">✦ StepTravel</span>
           <h1 className="fs-title">Plan Your <span className="fs-title-accent">Flight</span></h1>
           <p className="fs-subtitle">Find your ticket at the best price</p>
         </div>
-
-        {/* SEARCH CARD */}
         <div className="fs-card">
           <div className="fs-route-row">
-
-            {/* FROM */}
             <LocationSelect
               locations={locations}
               value={fromId}
@@ -314,13 +305,10 @@ export default function PlanetTicket() {
               label="From"
               dotClass="from-dot"
             />
-
-            {/* SWAP */}
             <button className="fs-swap" onClick={swap} title="Swap">
               <span className="fs-swap-icon">⇌</span>
             </button>
 
-            {/* TO */}
             <LocationSelect
               locations={locations}
               value={toId}
@@ -330,8 +318,6 @@ export default function PlanetTicket() {
               dotClass="to-dot"
             />
           </div>
-
-          {/* DATE — optional */}
           <div className="fs-date-row">
             <label className="fs-label">
               <span className="fs-label-icon">◈</span> Flight Date <span style={{ opacity: 0.45, fontSize: "11px" }}>(optional)</span>
@@ -344,7 +330,6 @@ export default function PlanetTicket() {
             />
           </div>
 
-          {/* SEARCH BUTTON */}
           <button
             className={`fs-btn${searching ? " fs-btn--loading" : ""}`}
             onClick={() => {
@@ -361,14 +346,11 @@ export default function PlanetTicket() {
           </button>
         </div>
 
-        {/* ERROR */}
         {error && (
           <div className="fs-error">
             <span className="fs-error-icon">⚠</span> {error}
           </div>
         )}
-
-        {/* RESULTS */}
         {flights && (
           <div className="fs-results">
             <div className="fs-results-header">
