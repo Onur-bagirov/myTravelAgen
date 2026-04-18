@@ -28,16 +28,37 @@ function getFlag(country = "") {
 /* ── Custom location dropdown ── */
 function LocationSelect({ locations, value, onChange, loading, label, dotClass }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const ref = useRef(null);
+  const searchRef = useRef(null);
   const selected = locations.find((l) => String(l.id) === String(value));
+
+  const filtered = locations.filter((l) => {
+    const q = search.toLowerCase();
+    return (
+      l.name?.toLowerCase().includes(q) ||
+      l.country?.toLowerCase().includes(q)
+    );
+  });
 
   useEffect(() => {
     function onClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        setSearch("");
+      }
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (open && searchRef.current) {
+      setTimeout(() => searchRef.current?.focus(), 50);
+    } else {
+      setSearch("");
+    }
+  }, [open]);
 
   if (loading) {
     return (
@@ -75,23 +96,47 @@ function LocationSelect({ locations, value, onChange, loading, label, dotClass }
 
       {open && (
         <div className="ls-dropdown">
-          {locations.map((l) => {
-            const isSel = String(l.id) === String(value);
-            return (
-              <div
-                key={l.id}
-                className={`ls-option${isSel ? " selected" : ""}`}
-                onClick={() => { onChange(String(l.id)); setOpen(false); }}
-              >
-                <div className="ls-option-flag">{getFlag(l.country)}</div>
-                <div className="ls-option-text">
-                  <span className="ls-option-country">{l.country}</span>
-                  <span className="ls-option-city">{l.name}</span>
-                </div>
-                <span className="ls-selected-dot" />
-              </div>
-            );
-          })}
+          {/* SEARCH INPUT */}
+          <div className="ls-search-wrap">
+            <span className="ls-search-icon">🔍</span>
+            <input
+              ref={searchRef}
+              className="ls-search-input"
+              type="text"
+              placeholder="Search locations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+            />
+            {search && (
+              <button className="ls-search-clear" onClick={() => setSearch("")}>✕</button>
+            )}
+          </div>
+
+          {/* OPTIONS */}
+          <div className="ls-options-list">
+            {filtered.length === 0 ? (
+              <div className="ls-no-results">No locations found</div>
+            ) : (
+              filtered.map((l) => {
+                const isSel = String(l.id) === String(value);
+                return (
+                  <div
+                    key={l.id}
+                    className={`ls-option${isSel ? " selected" : ""}`}
+                    onClick={() => { onChange(String(l.id)); setOpen(false); setSearch(""); }}
+                  >
+                    <div className="ls-option-flag">{getFlag(l.country)}</div>
+                    <div className="ls-option-text">
+                      <span className="ls-option-country">{l.country}</span>
+                      <span className="ls-option-city">{l.name}</span>
+                    </div>
+                    <span className="ls-selected-dot" />
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -116,12 +161,13 @@ export default function PlanetTicket() {
   const [variants, setVariants]         = useState([]);
   const [fromId, setFromId]             = useState("");
   const [toId, setToId]                 = useState("");
-  // FIX: date optional - boş başlasın ki istifadəçi seçsin
   const [date, setDate]                 = useState("");
   const [searching, setSearching]       = useState(false);
   const [flights, setFlights]           = useState(null);
   const [error, setError]               = useState("");
   const [selectedFlight, setSelectedFlight] = useState(null);
+
+  const autoSearchKey = useRef(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -155,22 +201,32 @@ export default function PlanetTicket() {
     fetchVariants();
   }, []);
 
-  const fromLoc = locations.find((l) => String(l.id) === fromId);
-  const toLoc   = locations.find((l) => String(l.id) === toId);
+  useEffect(() => {
+    if (locLoading) return;
+    if (!fromId || !toId || fromId === toId) return;
+    const key = `${fromId}-${toId}-${date}`;
+    if (autoSearchKey.current === key) return;
+    autoSearchKey.current = key;
+    search(fromId, toId, date);
+  }, [fromId, toId, locLoading]);
 
-  async function search() {
-    if (!fromId || !toId) { setError("Please select both locations."); return; }
-    if (fromId === toId)  { setError("Departure and arrival locations cannot be the same."); return; }
+  async function search(overrideFrom, overrideTo, overrideDate) {
+    const fId = overrideFrom ?? fromId;
+    const tId = overrideTo   ?? toId;
+    const d   = overrideDate ?? date;
+
+    if (!fId || !tId) { setError("Please select both locations."); return; }
+    if (fId === tId)  { setError("Departure and arrival locations cannot be the same."); return; }
+
     setSearching(true); setFlights(null); setError("");
     try {
-      // FIX: date yalnız seçilibsə əlavə et
       const params = new URLSearchParams({
         PageNumber: 1,
         PageSize: 50,
-        FromLocationId: fromId,
-        ToLocationId: toId,
+        FromLocationId: fId,
+        ToLocationId: tId,
       });
-      if (date) params.append("Date", date);
+      if (d) params.append("Date", d);
 
       const res = await fetch(`${API_BASE}/PlaneTicket?${params.toString()}`, {
         method: "GET",
@@ -178,15 +234,16 @@ export default function PlanetTicket() {
       });
       if (!res.ok) throw new Error("No flights found or server error.");
       const result = await res.json();
-
-      // FIX: expired filter yumşaldıldı — yalnız keçmişdə olan biletləri çıxart (deyil, hamısını göstər)
       const list = result.data || [];
+
+      const fromLabel = locations.find((l) => String(l.id) === fId)?.name;
+      const toLabel   = locations.find((l) => String(l.id) === tId)?.name;
 
       setFlights({
         list,
-        fromLabel: fromLoc?.name,
-        toLabel:   toLoc?.name,
-        dateStr:   date ? new Date(date).toLocaleDateString("en-US") : "All dates",
+        fromLabel,
+        toLabel,
+        dateStr: d ? new Date(d).toLocaleDateString("en-US") : "All dates",
       });
     } catch (e) {
       setError("An error occurred while fetching flights: " + e.message);
@@ -290,7 +347,10 @@ export default function PlanetTicket() {
           {/* SEARCH BUTTON */}
           <button
             className={`fs-btn${searching ? " fs-btn--loading" : ""}`}
-            onClick={search}
+            onClick={() => {
+              autoSearchKey.current = null;
+              search();
+            }}
             disabled={searching}
           >
             {searching ? (
@@ -375,7 +435,6 @@ export default function PlanetTicket() {
                             </div>
                           </div>
                           <div className="ft-time-block ft-time-block--right">
-                            {/* FIX: endDate varsa göstər, yoxsa tire */}
                             <span className="ft-time">
                               {f.endDate ? formatTime(f.endDate) : "--:--"}
                             </span>

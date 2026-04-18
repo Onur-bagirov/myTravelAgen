@@ -11,7 +11,6 @@
   margin: 0 auto;
 }
 
-/* ── Header ── */
 .cpt-header {
   display: flex;
   align-items: center;
@@ -46,7 +45,6 @@
   color: rgba(255,255,255,0.45);
 }
 
-/* ── Alert ── */
 .cpt-alert {
   border-radius: 10px;
   padding: 12px 16px;
@@ -67,7 +65,6 @@
   color: #6ee7b7;
 }
 
-/* ── Form card ── */
 .cpt-form-card {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -76,7 +73,6 @@
   backdrop-filter: blur(8px);
 }
 
-/* ── Section title ── */
 .cpt-section-title {
   font-size: 11px;
   font-weight: 700;
@@ -95,7 +91,6 @@
   margin-top: 0;
 }
 
-/* ── Grids ── */
 .cpt-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -108,11 +103,11 @@
   gap: 14px;
 }
 
-/* ── Field ── */
 .cpt-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
 }
 
 .cpt-field label {
@@ -167,7 +162,6 @@
   font-weight: 600;
 }
 
-/* ── Hint banner ── */
 .cpt-hint-banner {
   margin-top: 10px;
   padding: 10px 14px;
@@ -182,7 +176,6 @@
   color: #ff9090;
 }
 
-/* ── Submit ── */
 .cpt-submit-btn {
   width: 100%;
   padding: 15px;
@@ -223,13 +216,12 @@
   border-top-color: #fff;
   border-radius: 50%;
   animation: cpt-spin 0.7s linear infinite;
-  display: inline-block;
+display: inline-block;
   flex-shrink: 0;
 }
 
 @keyframes cpt-spin { to { transform: rotate(360deg); } }
 
-/* ── Success wrap ── */
 .cpt-success-wrap {
   display: flex;
   flex-direction: column;
@@ -237,7 +229,6 @@
   gap: 24px;
 }
 
-/* ── Boarding pass ── */
 .cpt-boarding-pass {
   display: flex;
   width: 100%;
@@ -287,7 +278,6 @@
   color: #ff8080;
 }
 
-/* ── Route ── */
 .cpt-pass-route {
   display: flex;
   align-items: center;
@@ -345,7 +335,6 @@
   flex-shrink: 0;
 }
 
-/* ── Info grid ── */
 .cpt-pass-info-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -376,7 +365,6 @@
   color: #e2e8f0;
 }
 
-/* ── Perforation ── */
 .cpt-perforation {
   width: 24px;
   background: rgba(255,255,255,0.03);
@@ -396,7 +384,6 @@
   background: rgba(0,0,0,0.5);
 }
 
-/* ── Stub ── */
 .cpt-pass-right {
   width: 175px;
   flex-shrink: 0;
@@ -458,7 +445,6 @@
   min-width: 2px;
 }
 
-/* ── Action buttons ── */
 .cpt-actions {
   display: flex;
   gap: 12px;
@@ -497,7 +483,212 @@
   box-shadow: 0 8px 26px rgba(255,77,77,0.4);
 }
 
-/* ── Responsive ── */
+.loc-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.loc-field-wrap {
+  position: relative;
+}
+
+.loc-trigger {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 42px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.loc-trigger:focus {
+  outline: none;
+  border-color: #ff4d4d;
+  box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.15);
+}
+
+.loc-trigger--open {
+  border-color: #ff4d4d;
+  box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.15);
+}
+
+.loc-trigger-selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.loc-trigger-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.loc-trigger-country {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.35);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.loc-trigger-city {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loc-trigger-placeholder {
+  color: rgba(255,255,255,0.25);
+  font-size: 13px;
+}
+
+.loc-chevron {
+  color: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.loc-chevron--up {
+  transform: rotate(180deg);
+  color: #ff6060;
+}
+
+.loc-panel {
+  position: absolute;
+  z-index: 9999;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #1a0f1f;
+  border: 1px solid rgba(255, 77, 77, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow: hidden;
+  animation: loc-fade-in 0.15s ease;
+}
+
+@keyframes loc-fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.loc-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.loc-search {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  width: 100%;
+  caret-color: #ff6060;
+}
+
+.loc-search::placeholder {
+  color: rgba(255,255,255,0.2);
+}
+
+.loc-list {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,77,77,0.2) transparent;
+}
+
+.loc-list::-webkit-scrollbar { width: 4px; }
+.loc-list::-webkit-scrollbar-thumb {
+  background: rgba(255,77,77,0.2);
+  border-radius: 2px;
+}
+
+.loc-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.loc-item:hover {
+  background: rgba(255, 77, 77, 0.08);
+}
+
+.loc-item--selected {
+  background: rgba(255, 77, 77, 0.1);
+}
+
+.loc-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.loc-item-country {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.35);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.loc-item-city {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loc-check {
+  flex-shrink: 0;
+  color: #ff6060;
+}
+
+.loc-empty {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.2);
+}
+
 @media (max-width: 640px) {
   .cpt-page { padding: 20px 14px 60px; }
   .cpt-form-card { padding: 20px 16px; }

@@ -25,19 +25,39 @@ function getFlag(country = "") {
   return key ? COUNTRY_FLAGS[key] : "🌍";
 }
 
-/* ── Custom location dropdown ── */
 function LocationSelect({ locations, value, onChange, loading, label, dotClass }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const ref = useRef(null);
+  const searchRef = useRef(null);
   const selected = locations.find((l) => String(l.id) === String(value));
+
+  const filtered = locations.filter((l) => {
+    const q = search.toLowerCase();
+    return (
+      l.name?.toLowerCase().includes(q) ||
+      l.country?.toLowerCase().includes(q)
+    );
+  });
 
   useEffect(() => {
     function onClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        setSearch("");
+      }
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (open && searchRef.current) {
+      setTimeout(() => searchRef.current?.focus(), 50);
+    } else {
+      setSearch("");
+    }
+  }, [open]);
 
   if (loading) {
     return (
@@ -74,30 +94,50 @@ function LocationSelect({ locations, value, onChange, loading, label, dotClass }
 
       {open && (
         <div className="ls-dropdown">
-          {locations.map((l) => {
-            const isSel = String(l.id) === String(value);
-            return (
-              <div
-                key={l.id}
-                className={`ls-option${isSel ? " selected" : ""}`}
-                onClick={() => { onChange(String(l.id)); setOpen(false); }}
-              >
-                <div className="ls-option-flag">{getFlag(l.country)}</div>
-                <div className="ls-option-text">
-                  <span className="ls-option-country">{l.country}</span>
-                  <span className="ls-option-city">{l.name}</span>
-                </div>
-                <span className="ls-selected-dot" />
-              </div>
-            );
-          })}
+          <div className="ls-search-wrap">
+            <span className="ls-search-icon">🔍</span>
+            <input
+              ref={searchRef}
+              className="ls-search-input"
+              type="text"
+              placeholder="Search locations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+            />
+            {search && (
+              <button className="ls-search-clear" onClick={() => setSearch("")}>✕</button>
+            )}
+          </div>
+          <div className="ls-options-list">
+            {filtered.length === 0 ? (
+              <div className="ls-no-results">No locations found</div>
+            ) : (
+              filtered.map((l) => {
+                const isSel = String(l.id) === String(value);
+                return (
+                  <div
+                    key={l.id}
+                    className={`ls-option${isSel ? " selected" : ""}`}
+                    onClick={() => { onChange(String(l.id)); setOpen(false); setSearch(""); }}
+                  >
+                    <div className="ls-option-flag">{getFlag(l.country)}</div>
+                    <div className="ls-option-text">
+                      <span className="ls-option-country">{l.country}</span>
+                      <span className="ls-option-city">{l.name}</span>
+                    </div>
+                    <span className="ls-selected-dot" />
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-/* ── Barcode decoration ── */
 function Barcode({ seed = 0 }) {
   const heights = [14,20,10,28,16,22,12,26,18,14,24,10,20,16,28,12,22,18,10,26];
   return (
@@ -109,9 +149,6 @@ function Barcode({ seed = 0 }) {
   );
 }
 
-/* ══════════════════════════════
-   MAIN COMPONENT
-══════════════════════════════ */
 export default function TrainTicket() {
   const [locations, setLocations]   = useState([]);
   const [locLoading, setLocLoading] = useState(true);
@@ -122,6 +159,8 @@ export default function TrainTicket() {
   const [trains, setTrains]         = useState(null);
   const [error, setError]           = useState("");
   const [bookingTrain, setBookingTrain] = useState(null);
+
+  const autoSearchKey = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -142,24 +181,42 @@ export default function TrainTicket() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (locLoading) return;
+    if (!fromId || !toId || fromId === toId) return;
+    const key = `${fromId}-${toId}-${date}`;
+    if (autoSearchKey.current === key) return;
+    autoSearchKey.current = key;
+    search(fromId, toId, date);
+  }, [fromId, toId, locLoading]);
+
   const fromLoc = locations.find((l) => String(l.id) === String(fromId));
   const toLoc   = locations.find((l) => String(l.id) === String(toId));
 
-  async function search() {
-    if (!fromId || !toId) { setError("Zəhmət olmasa hər iki lokasiyanı seçin."); return; }
-    if (fromId === toId)  { setError("Çıxış və gəliş lokasiyaları eyni ola bilməz."); return; }
+  async function search(overrideFrom, overrideTo, overrideDate) {
+    const fId = overrideFrom ?? fromId;
+    const tId = overrideTo   ?? toId;
+    const d   = overrideDate ?? date;
+
+    if (!fId || !tId) { setError("Zəhmət olmasa hər iki lokasiyanı seçin."); return; }
+    if (fId === tId)  { setError("Çıxış və gəliş lokasiyaları eyni ola bilməz."); return; }
+
     setSearching(true); setTrains(null); setError("");
     try {
-      const params = new URLSearchParams({ PageNumber: 1, PageSize: 20, Date: date, FromLocationId: fromId, ToLocationId: toId });
+      const params = new URLSearchParams({ PageNumber: 1, PageSize: 20, Date: d, FromLocationId: fId, ToLocationId: tId });
       const res = await fetch(`${API_BASE}/TrainTicket?${params}`, { headers: getHeaders() });
       if (!res.ok) throw new Error("Qatar tapılmadı və ya server xətası.");
       const result = await res.json();
       const now = new Date();
+
+      const fromLabel = locations.find((l) => String(l.id) === fId)?.name;
+      const toLabel   = locations.find((l) => String(l.id) === tId)?.name;
+
       setTrains({
         list:      (result.data || []).filter((t) => new Date(t.dueDate) >= now),
-        fromLabel: fromLoc?.name,
-        toLabel:   toLoc?.name,
-        dateStr:   new Date(date).toLocaleDateString("az-AZ"),
+        fromLabel,
+        toLabel,
+        dateStr:   new Date(d).toLocaleDateString("az-AZ"),
       });
     } catch (e) {
       setError("Qatarlar gətirilərkən problem yarandı: " + e.message);
@@ -190,7 +247,6 @@ export default function TrainTicket() {
     return "ft-card--business";
   }
 
-  // ── Directly open booking page when a train card is clicked
   if (bookingTrain) {
     return (
       <TrainBooking
@@ -206,15 +262,11 @@ export default function TrainTicket() {
   return (
     <div className="fs-page">
       <div className="fs-inner">
-
-        {/* HEADER */}
         <div className="fs-header">
           <span className="fs-eyebrow">✦ StepTravel</span>
           <h1 className="fs-title">Plan Your <span className="fs-title-accent">Train</span></h1>
           <p className="fs-subtitle">Rahatlıqla yol planlaşdırın</p>
         </div>
-
-        {/* SEARCH CARD */}
         <div className="fs-card">
           <div className="fs-route-row">
             <LocationSelect
@@ -252,7 +304,10 @@ export default function TrainTicket() {
 
           <button
             className={`fs-btn${searching ? " fs-btn--loading" : ""}`}
-            onClick={search}
+            onClick={() => {
+              autoSearchKey.current = null;
+              search();
+            }}
             disabled={searching}
           >
             {searching ? (
@@ -262,15 +317,11 @@ export default function TrainTicket() {
             )}
           </button>
         </div>
-
-        {/* ERROR */}
         {error && (
           <div className="fs-error">
             <span className="fs-error-icon">⚠</span> {error}
           </div>
         )}
-
-        {/* RESULTS */}
         {trains && (
           <div className="fs-results">
             <div className="fs-results-header">
@@ -298,10 +349,9 @@ export default function TrainTicket() {
                       key={t.id}
                       className={`ft-card ${cardModifier}`}
                       style={{ animationDelay: `${i * 0.07}s` }}
-                      onClick={() => setBookingTrain(t)}  // ← birbaşa booking-ə keç
+                      onClick={() => setBookingTrain(t)}
                     >
                       <div className="ft-card-body">
-                        {/* TOP */}
                         <div className="ft-top">
                           <div className="ft-airline-block">
                             <div className="ft-airline-logo">
@@ -318,7 +368,6 @@ export default function TrainTicket() {
                           </div>
                         </div>
 
-                        {/* ROUTE */}
                         <div className="ft-route">
                           <div className="ft-time-block">
                             <span className="ft-time">{formatTime(t.dueDate)}</span>
@@ -342,7 +391,6 @@ export default function TrainTicket() {
 
                         <div className="ft-divider" />
 
-                        {/* BOTTOM */}
                         <div className="ft-bottom">
                           <div className="ft-bottom-left">
                             <div className="ft-tags">
@@ -359,7 +407,6 @@ export default function TrainTicket() {
                         </div>
                       </div>
 
-                      {/* SIDE */}
                       <div className="ft-card-side">
                         <div className="ft-variant-pill">Train</div>
                         <div className="ft-side-row">

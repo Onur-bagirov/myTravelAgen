@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ticket.css";
 
@@ -9,7 +9,6 @@ const authHeaders = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
-/* ── Validation ── */
 const rules = {
   airline: (v) => {
     if (!v?.trim()) return "Airline name is required";
@@ -118,7 +117,168 @@ function toISO(str) {
   return str.length === 16 ? str + ":00.000Z" : str + ".000Z";
 }
 
-/* ── Field ── */
+const countryColors = {
+  FR: { bg: "#1a3a6b", text: "#4a9eff" },
+  TR: { bg: "#6b1a1a", text: "#ff6b6b" },
+  AZ: { bg: "#1a3a1a", text: "#4aff6b" },
+  DE: { bg: "#3a3a1a", text: "#ffd700" },
+  GB: { bg: "#1a2a5a", text: "#6699ff" },
+  US: { bg: "#1a2a4a", text: "#66aaff" },
+  RU: { bg: "#2a1a3a", text: "#cc88ff" },
+  IT: { bg: "#1a3a2a", text: "#55cc88" },
+  ES: { bg: "#3a2a1a", text: "#ffaa44" },
+  DEFAULT: { bg: "#2a2a3a", text: "#9090c0" },
+};
+
+function getCountryCode(location) {
+  if (!location) return "??";
+  if (location.countryCode) return location.countryCode.toUpperCase();
+  const country = (location.country || "").toUpperCase();
+  const map = {
+    FRANSA: "FR", FRANCE: "FR",
+    TURKIYE: "TR", TURKEY: "TR", "TÜRKİYE": "TR",
+    AZERBAIJAN: "AZ", AZERBAYCAN: "AZ",
+    GERMANY: "DE", DEUTSCHLAND: "DE",
+    "UNITED KINGDOM": "GB", UK: "GB",
+    "UNITED STATES": "US", USA: "US",
+    RUSSIA: "RU",
+    ITALY: "IT", ITALIA: "IT",
+    SPAIN: "ES", ESPANA: "ES",
+  };
+  return map[country] || country.slice(0, 2) || "??";
+}
+
+function LocationAvatar({ location }) {
+  const code = getCountryCode(location);
+  const colors = countryColors[code] || countryColors.DEFAULT;
+  return (
+    <div
+      className="loc-avatar"
+      style={{ background: colors.bg, color: colors.text, border: `1.5px solid ${colors.text}30` }}
+    >
+      {code.slice(0, 2)}
+    </div>
+  );
+}
+
+function LocationDropdown({ locations, value, onChange, onBlur, loading, error, touched, label }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const wrapRef = useRef(null);
+  const searchRef = useRef(null);
+
+  const selected = locations.find(l => String(l.id) === String(value));
+
+  const filtered = search.trim()
+    ? locations.filter(l =>
+        l.name?.toLowerCase().includes(search.toLowerCase()) ||
+        (l.country || "").toLowerCase().includes(search.toLowerCase())
+      )
+    : locations;
+
+  useEffect(() => {
+    if (open && searchRef.current) searchRef.current.focus();
+  }, [open]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false);
+        setSearch("");
+        if (onBlur) onBlur();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onBlur]);
+
+  const handleSelect = (loc) => {
+    onChange({ target: { value: String(loc.id) } });
+    setOpen(false);
+    setSearch("");
+  };
+
+  return (
+    <div className="cpt-field loc-field-wrap" ref={wrapRef}>
+      <label>{label}</label>
+      <div
+        className={`loc-trigger${open ? " loc-trigger--open" : ""}${touched && error ? " cpt-input--error" : ""}`}
+        onClick={() => { if (!loading) setOpen(o => !o); }}
+        tabIndex={0}
+        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(o => !o); } }}
+        role="combobox"
+        aria-expanded={open}
+      >
+        {selected ? (
+          <div className="loc-trigger-selected">
+            <LocationAvatar location={selected} />
+            <div className="loc-trigger-text">
+              <span className="loc-trigger-country">{(selected.country || "").toUpperCase()}</span>
+              <span className="loc-trigger-city">{selected.name}</span>
+            </div>
+          </div>
+        ) : (
+          <span className="loc-trigger-placeholder">
+            {loading ? "Loading..." : "— Select location —"}
+          </span>
+        )}
+        <svg
+          className={`loc-chevron${open ? " loc-chevron--up" : ""}`}
+          width="14" height="14" viewBox="0 0 14 14" fill="none"
+        >
+          <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      {open && (
+        <div className="loc-panel">
+          <div className="loc-search-wrap">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0, color: "rgba(255,255,255,0.3)" }}>
+              <circle cx="5.5" cy="5.5" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <input
+              ref={searchRef}
+              className="loc-search"
+              placeholder="Search locations..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onMouseDown={e => e.stopPropagation()}
+            />
+          </div>
+          <div className="loc-list">
+            {filtered.length === 0 && (
+              <div className="loc-empty">No locations found</div>
+            )}
+            {filtered.map(loc => {
+              const isSelected = String(loc.id) === String(value);
+              return (
+                <div
+                  key={loc.id}
+                  className={`loc-item${isSelected ? " loc-item--selected" : ""}`}
+                  onClick={() => handleSelect(loc)}
+                >
+                  <LocationAvatar location={loc} />
+                  <div className="loc-item-text">
+                    <span className="loc-item-country">{(loc.country || "").toUpperCase()}</span>
+                    <span className="loc-item-city">{loc.name}</span>
+                  </div>
+                  {isSelected && (
+                    <svg className="loc-check" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M2.5 7l3.5 3.5 5.5-6" stroke="#ff6060" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {touched && error && <span className="cpt-field-error">⚠ {error}</span>}
+    </div>
+  );
+}
+
 function Field({ label, name, type = "text", placeholder, min, max, step, value, onChange, onBlur, error, touched }) {
   return (
     <div className="cpt-field">
@@ -141,7 +301,6 @@ function Field({ label, name, type = "text", placeholder, min, max, step, value,
   );
 }
 
-/* ── Section title ── */
 function SectionTitle({ icon, text }) {
   return (
     <div className="cpt-section-title">
@@ -151,7 +310,6 @@ function SectionTitle({ icon, text }) {
   );
 }
 
-/* ── Main ── */
 export default function CreatePlaneTicket() {
   const navigate = useNavigate();
 
@@ -322,7 +480,6 @@ export default function CreatePlaneTicket() {
   const displayTo   = createdTicket?._toName   || toName;
   const totalSeats  = createdTicket?.totalTicketsCreated ?? (Number(form.rowCount) * Number(form.seatsPerRow));
 
-  /* ══ Form view ══ */
   if (!isGenerated) return (
     <div className="cpt-page">
       <div className="cpt-wrapper">
@@ -373,45 +530,32 @@ export default function CreatePlaneTicket() {
 
             <SectionTitle icon="📍" text="Route" />
             <div className="cpt-grid-2">
-              <div className="cpt-field">
-                <label>From</label>
-                <select
-                  value={form.locationId}
-                  onChange={handleFromLocation}
-                  onBlur={() => {
-                    setTouched(p => ({ ...p, locationId: true }));
-                    setErrors(p => ({ ...p, locationId: validate("locationId", form.locationId) }));
-                  }}
-                  disabled={locLoading}
-                  className={`cpt-select${touched.locationId && errors.locationId ? " cpt-input--error" : ""}`}
-                >
-                  <option value="">{locLoading ? "Loading..." : "— Select location —"}</option>
-                  {locations.map(l => (
-                    <option key={l.id} value={l.id}>{l.name}{l.country ? ` (${l.country})` : ""}</option>
-                  ))}
-                </select>
-                {touched.locationId && errors.locationId && <span className="cpt-field-error">⚠ {errors.locationId}</span>}
-              </div>
-
-              <div className="cpt-field">
-                <label>To</label>
-                <select
-                  value={form.toLocationId}
-                  onChange={handleToLocation}
-                  onBlur={() => {
-                    setTouched(p => ({ ...p, toLocationId: true }));
-                    setErrors(p => ({ ...p, toLocationId: validate("toLocationId", form.toLocationId, form) }));
-                  }}
-                  disabled={locLoading}
-                  className={`cpt-select${touched.toLocationId && errors.toLocationId ? " cpt-input--error" : ""}`}
-                >
-                  <option value="">{locLoading ? "Loading..." : "— Select location —"}</option>
-                  {locations.map(l => (
-                    <option key={l.id} value={l.id}>{l.name}{l.country ? ` (${l.country})` : ""}</option>
-                  ))}
-                </select>
-                {touched.toLocationId && errors.toLocationId && <span className="cpt-field-error">⚠ {errors.toLocationId}</span>}
-              </div>
+              <LocationDropdown
+                label="From"
+                locations={locations}
+                value={form.locationId}
+                onChange={handleFromLocation}
+                onBlur={() => {
+                  setTouched(p => ({ ...p, locationId: true }));
+                  setErrors(p => ({ ...p, locationId: validate("locationId", form.locationId) }));
+                }}
+                loading={locLoading}
+                error={errors.locationId}
+                touched={touched.locationId}
+              />
+              <LocationDropdown
+                label="To"
+                locations={locations}
+                value={form.toLocationId}
+                onChange={handleToLocation}
+                onBlur={() => {
+                  setTouched(p => ({ ...p, toLocationId: true }));
+                  setErrors(p => ({ ...p, toLocationId: validate("toLocationId", form.toLocationId, form) }));
+                }}
+                loading={locLoading}
+                error={errors.toLocationId}
+                touched={touched.toLocationId}
+              />
             </div>
 
             <SectionTitle icon="💺" text="Seat Configuration" />
@@ -468,7 +612,6 @@ export default function CreatePlaneTicket() {
     </div>
   );
 
-  /* ══ Success / Boarding pass view ══ */
   return (
     <div className="cpt-page">
       <div className="cpt-wrapper" style={{ maxWidth: 760 }}>
@@ -484,7 +627,6 @@ export default function CreatePlaneTicket() {
         <div className="cpt-success-wrap">
           <div className="cpt-boarding-pass">
 
-            {/* Left */}
             <div className="cpt-pass-left">
               <div className="cpt-pass-header">
                 <div>
@@ -531,14 +673,12 @@ export default function CreatePlaneTicket() {
               </div>
             </div>
 
-            {/* Perforation */}
             <div className="cpt-perforation">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="cpt-perf-dot" />
               ))}
             </div>
 
-            {/* Stub */}
             <div className="cpt-pass-right">
               <div className="cpt-stub-airline">{createdTicket?.airline || form.airline}</div>
               <div className="cpt-stub-route">
@@ -568,7 +708,6 @@ export default function CreatePlaneTicket() {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="cpt-actions">
             <button className="cpt-action-btn cpt-action-btn--primary" onClick={resetForm}>
               + New Ticket

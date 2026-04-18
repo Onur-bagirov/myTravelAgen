@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import "./showTrain.css";
 import PaymentModal from "../PymetModal/pyMod";
 
@@ -66,7 +67,179 @@ function parseSeatName(name) {
   return { row: parseInt(m[1], 10), col: m[2].charCodeAt(0) - 65 };
 }
 
-// ── Toast ────────────────────────────────────────────────────
+const COUNTRY_DATA = {
+  france:       { code: "FR", flag: "🇫🇷" },
+  turkey:       { code: "TR", flag: "🇹🇷" },
+  türkiye:      { code: "TR", flag: "🇹🇷" },
+  turkiye:      { code: "TR", flag: "🇹🇷" },
+  azerbaijan:   { code: "AZ", flag: "🇦🇿" },
+  azerbaycan:   { code: "AZ", flag: "🇦🇿" },
+  germany:      { code: "DE", flag: "🇩🇪" },
+  uk:           { code: "GB", flag: "🇬🇧" },
+  "united kingdom": { code: "GB", flag: "🇬🇧" },
+  russia:       { code: "RU", flag: "🇷🇺" },
+  usa:          { code: "US", flag: "🇺🇸" },
+  "united states": { code: "US", flag: "🇺🇸" },
+  italy:        { code: "IT", flag: "🇮🇹" },
+  spain:        { code: "ES", flag: "🇪🇸" },
+  china:        { code: "CN", flag: "🇨🇳" },
+  japan:        { code: "JP", flag: "🇯🇵" },
+  uae:          { code: "AE", flag: "🇦🇪" },
+  "united arab emirates": { code: "AE", flag: "🇦🇪" },
+  georgia:      { code: "GE", flag: "🇬🇪" },
+  netherlands:  { code: "NL", flag: "🇳🇱" },
+  belgium:      { code: "BE", flag: "🇧🇪" },
+  switzerland:  { code: "CH", flag: "🇨🇭" },
+  austria:      { code: "AT", flag: "🇦🇹" },
+  poland:       { code: "PL", flag: "🇵🇱" },
+  czechia:      { code: "CZ", flag: "🇨🇿" },
+  ukraine:      { code: "UA", flag: "🇺🇦" },
+  kazakhstan:   { code: "KZ", flag: "🇰🇿" },
+  iran:         { code: "IR", flag: "🇮🇷" },
+};
+
+function getCountryMeta(countryName = "") {
+  const key = countryName.toLowerCase().trim();
+  return COUNTRY_DATA[key] || { code: countryName.slice(0, 2).toUpperCase(), flag: "🌐" };
+}
+
+function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+  const ref = useRef(null);
+  const triggerRef = useRef(null);
+
+  const selected = locations.find(l => String(l.id) === String(value));
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const updatePos = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropPos({
+        top: rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handleScroll = () => updatePos();
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [open]);
+
+  const handleOpen = () => {
+    updatePos();
+    setOpen(o => !o);
+  };
+
+  const filtered = locations.filter(l =>
+    l.name?.toLowerCase().includes(search.toLowerCase()) ||
+    l.country?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSelect = (id) => {
+    onChange(id);
+    setOpen(false);
+    setSearch("");
+  };
+
+  const dropdown = open ? createPortal(
+    <div
+      className="loc-dropdown"
+      style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, bottom: "auto" }}
+    >
+      <div className="loc-search-wrap">
+        <span className="loc-search-icon">🔍</span>
+        <input
+          className="loc-search-input"
+          placeholder="Search locations..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          autoFocus
+        />
+      </div>
+      <div className="loc-list">
+        <button
+          type="button"
+          className={`loc-item loc-item--all ${!value ? "loc-item--active" : ""}`}
+          onClick={() => handleSelect("")}
+        >
+          <span className="loc-item-icon">🌍</span>
+          <div className="loc-item-text">
+            <span className="loc-item-all-label">All Locations</span>
+          </div>
+          {!value && <span className="loc-item-check">✓</span>}
+        </button>
+
+        {filtered.length === 0 && (
+          <div className="loc-no-results">No locations found</div>
+        )}
+
+        {filtered.map(loc => {
+          const meta = getCountryMeta(loc.country || "");
+          const isActive = String(loc.id) === String(value);
+          return (
+            <button
+              type="button"
+              key={loc.id}
+              className={`loc-item ${isActive ? "loc-item--active" : ""}`}
+              onClick={() => handleSelect(String(loc.id))}
+            >
+              <span className="loc-item-avatar" data-code={meta.code}>
+                {meta.flag}
+              </span>
+              <div className="loc-item-text">
+                <span className="loc-item-country">{(loc.country || "").toUpperCase()}</span>
+                <span className="loc-item-city">{loc.name}</span>
+              </div>
+              {isActive && <span className="loc-item-check">✓</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <div className="loc-select-wrap" ref={ref}>
+      <label className="loc-select-label">{label}</label>
+      <button
+        ref={triggerRef}
+        type="button"
+        className={`loc-select-trigger ${open ? "loc-select-trigger--open" : ""}`}
+        onClick={handleOpen}
+      >
+        {selected ? (
+          <span className="loc-trigger-inner">
+            <span className="loc-trigger-flag">
+              {getCountryMeta(selected.country || "").flag}
+            </span>
+            <span className="loc-trigger-name">{selected.name}</span>
+          </span>
+        ) : (
+          <span className="loc-trigger-placeholder">{placeholder}</span>
+        )}
+        <span className={`loc-trigger-chevron ${open ? "loc-trigger-chevron--up" : ""}`}>
+          ›
+        </span>
+      </button>
+      {dropdown}
+    </div>
+  );
+}
+
 function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
@@ -82,7 +255,6 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
-// ── Confirm Delete Modal ─────────────────────────────────────
 function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   return (
     <div className="st-modal-overlay" onClick={onCancel}>
@@ -102,7 +274,6 @@ function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   );
 }
 
-// ── Edit Modal ───────────────────────────────────────────────
 function EditModal({ ticket, onClose, onSaved }) {
   const [form, setForm] = useState({
     id:           ticket.id,
@@ -121,19 +292,15 @@ function EditModal({ ticket, onClose, onSaved }) {
 
   const validate = () => {
     const errs = {};
-
-    // Train Company
     if (!form.trainCompany.trim()) {
       errs.trainCompany = "Train company is required.";
     } else if (form.trainCompany.trim().length < 2) {
       errs.trainCompany = "Train company must be at least 2 characters.";
     } else if (form.trainCompany.trim().length > 60) {
       errs.trainCompany = "Train company must be at most 60 characters.";
-    } else if (!/^[a-zA-Z0-9 .'\-&]+$/.test(form.trainCompany.trim())) {
+    } else if (!/^[a-zA-Z0-9 .\'\-&]+$/.test(form.trainCompany.trim())) {
       errs.trainCompany = "Train company contains invalid characters.";
     }
-
-    // Train Number
     if (!form.trainNumber.trim()) {
       errs.trainNumber = "Train number is required.";
     } else if (form.trainNumber.trim().length > 20) {
@@ -141,8 +308,6 @@ function EditModal({ ticket, onClose, onSaved }) {
     } else if (!/^[A-Za-z0-9\-]+$/.test(form.trainNumber.trim())) {
       errs.trainNumber = "Train number must be letters and numbers only.";
     }
-
-    // Vagon Number
     if (form.vagonNumber !== "" && form.vagonNumber !== null) {
       const v = Number(form.vagonNumber);
       if (isNaN(v) || !Number.isInteger(v)) {
@@ -153,7 +318,6 @@ function EditModal({ ticket, onClose, onSaved }) {
         errs.vagonNumber = "Vagon number cannot exceed 999.";
       }
     }
-
     return errs;
   };
 
@@ -172,7 +336,7 @@ function EditModal({ ticket, onClose, onSaved }) {
         trainCompany: form.trainCompany.trim(),
         trainNumber:  form.trainNumber.trim(),
         vagonNumber:  form.vagonNumber !== "" ? parseInt(form.vagonNumber) : null,
-        state:        0, // Always Pending
+        state:        0,
       };
       const res = await fetch(`${BASE_URL}/TrainTicket`, {
         method:  "PUT",
@@ -197,57 +361,29 @@ function EditModal({ ticket, onClose, onSaved }) {
       <div className="st-edit-modal" onClick={e => e.stopPropagation()}>
         <button className="st-modal-close" onClick={onClose}>✕</button>
         <div className="st-edit-modal-title">✏️ Edit Ticket #{ticket.id}</div>
-
         {error && <div className="st-error-banner">⚠ {error}</div>}
-
         <div className="st-edit-form">
           <div className="st-edit-field">
             <label>Train Company <span className="st-edit-required">*</span></label>
-            <input
-              name="trainCompany"
-              value={form.trainCompany}
-              onChange={handleChange}
-              placeholder="e.g. ADY"
-              className={validationErrors.trainCompany ? "st-edit-input--error" : ""}
-            />
-            {validationErrors.trainCompany && (
-              <span className="st-edit-field-error">{validationErrors.trainCompany}</span>
-            )}
+            <input name="trainCompany" value={form.trainCompany} onChange={handleChange} placeholder="e.g. ADY"
+              className={validationErrors.trainCompany ? "st-edit-input--error" : ""} />
+            {validationErrors.trainCompany && <span className="st-edit-field-error">{validationErrors.trainCompany}</span>}
           </div>
           <div className="st-edit-field">
             <label>Train Number <span className="st-edit-required">*</span></label>
-            <input
-              name="trainNumber"
-              value={form.trainNumber}
-              onChange={handleChange}
-              placeholder="e.g. T-101"
-              className={validationErrors.trainNumber ? "st-edit-input--error" : ""}
-            />
-            {validationErrors.trainNumber && (
-              <span className="st-edit-field-error">{validationErrors.trainNumber}</span>
-            )}
+            <input name="trainNumber" value={form.trainNumber} onChange={handleChange} placeholder="e.g. T-101"
+              className={validationErrors.trainNumber ? "st-edit-input--error" : ""} />
+            {validationErrors.trainNumber && <span className="st-edit-field-error">{validationErrors.trainNumber}</span>}
           </div>
           <div className="st-edit-field">
             <label>Vagon Number</label>
-            <input
-              name="vagonNumber"
-              type="number"
-              min={1}
-              value={form.vagonNumber}
-              onChange={handleChange}
-              placeholder="e.g. 5"
-              className={validationErrors.vagonNumber ? "st-edit-input--error" : ""}
-            />
-            {validationErrors.vagonNumber && (
-              <span className="st-edit-field-error">{validationErrors.vagonNumber}</span>
-            )}
+            <input name="vagonNumber" type="number" min={1} value={form.vagonNumber} onChange={handleChange} placeholder="e.g. 5"
+              className={validationErrors.vagonNumber ? "st-edit-input--error" : ""} />
+            {validationErrors.vagonNumber && <span className="st-edit-field-error">{validationErrors.vagonNumber}</span>}
           </div>
         </div>
-
         <div className="st-edit-actions">
-          <button className="st-edit-cancel-btn" onClick={onClose} disabled={saving}>
-            Cancel
-          </button>
+          <button className="st-edit-cancel-btn" onClick={onClose} disabled={saving}>Cancel</button>
           <button className="st-edit-save-btn" onClick={handleSubmit} disabled={saving}>
             {saving ? "Saving…" : "Save Changes"}
           </button>
@@ -257,7 +393,6 @@ function EditModal({ ticket, onClose, onSaved }) {
   );
 }
 
-/* ─── Seat Map ─── */
 function SeatMap({ seats, selectedSeatId, onSelect }) {
   if (!seats.length) return <p className="st-no-seats">No seats found for this ticket.</p>;
 
@@ -290,7 +425,6 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
         <div className="st-modal-stat st-modal-stat--occ">🔴 {occupied} Occupied</div>
         <div className="st-modal-stat">💺 {seats.length} Total</div>
       </div>
-
       <div className="st-seatmap-legend">
         {Object.entries(variantColors).map(([vid, color]) => {
           const sample = seats.find((s) => String(s.variantId) === String(vid));
@@ -307,7 +441,6 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
           Occupied
         </span>
       </div>
-
       <div className="st-seatmap-cabin">
         <div className="st-train-nose">🚂 Locomotive (Front)</div>
         {grid.map((row, ri) => (
@@ -325,11 +458,7 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
                       seat.isOccupied ? "st-seat--occupied" : "st-seat--free",
                       isSelected ? "st-seat--selected" : "",
                     ].filter(Boolean).join(" ")}
-                    style={
-                      !seat.isOccupied && !isSelected
-                        ? { "--seat-color": color, "--seat-bg": `${color}22` }
-                        : {}
-                    }
+                    style={!seat.isOccupied && !isSelected ? { "--seat-color": color, "--seat-bg": `${color}22` } : {}}
                     disabled={seat.isOccupied}
                     onClick={() => !seat.isOccupied && onSelect(seat)}
                     title={`${seat.name} — ${seat.variantName}`}
@@ -348,7 +477,6 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
   );
 }
 
-/* ─── Booking Modal ─── */
 function BookingModal({ ticket, onClose }) {
   const [seats, setSeats]               = useState([]);
   const [loadingSeats, setLoadingSeats] = useState(true);
@@ -359,9 +487,7 @@ function BookingModal({ ticket, onClose }) {
   const [success, setSuccess]           = useState(false);
   const [showPayment, setShowPayment]   = useState(false);
 
-  const totalPrice = selectedSeat
-    ? Number(selectedSeat.variantPrice ?? 0).toFixed(2)
-    : "—";
+  const totalPrice = selectedSeat ? Number(selectedSeat.variantPrice ?? 0).toFixed(2) : "—";
 
   useEffect(() => {
     if (!ticket?.id) return;
@@ -392,16 +518,12 @@ function BookingModal({ ticket, onClose }) {
       if (!res.ok) {
         let errMsg = result?.message || result?.title || `Server error: ${res.status}`;
         if (result?.errors) errMsg = Object.values(result.errors).flat().join(", ");
-        setSeats((prev) =>
-          prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s)
-        );
+        setSeats((prev) => prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
         setSelectedSeat(null);
         throw new Error(errMsg);
       }
       if (!result?.data) {
-        setSeats((prev) =>
-          prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s)
-        );
+        setSeats((prev) => prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
         setSelectedSeat(null);
         throw new Error("This seat is already taken. Please choose another.");
       }
@@ -439,7 +561,6 @@ function BookingModal({ ticket, onClose }) {
       <div className="st-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
         <div className="st-modal">
           <button className="st-modal-close" onClick={onClose}>✕</button>
-
           <div className="st-modal-company">{ticket.trainCompany}</div>
           <div className="st-modal-route">
             <span>{fromName}</span>
@@ -450,21 +571,13 @@ function BookingModal({ ticket, onClose }) {
             <span>Wagon: <strong>{ticket.vagonNumber ?? "—"}</strong></span>
             <span>{fmt(ticket.dueDate)}</span>
           </div>
-
           {loadingSeats ? (
-            <div className="st-state" style={{ padding: "32px 0" }}>
-              <div className="st-spinner" />
-            </div>
+            <div className="st-state" style={{ padding: "32px 0" }}><div className="st-spinner" /></div>
           ) : seatsError ? (
             <div className="st-error-banner">{seatsError}</div>
           ) : (
-            <SeatMap
-              seats={seats}
-              selectedSeatId={selectedSeat?.id}
-              onSelect={setSelectedSeat}
-            />
+            <SeatMap seats={seats} selectedSeatId={selectedSeat?.id} onSelect={setSelectedSeat} />
           )}
-
           {selectedSeat && (
             <div className="st-selected-banner">
               💺 Selected: <strong>{selectedSeat.name}</strong>
@@ -472,9 +585,7 @@ function BookingModal({ ticket, onClose }) {
               &nbsp;|&nbsp; Total: <strong>{totalPrice} ₼</strong>
             </div>
           )}
-
           {buyError && <div className="st-error-banner">{buyError}</div>}
-
           {selectedSeat && (
             <button className="st-book-btn" disabled={buying} onClick={() => setShowPayment(true)}>
               {buying ? "Processing..." : `🎫 Book Ticket · ${totalPrice} ₼`}
@@ -482,7 +593,6 @@ function BookingModal({ ticket, onClose }) {
           )}
         </div>
       </div>
-
       {showPayment && (
         <PaymentModal
           amount={totalPrice}
@@ -495,7 +605,6 @@ function BookingModal({ ticket, onClose }) {
   );
 }
 
-/* ─── Ticket Card ─── */
 function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const [showEdit,    setShowEdit]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -505,10 +614,7 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const companyMode = isCompany(role);
 
   const seats = ticket.availableSeats;
-  const seatsClass =
-    seats <= 5  ? "st-info-val--low" :
-    seats <= 15 ? "st-info-val--warn" :
-                  "st-info-val--ok";
+  const seatsClass = seats <= 5 ? "st-info-val--low" : seats <= 15 ? "st-info-val--warn" : "st-info-val--ok";
 
   const fromCode = (ticket.from?.split(",")[0] ?? "???").slice(0, 3).toUpperCase();
   const toCode   = (ticket.to?.split(",")[0]   ?? "???").slice(0, 3).toUpperCase();
@@ -527,9 +633,7 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
     setDeleting(true);
     try {
       const res = await fetch(`${BASE_URL}/TrainTicket`, {
-        method:  "DELETE",
-        headers: authHeaders(),
-        body:    JSON.stringify({ id: ticket.id }),
+        method: "DELETE", headers: authHeaders(), body: JSON.stringify({ id: ticket.id }),
       });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
@@ -550,28 +654,17 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
           <div className="st-card-company">{ticket.trainCompany}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="st-card-status">⏳ Pending</span>
-
-            {/* Edit button — Admin or Company */}
             {(adminMode || companyMode) && (
-              <button
-                className="st-action-btn st-action-btn--edit"
-                onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
-                title="Edit Ticket"
-              >✏️</button>
+              <button className="st-action-btn st-action-btn--edit"
+                onClick={(e) => { e.stopPropagation(); setShowEdit(true); }} title="Edit Ticket">✏️</button>
             )}
-
-            {/* Delete button — Admin only */}
             {adminMode && (
-              <button
-                className="st-action-btn st-action-btn--delete"
+              <button className="st-action-btn st-action-btn--delete"
                 onClick={(e) => { e.stopPropagation(); setShowConfirm(true); }}
-                disabled={deleting}
-                title="Delete Ticket"
-              >{deleting ? "…" : "🗑️"}</button>
+                disabled={deleting} title="Delete Ticket">{deleting ? "…" : "🗑️"}</button>
             )}
           </div>
         </div>
-
         <div className="st-card-route">
           <div className="st-card-city">
             <span className="st-card-code">{fromCode}</span>
@@ -589,7 +682,6 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
             <span className="st-card-city-name">{toFull}</span>
           </div>
         </div>
-
         <div className="st-card-info">
           <div className="st-info-item">
             <span className="st-info-label">DATE</span>
@@ -604,7 +696,6 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
             <span className="st-info-val">{ticket.vagonNumber ?? "—"}</span>
           </div>
         </div>
-
         <div className="st-card-info st-card-info--2col">
           <div className="st-info-item">
             <span className="st-info-label">PRICE</span>
@@ -615,35 +706,19 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
             <span className={`st-info-val ${seatsClass}`}>{seats}</span>
           </div>
         </div>
-
-        <button className="st-seatmap-btn" onClick={onClick}>
-          💺 Seat Map
-        </button>
+        <button className="st-seatmap-btn" onClick={onClick}>💺 Seat Map</button>
       </div>
-
       {showEdit && (
-        <EditModal
-          ticket={ticket}
-          onClose={() => setShowEdit(false)}
-          onSaved={(updatedBody) => {
-            onEdited(updatedBody);
-            onToast(`Ticket #${updatedBody.id} updated successfully.`, "success");
-          }}
-        />
+        <EditModal ticket={ticket} onClose={() => setShowEdit(false)}
+          onSaved={(updatedBody) => { onEdited(updatedBody); onToast(`Ticket #${updatedBody.id} updated successfully.`, "success"); }} />
       )}
-
       {showConfirm && (
-        <ConfirmDeleteModal
-          ticketId={ticket.id}
-          onConfirm={handleDeleteConfirmed}
-          onCancel={() => setShowConfirm(false)}
-        />
+        <ConfirmDeleteModal ticketId={ticket.id} onConfirm={handleDeleteConfirmed} onCancel={() => setShowConfirm(false)} />
       )}
     </>
   );
 }
 
-/* ─── Main Page ─── */
 const PAGE_SIZE = 9;
 const EMPTY_FILTERS = { trainCompany: "", date: "", fromLocationId: "", toLocationId: "" };
 
@@ -659,9 +734,7 @@ export default function ShowTrainTickets() {
   const [toast, setToast]               = useState(null);
 
   const role = getUserRole();
-
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-
   const showToast = (message, type = "success") => setToast({ message, type });
 
   useEffect(() => {
@@ -693,27 +766,13 @@ export default function ShowTrainTickets() {
 
   useEffect(() => { fetchTickets(page); }, [page, fetchTickets]);
 
-  const handleReset = () => {
-    setFilters(EMPTY_FILTERS);
-    setPage(1);
-  };
-
-  const handleSearch = () => {
-    setPage(1);
-    fetchTickets(1);
-  };
+  const handleReset = () => { setFilters(EMPTY_FILTERS); setPage(1); };
+  const handleSearch = () => { setPage(1); fetchTickets(1); };
 
   return (
     <div className="st-page">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* Header */}
       <div className="st-header">
         <div className="st-title-block">
           <div className="st-icon">🚂</div>
@@ -724,47 +783,29 @@ export default function ShowTrainTickets() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="st-filters">
         <div className="st-filter-grid">
           <div className="st-filter-group">
             <label>Company</label>
-            <input
-              type="text"
-              placeholder="e.g. ADY"
-              value={filters.trainCompany}
-              onChange={(e) => setFilters({ ...filters, trainCompany: e.target.value })}
-            />
+            <input type="text" placeholder="e.g. ADY" value={filters.trainCompany}
+              onChange={(e) => setFilters({ ...filters, trainCompany: e.target.value })} />
           </div>
-          <div className="st-filter-group">
-            <label>From</label>
-            <select
-              className="st-filter-select"
-              value={filters.fromLocationId}
-              onChange={(e) => setFilters({ ...filters, fromLocationId: e.target.value })}
-            >
-              <option value="">— All Locations —</option>
-              {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </select>
-          </div>
-          <div className="st-filter-group">
-            <label>To</label>
-            <select
-              className="st-filter-select"
-              value={filters.toLocationId}
-              onChange={(e) => setFilters({ ...filters, toLocationId: e.target.value })}
-            >
-              <option value="">— All Locations —</option>
-              {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </select>
-          </div>
+          <LocationSelect
+            label="From"
+            value={filters.fromLocationId}
+            onChange={(val) => setFilters({ ...filters, fromLocationId: val })}
+            locations={locations}
+          />
+          <LocationSelect
+            label="To"
+            value={filters.toLocationId}
+            onChange={(val) => setFilters({ ...filters, toLocationId: val })}
+            locations={locations}
+          />
           <div className="st-filter-group">
             <label>Date</label>
-            <input
-              type="date"
-              value={filters.date}
-              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-            />
+            <input type="date" value={filters.date}
+              onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
           </div>
         </div>
         <div className="st-filter-actions">
@@ -774,49 +815,26 @@ export default function ShowTrainTickets() {
       </div>
 
       <div className="st-content">
-        {loading && (
-          <div className="st-state">
-            <div className="st-spinner" />
-            <p>Loading...</p>
-          </div>
-        )}
-
+        {loading && <div className="st-state"><div className="st-spinner" /><p>Loading...</p></div>}
         {error && !loading && (
           <div className="st-state st-state-error">
-            <span>⚠️</span>
-            <p>{error}</p>
+            <span>⚠️</span><p>{error}</p>
             <button onClick={() => fetchTickets(page)}>Try Again</button>
           </div>
         )}
-
         {!loading && !error && tickets.length === 0 && (
-          <div className="st-state">
-            <span className="st-empty-icon">🚂</span>
-            <p>No tickets found.</p>
-          </div>
+          <div className="st-state"><span className="st-empty-icon">🚂</span><p>No tickets found.</p></div>
         )}
-
         {!loading && !error && tickets.length > 0 && (
           <div className="st-grid">
             {tickets.map((t) => (
-              <TicketCard
-                key={t.id}
-                ticket={t}
-                role={role}
+              <TicketCard key={t.id} ticket={t} role={role}
                 onClick={() => setActiveTicket(t)}
-                onDeleted={(id) => {
-                  setTickets(prev => prev.filter(tk => tk.id !== id));
-                  setTotalCount(c => c - 1);
-                }}
+                onDeleted={(id) => { setTickets(prev => prev.filter(tk => tk.id !== id)); setTotalCount(c => c - 1); }}
                 onEdited={(updatedBody) => {
                   setTickets(prev => prev.map(tk =>
                     tk.id === updatedBody.id
-                      ? {
-                          ...tk,
-                          trainCompany: updatedBody.trainCompany,
-                          trainNumber:  updatedBody.trainNumber,
-                          vagonNumber:  updatedBody.vagonNumber,
-                        }
+                      ? { ...tk, trainCompany: updatedBody.trainCompany, trainNumber: updatedBody.trainNumber, vagonNumber: updatedBody.vagonNumber }
                       : tk
                   ));
                 }}
@@ -825,23 +843,16 @@ export default function ShowTrainTickets() {
             ))}
           </div>
         )}
-
         {!loading && totalPages > 1 && (
           <div className="st-pagination">
-            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-              ← Previous
-            </button>
+            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>← Previous</button>
             <span>{page} / {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
-              Next →
-            </button>
+            <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>Next →</button>
           </div>
         )}
       </div>
 
-      {activeTicket && (
-        <BookingModal ticket={activeTicket} onClose={() => setActiveTicket(null)} />
-      )}
+      {activeTicket && <BookingModal ticket={activeTicket} onClose={() => setActiveTicket(null)} />}
     </div>
   );
 }

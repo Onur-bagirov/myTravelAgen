@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import "./showPlane.css";
 
@@ -48,7 +49,6 @@ function isExpired(dueDate) {
   return dueDate && new Date(dueDate) < new Date();
 }
 
-// Convert a Date/ISO string to "YYYY-MM-DDTHH:mm" for datetime-local input
 function toDatetimeLocal(d) {
   if (!d) return "";
   const dt = new Date(d);
@@ -85,7 +85,179 @@ function stateBadge(state) {
 const STATE_MAP = { Pending: 0, Available: 1, Booked: 2, Canceled: 4 };
 const STATE_NUM_TO_NAME = { 0: "Pending", 1: "Available", 2: "Booked", 4: "Canceled" };
 
-// ── Confirm Delete Modal ─────────────────────────────────────
+const COUNTRY_DATA = {
+  france:       { code: "FR", flag: "🇫🇷" },
+  turkey:       { code: "TR", flag: "🇹🇷" },
+  türkiye:      { code: "TR", flag: "🇹🇷" },
+  turkiye:      { code: "TR", flag: "🇹🇷" },
+  azerbaijan:   { code: "AZ", flag: "🇦🇿" },
+  azerbaycan:   { code: "AZ", flag: "🇦🇿" },
+  germany:      { code: "DE", flag: "🇩🇪" },
+  uk:           { code: "GB", flag: "🇬🇧" },
+  "united kingdom": { code: "GB", flag: "🇬🇧" },
+  russia:       { code: "RU", flag: "🇷🇺" },
+  usa:          { code: "US", flag: "🇺🇸" },
+  "united states": { code: "US", flag: "🇺🇸" },
+  italy:        { code: "IT", flag: "🇮🇹" },
+  spain:        { code: "ES", flag: "🇪🇸" },
+  china:        { code: "CN", flag: "🇨🇳" },
+  japan:        { code: "JP", flag: "🇯🇵" },
+  uae:          { code: "AE", flag: "🇦🇪" },
+  "united arab emirates": { code: "AE", flag: "🇦🇪" },
+  georgia:      { code: "GE", flag: "🇬🇪" },
+  netherlands:  { code: "NL", flag: "🇳🇱" },
+  belgium:      { code: "BE", flag: "🇧🇪" },
+  switzerland:  { code: "CH", flag: "🇨🇭" },
+  austria:      { code: "AT", flag: "🇦🇹" },
+  poland:       { code: "PL", flag: "🇵🇱" },
+  czechia:      { code: "CZ", flag: "🇨🇿" },
+  ukraine:      { code: "UA", flag: "🇺🇦" },
+  kazakhstan:   { code: "KZ", flag: "🇰🇿" },
+  iran:         { code: "IR", flag: "🇮🇷" },
+};
+
+function getCountryMeta(countryName = "") {
+  const key = countryName.toLowerCase().trim();
+  return COUNTRY_DATA[key] || { code: countryName.slice(0, 2).toUpperCase(), flag: "🌐" };
+}
+
+function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+  const ref = useRef(null);
+  const triggerRef = useRef(null);
+
+  const selected = locations.find(l => String(l.id) === String(value));
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const updatePos = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropPos({
+        top: rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handleScroll = () => updatePos();
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [open]);
+
+  const handleOpen = () => {
+    updatePos();
+    setOpen(o => !o);
+  };
+
+  const filtered = locations.filter(l =>
+    l.name?.toLowerCase().includes(search.toLowerCase()) ||
+    l.country?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSelect = (id) => {
+    onChange(id);
+    setOpen(false);
+    setSearch("");
+  };
+
+  const dropdown = open ? createPortal(
+    <div
+      className="loc-dropdown"
+      style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, bottom: "auto" }}
+    >
+      <div className="loc-search-wrap">
+        <span className="loc-search-icon">🔍</span>
+        <input
+          className="loc-search-input"
+          placeholder="Search locations..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          autoFocus
+        />
+      </div>
+      <div className="loc-list">
+        <button
+          type="button"
+          className={`loc-item loc-item--all ${!value ? "loc-item--active" : ""}`}
+          onClick={() => handleSelect("")}
+        >
+          <span className="loc-item-icon">🌍</span>
+          <div className="loc-item-text">
+            <span className="loc-item-all-label">All Locations</span>
+          </div>
+          {!value && <span className="loc-item-check">✓</span>}
+        </button>
+
+        {filtered.length === 0 && (
+          <div className="loc-no-results">No locations found</div>
+        )}
+
+        {filtered.map(loc => {
+          const meta = getCountryMeta(loc.country || "");
+          const isActive = String(loc.id) === String(value);
+          return (
+            <button
+              type="button"
+              key={loc.id}
+              className={`loc-item ${isActive ? "loc-item--active" : ""}`}
+              onClick={() => handleSelect(String(loc.id))}
+            >
+              <span className="loc-item-avatar" data-code={meta.code}>
+                {meta.flag}
+              </span>
+              <div className="loc-item-text">
+                <span className="loc-item-country">{(loc.country || "").toUpperCase()}</span>
+                <span className="loc-item-city">{loc.name}</span>
+              </div>
+              {isActive && <span className="loc-item-check">✓</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
+  return (
+    <div className="loc-select-wrap" ref={ref}>
+      <label className="loc-select-label">{label}</label>
+      <button
+        ref={triggerRef}
+        type="button"
+        className={`loc-select-trigger ${open ? "loc-select-trigger--open" : ""}`}
+        onClick={handleOpen}
+      >
+        {selected ? (
+          <span className="loc-trigger-inner">
+            <span className="loc-trigger-flag">
+              {getCountryMeta(selected.country || "").flag}
+            </span>
+            <span className="loc-trigger-name">{selected.name}</span>
+          </span>
+        ) : (
+          <span className="loc-trigger-placeholder">{placeholder}</span>
+        )}
+        <span className={`loc-trigger-chevron ${open ? "loc-trigger-chevron--up" : ""}`}>
+          ›
+        </span>
+      </button>
+      {dropdown}
+    </div>
+  );
+}
+
 function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -105,7 +277,6 @@ function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   );
 }
 
-// ── Toast ────────────────────────────────────────────────────
 function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
@@ -121,7 +292,6 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
-// ── Edit Modal (now includes State + Date/Time) ──────────────
 function EditModal({ ticket, onClose, onSaved }) {
   const currentStateName =
     typeof ticket.state === "number"
@@ -296,7 +466,6 @@ function EditModal({ ticket, onClose, onSaved }) {
             {validationErrors.luggageKg && <span className="edit-field-error">{validationErrors.luggageKg}</span>}
           </div>
 
-          {/* ── DATE & TIME ── */}
           <div className="edit-field edit-field--full">
             <label>Date &amp; Time <span className="edit-required">*</span></label>
             <input
@@ -309,7 +478,6 @@ function EditModal({ ticket, onClose, onSaved }) {
             {validationErrors.dueDate && <span className="edit-field-error">{validationErrors.dueDate}</span>}
           </div>
 
-          {/* ── STATE ── */}
           <div className="edit-field edit-field--full">
             <label>State</label>
             <div className="state-option-list state-option-list--inline">
@@ -360,7 +528,6 @@ function EditModal({ ticket, onClose, onSaved }) {
   );
 }
 
-// ── Seat Map Modal ───────────────────────────────────────────
 function SeatButton({ seat }) {
   const meta = getVariantMeta(seat.variantName);
   return (
@@ -502,7 +669,6 @@ function SeatMapModal({ ticket, onClose }) {
   );
 }
 
-// ── Ticket Card ──────────────────────────────────────────────
 function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, onToast }) {
   const [showSeats,   setShowSeats]   = useState(false);
   const [showEdit,    setShowEdit]    = useState(false);
@@ -674,7 +840,6 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
           ticket={{ ...ticket, state: currentState }}
           onClose={() => setShowEdit(false)}
           onSaved={updatedBody => {
-            // Update local state badge immediately
             setCurrentState(updatedBody.state);
             onEdited(updatedBody);
           }}
@@ -691,7 +856,6 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
   );
 }
 
-// ── Main ─────────────────────────────────────────────────────
 export default function ShowPlaneTicket() {
   const navigate = useNavigate();
   const role     = getUserRole();
@@ -789,20 +953,20 @@ export default function ShowPlaneTicket() {
             <label>Airline</label>
             <input type="text" placeholder="e.g. AZAL" value={airline} onChange={e => setAirline(e.target.value)} />
           </div>
-          <div className="spt-filter-group">
-            <label>From</label>
-            <select value={fromId} onChange={e => setFromId(e.target.value)} className="spt-select">
-              <option value="">— All Locations —</option>
-              {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </select>
-          </div>
-          <div className="spt-filter-group">
-            <label>To</label>
-            <select value={toId} onChange={e => setToId(e.target.value)} className="spt-select">
-              <option value="">— All Locations —</option>
-              {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </select>
-          </div>
+
+          <LocationSelect
+            label="From"
+            value={fromId}
+            onChange={setFromId}
+            locations={locations}
+          />
+          <LocationSelect
+            label="To"
+            value={toId}
+            onChange={setToId}
+            locations={locations}
+          />
+
           <div className="spt-filter-group">
             <label>Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} />
