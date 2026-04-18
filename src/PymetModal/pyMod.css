@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── Overlay ── */
 .pm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -19,7 +19,6 @@
   to   { opacity: 1; }
 }
 
-/* ── Modal ── */
 .pm-modal {
   background: #0e1318;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -28,13 +27,13 @@
   width: 100%;
   max-width: 400px;
   position: relative;
-  animation: pmSlideUp 0.25s ease;
+  animation: pmSlideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: 'Syne', sans-serif;
 }
 
 @keyframes pmSlideUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .pm-close {
@@ -48,23 +47,33 @@
   height: 28px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
-.pm-close:hover { background: rgba(255, 255, 255, 0.12); color: #e2e8f0; }
+.pm-close:hover {
+  background: rgba(220, 38, 38, 0.2);
+  color: #ef4444;
+}
 
-/* ── Header ── */
 .pm-header {
   text-align: center;
   margin-bottom: 20px;
 }
 
 .pm-lock-icon {
-  font-size: 1.6rem;
-  margin-bottom: 8px;
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 18px;
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.35);
 }
 
 .pm-title {
@@ -76,34 +85,34 @@
 }
 
 .pm-sub {
-  font-size: 0.72rem;
-  color: #64748b;
+  font-size: 0.68rem;
+  color: #4b5563;
   font-family: 'DM Mono', monospace;
   margin: 0;
+  letter-spacing: 0.04em;
 }
 
-/* ── Kart preview ── */
 .pm-card-preview {
   border-radius: 14px;
   padding: 18px 20px;
   margin-bottom: 20px;
   background: linear-gradient(135deg, #1e2a3a 0%, #0f1923 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   min-height: 140px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: background 0.3s;
+  transition: background 0.4s ease;
 }
 
 .pm-card-preview--visa {
   background: linear-gradient(135deg, #1a237e 0%, #0d1b6e 100%);
 }
 .pm-card-preview--mastercard {
-  background: linear-gradient(135deg, #1b0000 0%, #3d1500 100%);
+  background: linear-gradient(135deg, #2a0a0a 0%, #3d1500 100%);
 }
 .pm-card-preview--kapital {
-  background: linear-gradient(135deg, #004d1a 0%, #001f0a 100%);
+  background: linear-gradient(135deg, #003d14 0%, #001809 100%);
 }
 
 .pm-card-top {
@@ -117,10 +126,9 @@
   height: 24px;
   border-radius: 4px;
   background: linear-gradient(135deg, #d4af37, #f5d06e);
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.35);
 }
 
-/* Brand logos */
 .pm-brand--visa {
   font-family: 'DM Mono', monospace;
   font-size: 1.1rem;
@@ -134,7 +142,8 @@
   display: flex;
   align-items: center;
 }
-.pm-mc-left, .pm-mc-right {
+.pm-mc-left,
+.pm-mc-right {
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -143,7 +152,7 @@
 .pm-mc-right { background: rgba(255, 163, 0, 0.85); margin-left: -10px; }
 
 .pm-brand--kb {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #4ade80;
   letter-spacing: 0.1em;
@@ -152,7 +161,6 @@
   border-radius: 4px;
 }
 
-/* Card number */
 .pm-card-number {
   display: flex;
   gap: 12px;
@@ -166,7 +174,6 @@
   letter-spacing: 0.1em;
 }
 
-/* Card bottom */
 .pm-card-bottom {
   display: flex;
   gap: 20px;
@@ -174,8 +181,8 @@
 }
 
 .pm-card-label {
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.58rem;
+  color: rgba(255, 255, 255, 0.35);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 2px;
@@ -183,7 +190,7 @@
 
 .pm-card-val {
   font-family: 'DM Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
 }
@@ -199,7 +206,6 @@
   color: #e8d5a3;
 }
 
-/* ── Form ── */
 .pm-form {
   display: flex;
   flex-direction: column;
@@ -220,10 +226,10 @@
 }
 
 .pm-label {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: 0.67rem;
+  color: #4b5563;
   font-family: 'DM Mono', monospace;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -234,60 +240,59 @@
   padding: 10px 14px;
   color: #e2e8f0;
   font-family: 'DM Mono', monospace;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   outline: none;
   transition: border-color 0.15s;
   width: 100%;
+  box-sizing: border-box;
 }
 
-.pm-input::placeholder { color: #334155; }
+.pm-input::placeholder { color: #2d3748; }
 
 .pm-input:focus {
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: rgba(220, 38, 38, 0.5);
 }
 
 .pm-input--err {
-  border-color: rgba(239, 68, 68, 0.5) !important;
+  border-color: rgba(239, 68, 68, 0.55) !important;
 }
 
 .pm-err {
-  font-size: 0.65rem;
+  font-size: 0.63rem;
   color: #fca5a5;
   font-family: 'DM Mono', monospace;
 }
 
-/* ── Pay button ── */
 .pm-pay-btn {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
   border: none;
-  background: #3b82f6;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
   color: #fff;
   font-family: 'Syne', sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
   letter-spacing: 0.02em;
-  transition: background 0.15s, transform 0.1s;
+  transition: opacity 0.15s, transform 0.1s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   margin-bottom: 12px;
+  box-shadow: 0 4px 18px rgba(220, 38, 38, 0.3);
 }
 
-.pm-pay-btn:hover:not(:disabled) { background: #2563eb; }
+.pm-pay-btn:hover:not(:disabled) { opacity: 0.88; }
 .pm-pay-btn:active:not(:disabled) { transform: scale(0.98); }
-.pm-pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.pm-pay-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.pm-pay-btn--loading { background: #7f1d1d; box-shadow: none; }
 
-.pm-pay-btn--loading { background: #1d4ed8; }
-
-/* Spinner */
 .pm-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.25);
   border-top-color: #fff;
   border-radius: 50%;
   animation: pmSpin 0.7s linear infinite;
@@ -297,11 +302,91 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Disclaimer ── */
+.pm-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.pm-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6rem;
+  color: #374151;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.pm-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #374151;
+}
+
 .pm-disclaimer {
   text-align: center;
-  font-size: 0.65rem;
-  color: #334155;
+  font-size: 0.62rem;
+  color: #2d3748;
   font-family: 'DM Mono', monospace;
   margin: 0;
+}
+
+.pm-success {
+  text-align: center;
+  padding: 16px 0 8px;
+  animation: pmSlideUp 0.35s ease;
+}
+
+.pm-success-icon {
+  width: 60px;
+  height: 60px;
+  background: rgba(22, 163, 74, 0.12);
+  border: 2px solid #16a34a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 26px;
+}
+
+.pm-success-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.pm-success-amount {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #e8d5a3;
+  margin: 0 0 10px;
+}
+
+.pm-success-sub {
+  font-size: 0.7rem;
+  color: #4b5563;
+  font-family: 'DM Mono', monospace;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.pm-success-ref {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.65rem;
+  color: #374151;
+  font-family: 'DM Mono', monospace;
+  background: #141a22;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 8px 14px;
+  letter-spacing: 0.06em;
 }
