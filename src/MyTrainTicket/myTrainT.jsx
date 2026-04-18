@@ -44,18 +44,18 @@ function finalPrice(t) {
 }
 
 const STATE_MAP = {
-  Booked:   { cls: "s-booked",   label: "Booked"    },
-  Pending:  { cls: "s-pending",  label: "Pending"   },
-  Canceled: { cls: "s-canceled", label: "Canceled"  },
-  Expired:  { cls: "s-expired",  label: "Expired"   },
-  Delayed:  { cls: "s-delayed",  label: "Delayed"   },
+  Booked:   { cls: "s-booked",   label: "Booked"   },
+  Pending:  { cls: "s-pending",  label: "Pending"  },
+  Canceled: { cls: "s-canceled", label: "Canceled" },
+  Expired:  { cls: "s-expired",  label: "Expired"  },
+  Delayed:  { cls: "s-delayed",  label: "Delayed"  },
 };
 
 function TrainTicketCard({ t, idx }) {
-  const exp    = isExpired(t);
-  const stKey  = exp && t.state === "Booked" ? "Expired" : t.state;
-  const st     = STATE_MAP[stKey] ?? { cls: "s-expired", label: t.state };
-  const cd     = countdown(t.dueDate);
+  const exp      = isExpired(t);
+  const stKey    = exp && t.state === "Booked" ? "Expired" : t.state;
+  const st       = STATE_MAP[stKey] ?? { cls: "s-expired", label: t.state };
+  const cd       = countdown(t.dueDate);
   const hasDsc   = t.discount > 0 && t.discount < 1;
   const origCalc = hasDsc ? (Number(t.price) / t.discount).toFixed(2) : null;
 
@@ -67,13 +67,14 @@ function TrainTicketCard({ t, idx }) {
       <div className="amt-stripe" />
 
       <div className="amt-body">
+
         <div className="amt-top">
           <div className="amt-train-info">
-            <span className="amt-train-ico">傳</span>
+            <div className="amt-train-ico">🚆</div>
             <div>
               <span className="amt-train-name">{t.trainCompany}</span>
               <span className="amt-train-num">
-                №{t.trainNumber} · Coach {t.vagonNumber}
+                #{t.trainNumber} · Coach {t.vagonNumber}
               </span>
             </div>
           </div>
@@ -85,14 +86,14 @@ function TrainTicketCard({ t, idx }) {
         <div className="amt-route">
           <div className="amt-loc">
             <span className="amt-city">{t.from ?? "—"}</span>
-            <span className="amp-time">{fmtTime(t.dueDate)}</span>
+            <span className="amt-time">{fmtTime(t.dueDate)}</span>
           </div>
 
           <div className="amt-mid">
             <div className="amt-track">
               <span className="amt-dot" />
               <span className="amt-dash" />
-              <span className="amt-loco">傳</span>
+              <span className="amt-loco">🚆</span>
               <span className="amt-dash" />
               <span className="amt-dot" />
             </div>
@@ -110,7 +111,6 @@ function TrainTicketCard({ t, idx }) {
             </span>
           </div>
         </div>
-
         <div className="amt-meta">
           <span className="amt-meta-item">📅 {fmtDate(t.dueDate)}</span>
           {t.seat?.name  && <span className="amt-meta-item">💺 {t.seat.name}</span>}
@@ -125,16 +125,12 @@ function TrainTicketCard({ t, idx }) {
             <span className="amt-bought">Purchased: {fmtDate(t.broughtDate)}</span>
           )}
           <div className="amt-price-wrap">
-            {hasDsc && (
-              <span className="amt-orig">{origCalc} ₼</span>
-            )}
+            {hasDsc && <span className="amt-orig">{origCalc} ₼</span>}
             <span className="amt-price">{finalPrice(t)} ₼</span>
           </div>
         </div>
+        {t.note && <div className="amt-note">📝 {t.note}</div>}
 
-        {t.note && (
-          <div className="amt-note">📝 {t.note}</div>
-        )}
       </div>
     </div>
   );
@@ -174,6 +170,7 @@ export default function AllMyTrainTickets() {
       <div className="amt-noise" />
 
       <div className="amt-inner">
+
         <div className="amt-header">
           <div>
             <h1 className="amt-title">My Train Tickets</h1>
@@ -183,9 +180,9 @@ export default function AllMyTrainTickets() {
           </div>
           <div className="amt-filters">
             {[
-              { key: "all",     label: "All"     },
-              { key: "active",  label: "Active"  },
-              { key: "expired", label: "Past"    },
+              { key: "all",     label: "All"    },
+              { key: "active",  label: "Active" },
+              { key: "expired", label: "Past"   },
             ].map((f) => (
               <button
                 key={f.key}
@@ -197,7 +194,6 @@ export default function AllMyTrainTickets() {
             ))}
           </div>
         </div>
-
         {loading && (
           <div className="amt-list">
             {[...Array(3)].map((_, i) => (
@@ -209,25 +205,22 @@ export default function AllMyTrainTickets() {
             ))}
           </div>
         )}
-
         {!loading && error && (
           <div className="amt-empty">
             <span className="amt-empty-ico">⚠️</span>
             <p>{error}</p>
           </div>
         )}
-
         {!loading && !error && visible.length === 0 && (
           <div className="amt-empty">
-            <span className="amt-empty-ico">傳</span>
+            <span className="amt-empty-ico">🚆</span>
             <p>
-              {filter === "active"  ? "No active tickets."  :
-               filter === "expired" ? "No past tickets." :
+              {filter === "active"  ? "No active tickets."                    :
+               filter === "expired" ? "No past tickets."                      :
                "You haven't purchased any tickets yet."}
             </p>
           </div>
         )}
-
         {!loading && !error && visible.length > 0 && (
           <div className="amt-list">
             {visible.map((t, i) => (
@@ -235,6 +228,7 @@ export default function AllMyTrainTickets() {
             ))}
           </div>
         )}
+
       </div>
     </div>
   );

@@ -57,10 +57,7 @@ function TicketCard({ t, idx }) {
       className={`bp-card${exp ? " bp-card--exp" : ""}`}
       style={{ animationDelay: `${idx * 0.07}s` }}
     >
-      {/* ── LEFT MAIN SECTION ── */}
       <div className="bp-main">
-
-        {/* Header bar */}
         <div className="bp-header">
           <div className="bp-header-left">
             <div className="bp-plane-icon">✈</div>
@@ -79,9 +76,7 @@ function TicketCard({ t, idx }) {
           </div>
         </div>
 
-        {/* BIG ROUTE ROW */}
         <div className="bp-route">
-          {/* FROM */}
           <div className="bp-from-block">
             <span className="bp-from-label">From</span>
             <div style={{ display: "flex", alignItems: "baseline" }}>
@@ -93,7 +88,6 @@ function TicketCard({ t, idx }) {
             )}
           </div>
 
-          {/* Track */}
           <div className="bp-track">
             <div className="bp-track-line">
               <span className="bp-dot bp-dot--filled" />
@@ -113,7 +107,6 @@ function TicketCard({ t, idx }) {
             )}
           </div>
 
-          {/* TO */}
           <div className="bp-to-block">
             <span className="bp-to-label">To</span>
             <div style={{ display: "flex", alignItems: "baseline" }}>
@@ -124,8 +117,6 @@ function TicketCard({ t, idx }) {
             )}
           </div>
         </div>
-
-        {/* PASSENGER + DETAILS ROW */}
         <div className="bp-details-row">
           <div className="bp-detail-item">
             <span className="bp-detail-label">Passenger</span>
@@ -147,7 +138,6 @@ function TicketCard({ t, idx }) {
           </div>
         </div>
 
-        {/* CHIPS ROW */}
         <div className="bp-chips">
           {t.gate && (
             <span className="bp-chip bp-chip--gate">Gate {t.gate}</span>
@@ -172,10 +162,8 @@ function TicketCard({ t, idx }) {
         {t.note && <div className="bp-note">📝 {t.note}</div>}
       </div>
 
-      {/* ── PERFORATION DIVIDER ── */}
       <div className="bp-divider" />
-
-      {/* ── RIGHT SIDEBAR ── */}
+      
       <div className="bp-sidebar">
         <div className="bp-sb-row">
           <span className="bp-sb-label">Airline</span>
@@ -201,7 +189,6 @@ function TicketCard({ t, idx }) {
           </div>
         )}
 
-        {/* Status badges */}
         <div className="bp-sb-badges">
           <span className={`bp-badge ${st.cls}`}>{st.label}</span>
           {t.variant?.isPriority && (
@@ -209,7 +196,6 @@ function TicketCard({ t, idx }) {
           )}
         </div>
 
-        {/* Price */}
         <div className="bp-sb-price-section">
           <div className="bp-sb-price-label">Price</div>
           {hasDsc && (
