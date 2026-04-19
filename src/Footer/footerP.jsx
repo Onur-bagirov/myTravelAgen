@@ -77,7 +77,7 @@ export default function Footer() {
                 </span>
                 <span className="footer-contact-text">
                   <span className="footer-contact-label">Phone</span>
-                  <span className="footer-contact-val">+994 50 000 00 00</span>
+                  <span className="footer-contact-val">+994 051 541 96 88</span>
                 </span>
               </li>
               <li className="footer-contact-item">
@@ -89,7 +89,7 @@ export default function Footer() {
                 </span>
                 <span className="footer-contact-text">
                   <span className="footer-contact-label">Email</span>
-                  <span className="footer-contact-val">contact@travelagen.az</span>
+                  <span className="footer-contact-val">travelagen2026@gmail.com</span>
                 </span>
               </li>
             </ul>
