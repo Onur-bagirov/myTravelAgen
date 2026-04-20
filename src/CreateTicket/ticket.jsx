@@ -75,31 +75,11 @@ const rules = {
     if (form && String(v) === String(form.locationId)) return "Departure and arrival cannot be the same";
     return null;
   },
-  variantId: (v) => {
-    if (!v || Number(v) < 1) return "Select a variant";
-    return null;
-  },
-  rowCount: (v) => {
-    if (v === "" || v == null) return "Row count is required";
-    const n = Number(v);
-    if (!Number.isInteger(n) || isNaN(n)) return "Enter a whole number";
-    if (n < 1) return "At least 1 row required";
-    if (n > 50) return "Maximum 50 rows";
-    return null;
-  },
-  seatsPerRow: (v) => {
-    if (v === "" || v == null) return "Seats per row is required";
-    const n = Number(v);
-    if (!Number.isInteger(n) || isNaN(n)) return "Enter a whole number";
-    if (n < 1) return "At least 1 seat per row";
-    if (n > 12) return "Maximum 12 seats per row";
-    return null;
-  },
 };
 
-const ALL_FIELDS = [
-  "airline","gate","plane","meal","luggageKg",
-  "dueDate","locationId","toLocationId","variantId","rowCount","seatsPerRow",
+const MAIN_FIELDS = [
+  "airline", "gate", "plane", "meal", "luggageKg",
+  "dueDate", "locationId", "toLocationId",
 ];
 
 function parseLocations(data) {
@@ -186,11 +166,7 @@ function LocationDropdown({ id, locations, value, onChange, onBlur, loading, err
   useEffect(() => {
     const handler = (e) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        if (open) {
-          close();
-          setSearch("");
-          if (onBlur) onBlur();
-        }
+        if (open) { close(); setSearch(""); if (onBlur) onBlur(); }
       }
     };
     document.addEventListener("mousedown", handler);
@@ -204,10 +180,7 @@ function LocationDropdown({ id, locations, value, onChange, onBlur, loading, err
   };
 
   const handleToggle = () => {
-    if (!loading) {
-      if (open) setSearch("");
-      toggle(id);
-    }
+    if (!loading) { if (open) setSearch(""); toggle(id); }
   };
 
   return (
@@ -300,24 +273,18 @@ function VariantSelect({ id, variants, value, onChange, onBlur, loading, error, 
   useEffect(() => {
     const handler = (e) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target)) {
-        if (open) {
-          close();
-          if (onBlur) onBlur();
-        }
+        if (open) { close(); if (onBlur) onBlur(); }
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open, close, onBlur]);
 
-  const handleToggle = () => {
-    if (!loading) toggle(id);
-  };
+  const handleToggle = () => { if (!loading) toggle(id); };
 
   return (
     <div className="cpt-field var-wrap" ref={wrapRef}>
       <label>Class (Variant)</label>
-
       <div
         className={`var-trigger${open ? " var-trigger--open" : ""}${touched && error ? " cpt-input--error" : ""}`}
         onClick={handleToggle}
@@ -417,8 +384,12 @@ export default function CreatePlaneTicket() {
     airline:"",gate:"",plane:"",meal:"",
     luggageKg:23,dueDate:"",
     locationId:"",toLocationId:"",
-    variantId:"",rowCount:10,seatsPerRow:6,
   });
+
+  // ── Multi seat-group state (train-style) ──────────────────────────────────
+  const [seatGroups, setSeatGroups] = useState([
+    { variantId: "", rowCount: 10, seatsPerRow: 6 },
+  ]);
 
   useEffect(() => {
     setLocLoading(true);
@@ -430,10 +401,35 @@ export default function CreatePlaneTicket() {
       .then(r => r.json()).then(d => {
         const list = Array.isArray(d?.data) ? d.data : Array.isArray(d) ? d : [];
         setVariants(list);
-        if (list.length > 0) setForm(p => ({ ...p, variantId: list[0].id }));
+        if (list.length > 0)
+          setSeatGroups([{ variantId: String(list[0].id), rowCount: 10, seatsPerRow: 6 }]);
       }).catch(() => {}).finally(() => setVarLoading(false));
   }, []);
 
+  // ── Seat group helpers ────────────────────────────────────────────────────
+  const handleGroup = (idx, field, val) =>
+    setSeatGroups(prev =>
+      prev.map((g, i) =>
+        i === idx
+          ? { ...g, [field]: field === "variantId" ? val : (val === "" ? "" : Number(val)) }
+          : g
+      )
+    );
+
+  const addGroup = () =>
+    setSeatGroups(p => [
+      ...p,
+      { variantId: variants[0] ? String(variants[0].id) : "", rowCount: 10, seatsPerRow: 6 },
+    ]);
+
+  const removeGroup = (idx) => setSeatGroups(p => p.filter((_, i) => i !== idx));
+
+  const totalSeats = seatGroups.reduce(
+    (s, g) => s + (Number(g.rowCount) || 0) * (Number(g.seatsPerRow) || 0),
+    0
+  );
+
+  // ── Validation ────────────────────────────────────────────────────────────
   const validate = (name, value, currentForm) => {
     const fn = rules[name];
     return fn ? fn(String(value ?? ""), currentForm ?? form) : null;
@@ -479,20 +475,32 @@ export default function CreatePlaneTicket() {
 
   const validateAll = () => {
     const newErrors = {}; const newTouched = {};
-    ALL_FIELDS.forEach(f => { newTouched[f] = true; newErrors[f] = validate(f, String(form[f] ?? ""), form); });
+    MAIN_FIELDS.forEach(f => { newTouched[f] = true; newErrors[f] = validate(f, String(form[f] ?? ""), form); });
     setTouched(newTouched); setErrors(newErrors);
     return Object.values(newErrors).every(e => !e);
   };
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault(); setServerError(null);
     if (!validateAll()) return;
+
+    if (seatGroups.some(g => !g.variantId)) {
+      setServerError("Please select a variant for every class group.");
+      return;
+    }
+
     setLoading(true);
     const payload = {
-      airline: form.airline.trim(), gate: form.gate.trim(), plane: form.plane.trim(), meal: form.meal.trim(),
+      airline: form.airline.trim(), gate: form.gate.trim(),
+      plane: form.plane.trim(), meal: form.meal.trim(),
       luggageKg: Number(form.luggageKg), dueDate: toISO(form.dueDate),
       fromId: Number(form.locationId), toId: Number(form.toLocationId),
-      seatGroups: [{ variantId: Number(form.variantId), rowCount: Number(form.rowCount), seatsPerRow: Number(form.seatsPerRow) }],
+      seatGroups: seatGroups.map(g => ({
+        variantId:   Number(g.variantId),
+        rowCount:    Number(g.rowCount),
+        seatsPerRow: Number(g.seatsPerRow),
+      })),
     };
     try {
       const res = await fetch(`${BASE_URL}/PlaneTicket`, { method: "POST", headers: authHeaders(), body: JSON.stringify(payload) });
@@ -519,105 +527,17 @@ export default function CreatePlaneTicket() {
   const resetForm = () => {
     setIsGenerated(false); setCreatedTicket(null); setServerError(null);
     setTouched({}); setErrors({}); setFromName(""); setToName("");
-    setForm({ airline:"",gate:"",plane:"",meal:"",luggageKg:23,dueDate:"",locationId:"",toLocationId:"",variantId:variants[0]?.id??"",rowCount:10,seatsPerRow:6 });
+    setForm({ airline:"",gate:"",plane:"",meal:"",luggageKg:23,dueDate:"",locationId:"",toLocationId:"" });
+    setSeatGroups([{ variantId: variants[0] ? String(variants[0].id) : "", rowCount: 10, seatsPerRow: 6 }]);
   };
 
   const displayDate = createdTicket?._localDueDate || form.dueDate;
   const displayFrom = createdTicket?._fromName || fromName;
   const displayTo   = createdTicket?._toName || toName;
-  const totalSeats  = createdTicket?.totalTicketsCreated ?? (Number(form.rowCount) * Number(form.seatsPerRow));
+  const totalCreated = createdTicket?.totalTicketsCreated ?? totalSeats;
 
-  if (!isGenerated) return (
-    <DropdownProvider>
-      <div className="cpt-page">
-        <div className="cpt-wrapper">
-          <div className="cpt-header">
-            <div className="cpt-header-icon">✈️</div>
-            <div>
-              <h1 className="cpt-title">Create Plane Ticket</h1>
-              <p className="cpt-subtitle">Fill in flight details — seats will be generated automatically</p>
-            </div>
-          </div>
-
-          {serverError && <div className="cpt-alert cpt-alert--error">⚠️ {serverError}</div>}
-
-          <div className="cpt-form-card">
-            <form onSubmit={handleSubmit} noValidate>
-
-              <SectionTitle icon="✈" text="Flight Details" />
-              <div className="cpt-grid-2">
-                <Field label="Airline" name="airline" placeholder="e.g. AZAL" value={form.airline} onChange={handleChange} onBlur={handleBlur} error={errors.airline} touched={touched.airline}/>
-                <Field label="Gate" name="gate" placeholder="e.g. A12" value={form.gate} onChange={handleChange} onBlur={handleBlur} error={errors.gate} touched={touched.gate}/>
-                <Field label="Plane Model" name="plane" placeholder="e.g. Boeing 737" value={form.plane} onChange={handleChange} onBlur={handleBlur} error={errors.plane} touched={touched.plane}/>
-                <Field label="Meal Type" name="meal" placeholder="e.g. Standard" value={form.meal} onChange={handleChange} onBlur={handleBlur} error={errors.meal} touched={touched.meal}/>
-              </div>
-              <div className="cpt-grid-2" style={{ marginTop: 14 }}>
-                <Field label="Luggage (kg) — max 100" name="luggageKg" type="number" min="0" max="100" step="0.5" value={form.luggageKg} onChange={handleChange} onBlur={handleBlur} error={errors.luggageKg} touched={touched.luggageKg}/>
-                <Field label="Departure Date & Time" name="dueDate" type="datetime-local" value={form.dueDate} onChange={handleChange} onBlur={handleBlur} error={errors.dueDate} touched={touched.dueDate}/>
-              </div>
-              {form.dueDate && !errors.dueDate && (
-                <div className="cpt-hint-banner">🗓 {fmtDate(form.dueDate)} at {fmtTime(form.dueDate)}</div>
-              )}
-
-              <SectionTitle icon="📍" text="Route" />
-              <div className="cpt-grid-2">
-                <LocationDropdown
-                  id="loc-from"
-                  label="From"
-                  locations={locations}
-                  value={form.locationId}
-                  onChange={handleFromLocation}
-                  onBlur={() => { setTouched(p => ({ ...p, locationId: true })); setErrors(p => ({ ...p, locationId: validate("locationId", form.locationId) })); }}
-                  loading={locLoading}
-                  error={errors.locationId}
-                  touched={touched.locationId}
-                />
-                <LocationDropdown
-                  id="loc-to"
-                  label="To"
-                  locations={locations}
-                  value={form.toLocationId}
-                  onChange={handleToLocation}
-                  onBlur={() => { setTouched(p => ({ ...p, toLocationId: true })); setErrors(p => ({ ...p, toLocationId: validate("toLocationId", form.toLocationId, form) })); }}
-                  loading={locLoading}
-                  error={errors.toLocationId}
-                  touched={touched.toLocationId}
-                />
-              </div>
-
-              <SectionTitle icon="💺" text="Seat Configuration" />
-              <div className="cpt-grid-3">
-                <VariantSelect
-                  id="variant-select"
-                  variants={variants}
-                  value={form.variantId}
-                  onChange={(val) => { setForm(p => ({ ...p, variantId: val })); if (touched.variantId) setErrors(p => ({ ...p, variantId: validate("variantId", val) })); }}
-                  onBlur={() => { setTouched(p => ({ ...p, variantId: true })); setErrors(p => ({ ...p, variantId: validate("variantId", form.variantId) })); }}
-                  loading={varLoading}
-                  error={errors.variantId}
-                  touched={touched.variantId}
-                />
-                <Field label="Row Count (max 50)" name="rowCount" type="number" min="1" max="50" value={form.rowCount} onChange={handleChange} onBlur={handleBlur} error={errors.rowCount} touched={touched.rowCount}/>
-                <Field label="Seats / Row (max 12)" name="seatsPerRow" type="number" min="1" max="12" value={form.seatsPerRow} onChange={handleChange} onBlur={handleBlur} error={errors.seatsPerRow} touched={touched.seatsPerRow}/>
-              </div>
-
-              {!errors.rowCount && !errors.seatsPerRow && form.rowCount && form.seatsPerRow && (
-                <div className="cpt-hint-banner" style={{ marginTop: 10 }}>
-                  💺 {Number(form.rowCount) * Number(form.seatsPerRow)} seats will be created ({form.rowCount} rows × {form.seatsPerRow} seats)
-                </div>
-              )}
-
-              <button type="submit" className="cpt-submit-btn" disabled={loading}>
-                {loading ? <><span className="cpt-spinner"/> Creating...</> : "✈ Create Ticket"}
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </DropdownProvider>
-  );
-
-  return (
+  // ── Success / Boarding Pass ───────────────────────────────────────────────
+  if (isGenerated) return (
     <div className="cpt-page">
       <div className="cpt-wrapper" style={{ maxWidth: 760 }}>
         <div className="cpt-header">
@@ -660,7 +580,7 @@ export default function CreatePlaneTicket() {
                   ["LUGGAGE", `${createdTicket?.luggageKg ?? form.luggageKg} kg`],
                   ["DATE", fmtDate(displayDate)],
                   ["TIME", fmtTime(displayDate)],
-                  ["SEATS", totalSeats],
+                  ["SEATS", totalCreated],
                   ["STATUS", "ACTIVE"],
                 ].map(([label, val]) => (
                   <div key={label} className="cpt-info-box"><span>{label}</span><strong>{val}</strong></div>
@@ -678,7 +598,7 @@ export default function CreatePlaneTicket() {
                 ["Plane", createdTicket?.plane || form.plane],
                 ["Date", fmtDate(displayDate)],
                 ["Time", fmtTime(displayDate)],
-                ["Seats", totalSeats],
+                ["Seats", totalCreated],
               ].map(([k, v]) => (
                 <div key={k} className="cpt-stub-row">
                   <span className="cpt-stub-key">{k}</span>
@@ -700,5 +620,115 @@ export default function CreatePlaneTicket() {
         </div>
       </div>
     </div>
+  );
+
+  // ── Form ──────────────────────────────────────────────────────────────────
+  return (
+    <DropdownProvider>
+      <div className="cpt-page">
+        <div className="cpt-wrapper">
+          <div className="cpt-header">
+            <div className="cpt-header-icon">✈️</div>
+            <div>
+              <h1 className="cpt-title">Create Plane Ticket</h1>
+              <p className="cpt-subtitle">Fill in flight details — seats will be generated automatically</p>
+            </div>
+          </div>
+
+          {serverError && <div className="cpt-alert cpt-alert--error">⚠️ {serverError}</div>}
+
+          <div className="cpt-form-card">
+            <form onSubmit={handleSubmit} noValidate>
+
+              <SectionTitle icon="✈" text="Flight Details" />
+              <div className="cpt-grid-2">
+                <Field label="Airline" name="airline" placeholder="e.g. AZAL" value={form.airline} onChange={handleChange} onBlur={handleBlur} error={errors.airline} touched={touched.airline}/>
+                <Field label="Gate" name="gate" placeholder="e.g. A12" value={form.gate} onChange={handleChange} onBlur={handleBlur} error={errors.gate} touched={touched.gate}/>
+                <Field label="Plane Model" name="plane" placeholder="e.g. Boeing 737" value={form.plane} onChange={handleChange} onBlur={handleBlur} error={errors.plane} touched={touched.plane}/>
+                <Field label="Meal Type" name="meal" placeholder="e.g. Standard" value={form.meal} onChange={handleChange} onBlur={handleBlur} error={errors.meal} touched={touched.meal}/>
+              </div>
+              <div className="cpt-grid-2" style={{ marginTop: 14 }}>
+                <Field label="Luggage (kg) — max 100" name="luggageKg" type="number" min="0" max="100" step="0.5" value={form.luggageKg} onChange={handleChange} onBlur={handleBlur} error={errors.luggageKg} touched={touched.luggageKg}/>
+                <Field label="Departure Date & Time" name="dueDate" type="datetime-local" value={form.dueDate} onChange={handleChange} onBlur={handleBlur} error={errors.dueDate} touched={touched.dueDate}/>
+              </div>
+              {form.dueDate && !errors.dueDate && (
+                <div className="cpt-hint-banner">🗓 {fmtDate(form.dueDate)} at {fmtTime(form.dueDate)}</div>
+              )}
+
+              <SectionTitle icon="📍" text="Route" />
+              <div className="cpt-grid-2">
+                <LocationDropdown
+                  id="loc-from" label="From" locations={locations} value={form.locationId}
+                  onChange={handleFromLocation}
+                  onBlur={() => { setTouched(p => ({ ...p, locationId: true })); setErrors(p => ({ ...p, locationId: validate("locationId", form.locationId) })); }}
+                  loading={locLoading} error={errors.locationId} touched={touched.locationId}
+                />
+                <LocationDropdown
+                  id="loc-to" label="To" locations={locations} value={form.toLocationId}
+                  onChange={handleToLocation}
+                  onBlur={() => { setTouched(p => ({ ...p, toLocationId: true })); setErrors(p => ({ ...p, toLocationId: validate("toLocationId", form.toLocationId, form) })); }}
+                  loading={locLoading} error={errors.toLocationId} touched={touched.toLocationId}
+                />
+              </div>
+
+              {/* ── Classes & Seats — multi-group (train-style) ── */}
+              <SectionTitle icon="💺" text="Classes & Seats" />
+
+              {seatGroups.map((g, idx) => (
+                <div key={idx} className="cpt-group-box">
+                  <div className="cpt-group-header">
+                    <span>Group {idx + 1}</span>
+                    {seatGroups.length > 1 && (
+                      <button type="button" className="cpt-remove-btn" onClick={() => removeGroup(idx)}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <div className="cpt-grid-3">
+                    <VariantSelect
+                      id={`variant-${idx}`}
+                      variants={variants}
+                      value={g.variantId}
+                      onChange={(val) => handleGroup(idx, "variantId", val)}
+                      loading={varLoading}
+                    />
+                    <div className="cpt-field">
+                      <label>Row Count (max 50)</label>
+                      <input
+                        type="number" min="1" max="50"
+                        value={g.rowCount}
+                        onChange={e => handleGroup(idx, "rowCount", e.target.value)}
+                      />
+                    </div>
+                    <div className="cpt-field">
+                      <label>Seats / Row (max 12)</label>
+                      <input
+                        type="number" min="1" max="12"
+                        value={g.seatsPerRow}
+                        onChange={e => handleGroup(idx, "seatsPerRow", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button type="button" className="cpt-add-group-btn" onClick={addGroup}>
+                + Add New Class Group
+              </button>
+
+              {totalSeats > 0 && (
+                <div className="cpt-hint-banner" style={{ marginTop: 12 }}>
+                  💺 {totalSeats} seats will be created across {seatGroups.length} group{seatGroups.length > 1 ? "s" : ""}
+                </div>
+              )}
+
+              <button type="submit" className="cpt-submit-btn" disabled={loading}>
+                {loading ? <><span className="cpt-spinner"/> Creating...</> : `✈ Create Ticket (${totalSeats} seats)`}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </DropdownProvider>
   );
 }

@@ -11,9 +11,7 @@ const getUserId = () => {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.uid || null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 };
 
 const getHeaders = () => ({
@@ -28,655 +26,682 @@ const getUserName = async () => {
     const data = await res.json();
     const u = data?.data ?? data;
     return [u.name, u.surname].filter(Boolean).join(" ") || null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 };
 
-// ─── Barcode SVG ──────────────────────────────────────────────────────────────
-function BarcodeSVG() {
-  const bars = [3, 1, 4, 1, 2, 3, 1, 2, 1, 4, 1, 2, 3, 1, 1, 4, 2, 1, 3, 1, 2, 1, 3, 2, 1, 4, 1];
+// ─── Barcode Side ─────────────────────────────────────────────────────────────
+function BarcodeSide({ seed = 0 }) {
+  const heights = [14,20,10,28,16,22,12,26,18,14,24,10,20,16,28,12,22,18,10,26,14,20,10];
   return (
-    <svg
-      width="72"
-      height="14"
-      viewBox="0 0 72 14"
-      xmlns="http://www.w3.org/2000/svg"
-      className="bp-stub-barcode"
-    >
-      {bars.reduce((acc, w, i) => {
-        const x = acc.x;
-        if (i % 2 === 0) {
-          acc.els.push(
-            <rect key={i} x={x} y={0} width={w} height={14} fill="rgba(255,255,255,0.78)" rx="0.5" />
-          );
-        }
-        acc.x += w + 1;
-        return acc;
-      }, { x: 0, els: [] }).els}
-    </svg>
+    <div className="bp-barcode-side">
+      {heights.map((v, i) => (
+        <div
+          key={i}
+          className="bp-barcode-bar"
+          style={{ height: `${((v + seed) % 24) + 6}px` }}
+        />
+      ))}
+    </div>
   );
 }
 
-// ─── Train Watermark ──────────────────────────────────────────────────────────
-function TrainWatermark() {
-  return (
-    <svg
-      className="bp-watermark"
-      viewBox="0 0 300 200"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <rect x="30" y="60" width="240" height="100" rx="18" fill="none" stroke="currentColor" strokeWidth="7" />
-      <rect x="55"  y="80" width="36" height="28" rx="6" fill="none" stroke="currentColor" strokeWidth="5" />
-      <rect x="105" y="80" width="36" height="28" rx="6" fill="none" stroke="currentColor" strokeWidth="5" />
-      <rect x="160" y="80" width="36" height="28" rx="6" fill="none" stroke="currentColor" strokeWidth="5" />
-      <rect x="210" y="80" width="36" height="28" rx="6" fill="none" stroke="currentColor" strokeWidth="5" />
-      <circle cx="80"  cy="170" r="18" fill="none" stroke="currentColor" strokeWidth="6" />
-      <circle cx="150" cy="170" r="18" fill="none" stroke="currentColor" strokeWidth="6" />
-      <circle cx="220" cy="170" r="18" fill="none" stroke="currentColor" strokeWidth="6" />
-      <line x1="10" y1="188" x2="290" y2="188" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-      <circle cx="268" cy="110" r="8" fill="none" stroke="currentColor" strokeWidth="4" />
-    </svg>
-  );
+// ─── Class accent helpers ─────────────────────────────────────────────────────
+function cardAccentClass(name = "") {
+  const n = (name || "").toLowerCase();
+  if (n.includes("first"))    return "ft-card--first";
+  if (n.includes("economy"))  return "ft-card--economy";
+  return                             "ft-card--business";
 }
 
-// ─── Boarding Pass Card ───────────────────────────────────────────────────────
-function BoardingPassCard({ train, fromLabel, toLabel, isExpired, formatTime, formatDate, formatArrivalTime, selectedSeat, displayClass, passengerName }) {
-  const departureTime = formatTime(train.dueDate);
-  const departureDate = formatDate(train.dueDate);
-  const arrivalTime   = formatArrivalTime(train);
+function variantMeta(name = "") {
+  const n = (name || "").toLowerCase();
+  if (n.includes("first"))   return { color: "#f59e0b" };
+  if (n.includes("economy")) return { color: "#22c55e" };
+  return                            { color: "#ef4444" };
+}
+
+// ─── Ticket Card ──────────────────────────────────────────────────────────────
+function TicketCard({
+  train, fromLabel, toLabel, isExpired,
+  formatTime, formatArrivalFromTrain, formatDate,
+  passengerName, displayClass, selectedSeat,
+  seats, onSelectVariant,
+}) {
+  const accentClass = cardAccentClass(displayClass);
+  const initial     = (train?.trainCompany || "T")[0].toUpperCase();
+  const departTime  = formatTime(train?.dueDate);
+  const arrivalTime = formatArrivalFromTrain(train);
+
+  const variantMap = new Map();
+  (seats || []).forEach(s => {
+    if (!variantMap.has(s.variantId)) {
+      variantMap.set(s.variantId, {
+        id:    s.variantId,
+        name:  s.variantName,
+        price: s.variantPrice ?? 0,
+      });
+    }
+  });
+  const variants  = [...variantMap.values()];
+  const basePrice = Number(train?.price || 0);
 
   return (
-    <div className={`bp-card${isExpired ? " bp-card--expired" : ""}`}>
-      {/* LEFT MAIN */}
-      <div className="bp-main">
-        <TrainWatermark />
+    <div className={`ft-card ${accentClass}${isExpired ? " bp-card--expired" : ""}`}
+         style={{ marginBottom: "1.5rem", cursor: "default" }}
+         onClick={e => e.stopPropagation()}>
 
-        <div className="bp-top-row">
-          <div className="bp-title-group">
-            <div className="bp-title-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 16V8a2 2 0 012-2h12a2 2 0 012 2v8M4 16h16M4 16v2M20 16v2M7 22h10" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
-                <rect x="6" y="6" width="12" height="8" rx="1.5" fill="white" opacity="0.3"/>
-              </svg>
+      <div className="ft-card-body">
+        <div className="ft-top">
+          <div className="ft-airline-block">
+            <div className="ft-airline-logo">
+              <span className="ft-airline-initial">{initial}</span>
             </div>
-            <span className="bp-title-text">Train Ticket</span>
-          </div>
-          {displayClass && (
-            <div className="bp-class-badge">{displayClass}</div>
-          )}
-        </div>
-
-        <div className="bp-meta-row">
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Company</span>
-            <span className="bp-meta-value">{train.trainCompany || "—"}</span>
-          </div>
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Train No</span>
-            <span className="bp-meta-value">{train.trainNumber || "—"}</span>
-          </div>
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Date</span>
-            <span className="bp-meta-value">{departureDate}</span>
-          </div>
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Time</span>
-            <span className="bp-meta-value" style={{ color: "#ef4444", fontWeight: 700 }}>{departureTime}</span>
-          </div>
-        </div>
-
-        <div className="bp-route">
-          <div className="bp-city-block">
-            <span style={{
-              display: "block",
-              fontSize: "clamp(28px, 5vw, 42px)",
-              fontWeight: 800,
-              color: "#ffffff",
-              letterSpacing: "0.04em",
-              lineHeight: 1,
-              marginBottom: "6px",
-              fontFamily: "'Syne', sans-serif",
-            }}>
-              {departureTime || "--:--"}
-            </span>
-            <span className="bp-city">{fromLabel}</span>
-          </div>
-
-          <div className="bp-route-mid">
-            <div className="bp-dotline">
-              <span className="bp-dot" />
-              <div className="bp-dash" />
-              <svg className="bp-plane-mid" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="6" width="18" height="12" rx="3" fill="#ef4444" opacity="0.9"/>
-                <rect x="5" y="8" width="4" height="4" rx="1" fill="white" opacity="0.7"/>
-                <rect x="10" y="8" width="4" height="4" rx="1" fill="white" opacity="0.7"/>
-                <circle cx="7"  cy="19" r="2" fill="#ef4444"/>
-                <circle cx="17" cy="19" r="2" fill="#ef4444"/>
-              </svg>
-              <div className="bp-dash" />
-              <span className="bp-dot" />
+            <div className="ft-airline-info">
+              <span className="ft-airline-name">{train?.trainCompany || "—"}</span>
+              <span className="ft-plane-model">{train?.trainNumber || "—"}</span>
             </div>
-            <span className="bp-dur">Direct</span>
           </div>
-
-          <div className="bp-city-block bp-city-block--right">
-            <span style={{
-              display: "block",
-              fontSize: "clamp(28px, 5vw, 42px)",
-              fontWeight: 800,
-              color: "#ffffff",
-              letterSpacing: "0.04em",
-              lineHeight: 1,
-              marginBottom: "6px",
-              fontFamily: "'Syne', sans-serif",
-              textAlign: "right",
-            }}>
-              {arrivalTime}
-            </span>
-            <span className="bp-city" style={{ marginBottom: 4 }}>{toLabel}</span>
+          <div className="ft-flight-meta">
+            <span className="ft-flight-date">{formatDate(train?.dueDate)}</span>
+            <span className="ft-flight-num">Wagon {train?.vagonNumber || "—"}</span>
           </div>
         </div>
 
-        <div className="bp-info-row">
-          <div className="bp-info-item">
-            <span className="bp-meta-label">Wagon</span>
-            <span className="bp-info-val bp-info-val--accent">{train.vagonNumber ?? "—"}</span>
+        <div className="ft-route">
+          <div className="ft-time-block">
+            <span className="ft-time">{departTime ?? "--:--"}</span>
+            <span className="ft-city">{(fromLabel || train?.from || "—").toUpperCase()}</span>
           </div>
-          <div className="bp-info-item">
-            <span className="bp-meta-label">Departure</span>
-            <span className="bp-info-val bp-info-val--accent">{departureTime}</span>
-          </div>
-          {selectedSeat && (
-            <div className="bp-info-item">
-              <span className="bp-meta-label">Seat</span>
-              <span className="bp-info-val bp-info-val--accent">{selectedSeat.name}</span>
+
+          <div className="ft-route-center">
+            <span className="ft-duration">DIRECT</span>
+            <div className="ft-line">
+              <span className="ft-line-dot" />
+              <span className="ft-line-bar" />
+              <span className="ft-plane-fly">🚆</span>
+              <span className="ft-line-bar" />
+              <span className="ft-line-dot" />
             </div>
-          )}
-          <div className="bp-info-item">
-            <span className="bp-meta-label">Available</span>
-            <span className="bp-info-val">{train.availableSeats ?? "—"}</span>
+          </div>
+
+          <div className="ft-time-block ft-time-block--right">
+            <span className="ft-time">{arrivalTime ?? "--:--"}</span>
+            <span className="ft-city ft-city--arrival">{(toLabel || train?.to || "—").toUpperCase()}</span>
           </div>
         </div>
 
-        <div className="bp-divider" />
+        <div className="ft-divider" />
 
-        <div className="bp-pax-row">
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Passenger Name</span>
-            <span className="bp-meta-value" style={{ fontSize: "15px", color: "#fff", fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>
-              {passengerName || "—"}
-            </span>
+        {variants.length > 0 && (
+          <div className="ft-variants-section">
+            <span className="ft-variants-label">Select Class</span>
+            <div className="ft-variants-row">
+              {variants.map(v => {
+                const meta     = variantMeta(v.name);
+                const isActive = (displayClass || "").toLowerCase() === (v.name || "").toLowerCase();
+                const vPrice   = Math.round(basePrice + Number(v.price));
+                return (
+                  <button key={v.id} type="button"
+                    className={`vbtn${isActive ? " active" : ""}`}
+                    style={{ "--vcolor": meta.color }}
+                    onClick={() => onSelectVariant && onSelectVariant(v)}>
+                    <span className="vbtn-dot" style={{ background: meta.color }} />
+                    <span className="vbtn-name">{v.name}</span>
+                    <span className="vbtn-price">{vPrice} ₼</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="ft-divider" />
+
+        <div className="ft-bottom">
+          <div className="ft-tags">
+            {train?.availableSeats != null && (
+              <span className="ft-tag">
+                <span className="ft-tag-dot green" />
+                {train.availableSeats} seats
+              </span>
+            )}
+            {train?.luggageKg != null && (
+              <span className="ft-tag">🧳 {train.luggageKg} kg</span>
+            )}
+            {train?.vagonNumber != null && (
+              <span className="ft-tag">🚃 Wagon {train.vagonNumber}</span>
+            )}
+            {selectedSeat && (
+              <span className="ft-tag" style={{ color: "#fff", borderColor: "rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.12)" }}>
+                ✦ Seat {selectedSeat.name}
+              </span>
+            )}
+            {passengerName && (
+              <span className="ft-tag" style={{ fontStyle: "italic", opacity: 0.7 }}>{passengerName}</span>
+            )}
           </div>
         </div>
 
-        <p className="bp-notice">Please be ready 15 minutes before boarding</p>
+        {isExpired && (
+          <div className="bp-expired-overlay">
+            <span>EXPIRED</span>
+          </div>
+        )}
       </div>
 
-      {/* TEAR LINE */}
-      <div className="bp-tear" />
-
-      {/* RIGHT STUB */}
-      <div className="bp-stub">
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Company</span>
-          <span className="bp-stub-value">{train.trainCompany || "—"}</span>
+      <div className="ft-card-side">
+        <div className="ft-side-row">
+          <span className="ft-side-label">TRAIN</span>
+          <span className="ft-side-value">{train?.trainNumber || "—"}</span>
         </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Train</span>
-          <span className="bp-stub-value">{train.trainNumber || "—"}</span>
+        <div className="ft-side-row">
+          <span className="ft-side-label">DATE</span>
+          <span className="ft-side-value">{formatDate(train?.dueDate)}</span>
         </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Dep.</span>
-          <span className="bp-stub-value">{departureTime}</span>
+        <div className="ft-side-row">
+          <span className="ft-side-label">WAGON</span>
+          <span className="ft-side-value">{train?.vagonNumber || "—"}</span>
         </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Arr.</span>
-          <span className="bp-stub-value">{arrivalTime}</span>
+        <div className="ft-side-row">
+          <span className="ft-side-label">DEP.</span>
+          <span className="ft-side-value">{departTime || "--:--"}</span>
         </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Date</span>
-          <span className="bp-stub-value" style={{ fontSize: "10px" }}>{departureDate}</span>
+        <div className="ft-side-row">
+          <span className="ft-side-label">ARR.</span>
+          <span className="ft-side-value">{arrivalTime || "--:--"}</span>
         </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Wagon</span>
-          <span className="bp-stub-value" style={{ fontSize: "20px", fontWeight: 700 }}>{train.vagonNumber ?? "—"}</span>
-        </div>
-        {selectedSeat && (
-          <>
-            <div className="bp-stub-divider" />
-            <div className="bp-stub-meta">
-              <span className="bp-stub-label">Seat</span>
-              <span className="bp-stub-value" style={{ fontSize: "20px", fontWeight: 700 }}>{selectedSeat.name}</span>
-            </div>
-          </>
-        )}
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Passenger</span>
-          <span className="bp-stub-pax">{passengerName || "—"}</span>
-        </div>
-        <div className="bp-stub-route">{fromLabel} → {toLabel}</div>
-        <BarcodeSVG />
+        <BarcodeSide seed={train?.id || 0} />
       </div>
     </div>
   );
 }
 
-// ─── Seat Map ─────────────────────────────────────────────────────────────────
-function SeatMapGrid({ seats, selectedSeat, onSelect }) {
-  const seatByKey = {};
-  seats.forEach((s) => { seatByKey[s.name] = s; });
+// ─── Variant themes ───────────────────────────────────────────────────────────
+const THEMES = [
+  {
+    accent: "#f59e0b", freeBg: "rgba(245,158,11,0.08)", freeBorder: "rgba(245,158,11,0.32)",
+    selBg: "rgba(245,158,11,0.22)", selBorder: "#f59e0b", selShadow: "rgba(245,158,11,0.35)",
+    zoneBg: "rgba(245,158,11,0.03)", zoneBorder: "rgba(245,158,11,0.14)",
+    headBg: "rgba(245,158,11,0.05)", priceBg: "rgba(245,158,11,0.08)",
+  },
+  {
+    accent: "#ef4444", freeBg: "rgba(239,68,68,0.08)", freeBorder: "rgba(239,68,68,0.30)",
+    selBg: "rgba(239,68,68,0.22)", selBorder: "#ef4444", selShadow: "rgba(239,68,68,0.35)",
+    zoneBg: "rgba(239,68,68,0.03)", zoneBorder: "rgba(239,68,68,0.14)",
+    headBg: "rgba(239,68,68,0.05)", priceBg: "rgba(239,68,68,0.08)",
+  },
+  {
+    accent: "#22c55e", freeBg: "rgba(34,197,94,0.07)", freeBorder: "rgba(34,197,94,0.28)",
+    selBg: "rgba(34,197,94,0.22)", selBorder: "#22c55e", selShadow: "rgba(34,197,94,0.35)",
+    zoneBg: "rgba(34,197,94,0.02)", zoneBorder: "rgba(34,197,94,0.13)",
+    headBg: "rgba(34,197,94,0.04)", priceBg: "rgba(34,197,94,0.07)",
+  },
+];
+const getTheme = (idx) => THEMES[Math.min(idx, THEMES.length - 1)];
 
-  const variantGroups = seats.reduce((acc, s) => {
-    if (!acc[s.variantName]) acc[s.variantName] = { name: s.variantName, price: s.variantPrice };
-    return acc;
-  }, {});
+const CLASS_ICONS = { BUSINESS: "◆", FIRST: "★", ECONOMY: "●" };
+function classIcon(name) {
+  if (!name) return "●";
+  const u = name.toUpperCase();
+  return Object.entries(CLASS_ICONS).find(([k]) => u.includes(k))?.[1] ?? "●";
+}
 
-  const rows = [...new Set(seats.map((s) => {
-    const match = s.name.match(/^(\d+)/);
-    return match ? parseInt(match[1]) : null;
-  }).filter(Boolean))].sort((a, b) => a - b);
+// ─── Seat Button ──────────────────────────────────────────────────────────────
+function SeatBtn({ seat, seatId, selectedSeat, onSelect, theme }) {
+  if (!seat) return <div className="sb-empty" />;
+  const isSelected = selectedSeat?.id === seat.id;
+  const isTaken    = seat.isOccupied;
+
+  let style = {};
+  if (!isTaken) {
+    if (isSelected) {
+      style = {
+        background:  theme.selBg,
+        borderColor: theme.selBorder,
+        boxShadow:   `0 0 0 1px ${theme.selBorder}, 0 4px 12px ${theme.selShadow}`,
+      };
+    } else {
+      style = {
+        background:  theme.freeBg,
+        borderColor: theme.freeBorder,
+      };
+    }
+  }
+
+  return (
+    <button
+      className={`sb${isTaken ? " sb--taken" : ""}${isSelected ? " sb--selected" : ""}`}
+      style={style}
+      disabled={isTaken}
+      onClick={() => !isTaken && onSelect(seat)}
+      aria-label={`Seat ${seatId}${isTaken ? " — occupied" : ""}`}
+    >
+      <span className="sb-id">{seatId}</span>
+      {isSelected && <span className="sb-check">✓</span>}
+    </button>
+  );
+}
+
+// ─── Variant Block ────────────────────────────────────────────────────────────
+function VariantBlock({ variantName, variantPrice, seats, selectedSeat, onSelect, themeIdx }) {
+  const theme = getTheme(themeIdx);
+  const byKey = {};
+  seats.forEach(s => { byKey[s.name] = s; });
+
+  const rows = [
+    ...new Set(
+      seats.map(s => { const m = s.name.match(/^(\d+)/); return m ? parseInt(m[1]) : null; }).filter(Boolean)
+    ),
+  ].sort((a, b) => a - b);
 
   const ALL_LEFT  = ["A", "B", "C"];
   const ALL_RIGHT = ["D", "E", "F"];
-  const usedCols  = new Set(seats.map((s) => s.name.replace(/[0-9]/g, "")));
-  const LEFT_COLS  = ALL_LEFT.filter(c => usedCols.has(c));
-  const RIGHT_COLS = ALL_RIGHT.filter(c => usedCols.has(c));
-  const showAisle = LEFT_COLS.length > 0 && RIGHT_COLS.length > 0;
+  const used      = new Set(seats.map(s => s.name.replace(/[0-9]/g, "")));
+  const LEFT      = ALL_LEFT.filter(c => used.has(c));
+  const RIGHT     = ALL_RIGHT.filter(c => used.has(c));
+  const showAisle = LEFT.length > 0 && RIGHT.length > 0;
+
+  const tpl = [
+    "20px",
+    ...LEFT.map(() => "1fr"),
+    showAisle ? "12px" : null,
+    ...RIGHT.map(() => "1fr"),
+  ].filter(Boolean).join(" ");
 
   return (
-    <div className="sm-wrap">
-      {Object.values(variantGroups).map((vg) => (
-        <div key={vg.name} className="sm-variant-header">
-          <span className="sm-class-name">{vg.name}</span>
-          <span className="sm-price-tag">+{vg.price} ₼</span>
+    <div className="vb" style={{
+      "--accent": theme.accent, "--zone-bg": theme.zoneBg,
+      "--zone-border": theme.zoneBorder, "--head-bg": theme.headBg, "--price-bg": theme.priceBg,
+    }}>
+      <div className="vb-header">
+        <div className="vb-header-left">
+          <span className="vb-icon">{classIcon(variantName)}</span>
+          <span className="vb-header-name">{variantName}</span>
         </div>
-      ))}
-
-      <div className="sm-front">
-        <div className="sm-front-line" />
-        <span className="sm-front-label">🚂 Front</span>
-        <div className="sm-front-line" />
+        {variantPrice > 0 && <span className="vb-header-price">+{variantPrice} ₼</span>}
       </div>
 
-      <div className="sm-col-headers">
-        <div className="sm-row-num-cell" />
-        {LEFT_COLS.map(c => <div key={c} className="sm-col-h">{c}</div>)}
-        {showAisle && <div className="sm-aisle-spacer" />}
-        {RIGHT_COLS.map(c => <div key={c} className="sm-col-h">{c}</div>)}
+      <div className="vb-grid">
+        <div className="vb-grid-row vb-col-header-row" style={{ "--tpl": tpl }}>
+          <div />
+          {LEFT.map(c  => <div key={c}  className="vb-col-h">{c}</div>)}
+          {showAisle   && <div />}
+          {RIGHT.map(c => <div key={c}  className="vb-col-h">{c}</div>)}
+        </div>
+        {rows.map(row => (
+          <div key={row} className="vb-grid-row" style={{ "--tpl": tpl }}>
+            <div className="vb-row-num">{row}</div>
+            {LEFT.map(col => {
+              const id = `${row}${col}`, s = byKey[id];
+              return s
+                ? <SeatBtn key={id} seat={s} seatId={id} selectedSeat={selectedSeat} onSelect={onSelect} theme={theme} />
+                : <div key={id} className="sb-empty" />;
+            })}
+            {showAisle && <div className="vb-aisle" />}
+            {RIGHT.map(col => {
+              const id = `${row}${col}`, s = byKey[id];
+              return s
+                ? <SeatBtn key={id} seat={s} seatId={id} selectedSeat={selectedSeat} onSelect={onSelect} theme={theme} />
+                : <div key={id} className="sb-empty" />;
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Seat Map Grid ────────────────────────────────────────────────────────────
+function SeatMapGrid({ seats, selectedSeat, onSelect }) {
+  const groups = {};
+  seats.forEach(s => {
+    const k = s.variantName || "ECONOMY";
+    if (!groups[k]) groups[k] = { name: k, price: s.variantPrice ?? 0, seats: [] };
+    groups[k].seats.push(s);
+  });
+  const sorted = Object.values(groups).sort((a, b) => b.price - a.price);
+
+  return (
+    <div className="sm-outer">
+      <div className="sm-front-bar">
+        <span className="sm-front-line" />
+        <span className="sm-front-lbl">
+          <span className="sm-front-icon">
+            <svg viewBox="0 0 24 24" fill="#ef4444" width="11" height="11">
+              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+            </svg>
+          </span>
+          Front of train
+        </span>
+        <span className="sm-front-line" />
       </div>
 
-      {rows.map((row) => (
-        <div key={row} className="sm-row">
-          <div className="sm-row-num-cell">{row}</div>
-          {LEFT_COLS.map((col) => {
-            const seatId = `${row}${col}`;
-            const seat = seatByKey[seatId];
-            if (!seat) return <div key={seatId} className="sm-seat sm-seat--empty" />;
-            return <SeatButton key={seatId} seat={seat} seatId={seatId} selectedSeat={selectedSeat} onSelect={onSelect} />;
-          })}
-          {showAisle && <div className="sm-aisle-spacer" />}
-          {RIGHT_COLS.map((col) => {
-            const seatId = `${row}${col}`;
-            const seat = seatByKey[seatId];
-            if (!seat) return <div key={seatId} className="sm-seat sm-seat--empty" />;
-            return <SeatButton key={seatId} seat={seat} seatId={seatId} selectedSeat={selectedSeat} onSelect={onSelect} />;
-          })}
+      {sorted.map((vg, idx) => (
+        <div key={vg.name}>
+          <VariantBlock
+            variantName={vg.name} variantPrice={vg.price}
+            seats={vg.seats} selectedSeat={selectedSeat}
+            onSelect={onSelect} themeIdx={idx}
+          />
+          {idx < sorted.length - 1 && (
+            <div className="sm-sep">
+              <span className="sm-sep-line" />
+              <span className="sm-sep-txt">· · · · ·</span>
+              <span className="sm-sep-line" />
+            </div>
+          )}
         </div>
       ))}
 
       <div className="sm-legend">
-        <span className="sm-legend-item"><span className="sm-legend-dot sm-legend-dot--free" /> Available</span>
-        <span className="sm-legend-item"><span className="sm-legend-dot sm-legend-dot--taken" /> Taken</span>
-        <span className="sm-legend-item"><span className="sm-legend-dot sm-legend-dot--selected" /> Selected</span>
+        {sorted.map((vg, idx) => {
+          const t = getTheme(idx);
+          return (
+            <span key={vg.name} className="sm-leg">
+              <span className="sm-leg-dot" style={{ background: t.freeBg, borderColor: t.freeBorder }} />
+              {vg.name}
+            </span>
+          );
+        })}
+        <span className="sm-leg">
+          <span className="sm-leg-dot" style={{ background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.38)" }} />
+          Taken
+        </span>
+        <span className="sm-leg">
+          <span className="sm-leg-dot" style={{ background: "rgba(239,68,68,0.22)", borderColor: "#ef4444" }} />
+          Selected
+        </span>
       </div>
     </div>
-  );
-}
-
-function SeatButton({ seat, seatId, selectedSeat, onSelect }) {
-  if (!seat) return <div className="sm-seat sm-seat--empty" />;
-  const isSelected = selectedSeat?.id === seat.id;
-  const isTaken = seat.isOccupied;
-  let stateClass = "sm-seat--free";
-  if (isTaken) stateClass = "sm-seat--taken";
-  else if (isSelected) stateClass = "sm-seat--selected";
-  return (
-    <button
-      className={`sm-seat ${stateClass}`}
-      disabled={isTaken}
-      onClick={() => !isTaken && onSelect(seat)}
-      aria-label={`Seat ${seatId}`}
-    >
-      {seatId}
-    </button>
   );
 }
 
 // ─── Main TrainBooking Component ──────────────────────────────────────────────
 export default function TrainBooking({ train, fromLabel, toLabel, onBack, onSuccess }) {
-  const [seats, setSeats] = useState([]);
-  const [seatsLoading, setSeatsLoading] = useState(true);
-  const [selectedSeat, setSelectedSeat] = useState(null);
-  const [hasPet, setHasPet] = useState(false);
-  const [hasChild, setHasChild] = useState(false);
-  const [luggageKg, setLuggageKg] = useState(0);
-  const [note, setNote] = useState("");
-  const [buying, setBuying] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
-  const [passengerName, setPassengerName] = useState("");
-  const [displayClass, setDisplayClass] = useState(null);
+  const [seats,         setSeats]         = useState([]);
+  const [seatsLoading,  setSeatsLoading]  = useState(true);
+  const [selectedSeat,  setSelectedSeat]  = useState(null);
+  const [hasPet,        setHasPet]        = useState(false);
+  const [hasChild,      setHasChild]      = useState(false);
+  const [luggageKg,     setLuggageKg]     = useState(train?.luggageKg ?? 0);
+  const [note,          setNote]          = useState("");
+  const [buying,        setBuying]        = useState(false);
+  const [error,         setError]         = useState("");
+  const [success,       setSuccess]       = useState(false);
+  const [showPayment,   setShowPayment]   = useState(false);
+  const [passengerName, setPassengerName] = useState(train?.passengerName ?? "");
+  const [displayClass,  setDisplayClass]  = useState(train?.variantName ?? null);
 
-  // FIX: isExpired yalnız məlumat üçündür, alışı bloklamır
   const isExpired = train?.dueDate ? new Date(train.dueDate) < new Date() : false;
 
   useEffect(() => {
-    if (!train?.id) { setSeatsLoading(false); return; }
-    const fetchSeats = async () => {
+    if (!train?.id) return;
+    (async () => {
       setSeatsLoading(true);
       try {
         const res = await fetch(
           `${API_BASE}/Seat/by-ticket?TicketId=${train.id}&TicketType=train`,
           { headers: getHeaders() }
         );
-        if (!res.ok) throw new Error("Failed to load seats.");
+        if (!res.ok) throw new Error("Seats could not be loaded.");
         const data = await res.json();
         const list = Array.isArray(data.data) ? data.data : [];
         setSeats(list);
-        if (list.length > 0) setDisplayClass(list[0].variantName ?? null);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setSeatsLoading(false);
-      }
-    };
-    fetchSeats();
-    getUserName().then((name) => { if (name) setPassengerName(name); });
+        if (!train?.variantName && list.length > 0) setDisplayClass(list[0].variantName ?? null);
+      } catch (e) { setError(e.message); }
+      finally { setSeatsLoading(false); }
+    })();
+    getUserName().then(n => { if (n) setPassengerName(n); });
   }, [train?.id]);
 
   useEffect(() => {
     if (selectedSeat) setDisplayClass(selectedSeat.variantName ?? displayClass);
+    else setDisplayClass(train?.variantName ?? seats[0]?.variantName ?? null);
   }, [selectedSeat]);
 
+  function handleVariantSelect(variant) {
+    setDisplayClass(variant.name);
+    if (selectedSeat && selectedSeat.variantName !== variant.name) {
+      setSelectedSeat(null);
+    }
+  }
+
   async function handleBuy() {
+    if (isExpired)     { setError("This train has already departed."); return; }
     if (!selectedSeat) { setError("Please select a seat."); return; }
     const userId = getUserId();
-    if (!userId) { setError("Session expired. Please log in again."); return; }
+    if (!userId)       { setError("Session expired. Please log in again."); return; }
 
-    setBuying(true);
-    setError("");
-
+    setBuying(true); setError("");
     try {
-      const luggageLimit = Number(train?.luggageKg || 30);
-      const safeTotalKg = luggageKg > 0 ? luggageKg : 1;
-      const safeCount = luggageKg > luggageLimit
-        ? Math.ceil((luggageKg - luggageLimit) / 5)
-        : 1;
-
+      const ll   = Number(train?.luggageKg || 30);
       const body = {
-        id: parseInt(selectedSeat.trainTicketId ?? train.id, 10),
-        userId: parseInt(userId, 10),
-        dueDate: train.dueDate,
-        chosenSeatId: parseInt(selectedSeat.id, 10),
-        hasPet: Boolean(hasPet),
-        hasChild: Boolean(hasChild),
-        luggageCount: safeCount,
-        totalLuggageKg: safeTotalKg,
-        state: 1,
-        note: note.trim() || null,
+        id:             parseInt(selectedSeat.trainTicketId ?? train.id, 10),
+        userId:         parseInt(userId, 10),
+        dueDate:        train.dueDate,
+        chosenSeatId:   parseInt(selectedSeat.id, 10),
+        hasPet:         Boolean(hasPet),
+        hasChild:       Boolean(hasChild),
+        luggageCount:   luggageKg > ll ? Math.ceil((luggageKg - ll) / 5) : 1,
+        totalLuggageKg: luggageKg > 0 ? luggageKg : 1,
+        state:          1,
+        note:           note.trim() || null,
       };
 
       const res = await fetch(`${API_BASE}/TrainTicket/fill`, {
-        method: "PUT",
-        headers: getHeaders(),
-        body: JSON.stringify(body),
+        method: "PUT", headers: getHeaders(), body: JSON.stringify(body),
       });
-
-      const rawText = await res.text();
+      const raw = await res.text();
       let result = null;
-      try { result = rawText ? JSON.parse(rawText) : null; } catch { result = null; }
+      try { result = raw ? JSON.parse(raw) : null; } catch {}
 
       if (!res.ok) {
-        let errMsg = result?.message || result?.title || `Server error: ${res.status}`;
-        if (result?.errors) errMsg = Object.values(result.errors).flat().join(", ");
-        setSeats((prev) => prev.map((s) => (s.id === selectedSeat.id ? { ...s, isOccupied: true } : s)));
+        let msg = result?.message || result?.title || `Error ${res.status}`;
+        if (result?.errors) msg = Object.values(result.errors).flat().join(", ");
+        setSeats(p => p.map(s => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
         setSelectedSeat(null);
-        throw new Error(errMsg);
+        throw new Error(msg);
       }
 
       setSuccess(true);
       if (onSuccess) setTimeout(() => onSuccess(result?.data ?? {}), 2000);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBuying(false);
-    }
+    } catch (e) { setError(e.message); }
+    finally { setBuying(false); }
   }
 
-  // UTC-safe time parser
-  function formatTime(dateStr) {
-    if (!dateStr) return "--:--";
-    const s = String(dateStr);
-    const match = s.match(/T(\d{2}):(\d{2})/);
-    if (match) return `${match[1]}:${match[2]}`;
-    const d = new Date(s);
-    if (isNaN(d.getTime())) return "--:--";
-    return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+  function formatTime(d) {
+    if (!d) return "--:--";
+    const dt = new Date(d);
+    return `${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
   }
 
-  function formatDate(dateStr) {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-  }
-
-  // FIX: Arrival time — endDate varsa göstər, yoxsa dueDate + 3 saat (müvəqqəti fallback)
-  function formatArrivalTime(t) {
+  function formatArrivalFromTrain(t) {
+    if (!t) return "--:--";
     if (t.endDate)     return formatTime(t.endDate);
     if (t.arrivalDate) return formatTime(t.arrivalDate);
     if (t.arrivalTime) return formatTime(t.arrivalTime);
-    // Fallback: dueDate + 3 saat
     if (t.dueDate) {
-      const s = String(t.dueDate);
-      const isoMatch = s.match(/T(\d{2}):(\d{2})/);
-      if (isoMatch) {
-        const totalMin = parseInt(isoMatch[1]) * 60 + parseInt(isoMatch[2]) + 180;
-        const hh = String(Math.floor(totalMin / 60) % 24).padStart(2, "0");
-        const mm = String(totalMin % 60).padStart(2, "0");
-        return `${hh}:${mm}`;
-      }
+      const dt = new Date(t.dueDate);
+      dt.setMinutes(dt.getMinutes() + (t.durationMinutes || 180));
+      return `${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
     }
     return "--:--";
   }
 
-  const basePrice    = Number(train?.price || 0);
-  const seatExtra    = Number(selectedSeat?.variantPrice || 0);
-  const luggageLimit = Number(train?.luggageKg || 30);
-  const luggageExtra = luggageKg > luggageLimit ? Math.ceil((luggageKg - luggageLimit) / 5) * 5 : 0;
-  const totalPrice   = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
-
-  if (!train) {
-    return (
-      <div className="tb-page">
-        <div className="tb-inner">
-          <button className="tb-back" onClick={onBack}>← Back</button>
-          <p style={{ color: "rgba(255,255,255,0.4)", textAlign: "center", marginTop: "2rem" }}>No ticket selected.</p>
-        </div>
-      </div>
-    );
+  function formatDate(d) {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
 
-  if (success) {
-    return (
-      <div className="tb-page">
-        <div className="tb-inner tb-success-screen">
-          <div className="tb-success-circle">✓</div>
-          <h2 className="tb-success-title">Ticket Purchased!</h2>
-          <p className="tb-success-sub">Your {fromLabel} → {toLabel} train ticket has been confirmed.</p>
-          <p className="tb-success-seat">Seat: <strong>{selectedSeat?.name}</strong></p>
-        </div>
+  const basePrice       = Number(train?.price || 0);
+  const seatExtra       = Number(selectedSeat?.variantPrice || 0);
+  const includedLuggage = train?.luggageKg ?? 30;
+  const luggageExtra    = luggageKg > includedLuggage ? Math.ceil((luggageKg - includedLuggage) / 5) * 5 : 0;
+  const totalPrice      = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
+
+  if (!train) return (
+    <div className="fb-page">
+      <div className="fb-inner">
+        <button className="fb-back" onClick={onBack}>← Back</button>
+        <p style={{ color: "rgba(255,255,255,0.28)", textAlign: "center", marginTop: "2rem" }}>No train selected.</p>
       </div>
-    );
-  }
+    </div>
+  );
+
+  if (success) return (
+    <div className="fb-page">
+      <div className="fb-inner fb-success-screen">
+        <div className="fb-success-circle">✓</div>
+        <h2 className="fb-success-title">Ticket Purchased!</h2>
+        <p className="fb-success-sub">Your train from {fromLabel} → {toLabel} is confirmed.</p>
+        <p className="fb-success-seat">Seat: <strong>{selectedSeat?.name}</strong></p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="tb-page">
-      <div className="tb-inner">
-        {onBack && (
-          <button className="tb-back" onClick={onBack}>← Back</button>
-        )}
+    <div className="fb-page">
+      <div className="fb-inner">
+        <button className="fb-back" onClick={onBack}>← Back</button>
 
         {isExpired && (
-          <div className="tb-expired-banner">
-            <span className="tb-expired-icon">🕐</span>
+          <div className="fb-expired-banner">
+            <span className="fb-expired-icon">🕐</span>
             <div>
-              <strong>This ticket has expired</strong>
-              <p>Departure date: {formatDate(train.dueDate)} · {formatTime(train.dueDate)}</p>
+              <strong>This train has already departed</strong>
+              <p>Departure: {formatDate(train.dueDate)} · {formatTime(train.dueDate)}</p>
             </div>
           </div>
         )}
 
-        <BoardingPassCard
+        <TicketCard
           train={train}
           fromLabel={fromLabel}
           toLabel={toLabel}
           isExpired={isExpired}
           formatTime={formatTime}
+          formatArrivalFromTrain={formatArrivalFromTrain}
           formatDate={formatDate}
-          formatArrivalTime={formatArrivalTime}
-          selectedSeat={selectedSeat}
-          displayClass={displayClass}
           passengerName={passengerName}
+          displayClass={displayClass}
+          selectedSeat={selectedSeat}
+          seats={seats}
+          onSelectVariant={handleVariantSelect}
         />
 
-        {/* 01 — Seat Selection */}
-        <div className="tb-section">
-          <h3 className="tb-section-title">
-            <span className="tb-section-num">01</span>Select Seat
+        {/* 01 Seat Selection */}
+        <div className={`fb-section${isExpired ? " fb-section--disabled" : ""}`}>
+          <h3 className="fb-section-title">
+            <span className="fb-section-num">01</span>Select a Seat
           </h3>
-          {seatsLoading ? (
-            <div className="tb-seats-loading">
-              {[...Array(12)].map((_, i) => <div key={i} className="tb-seat-skeleton" />)}
+          {isExpired ? (
+            <div className="fb-seats-empty">This train has departed. Seat selection is unavailable.</div>
+          ) : seatsLoading ? (
+            <div className="fb-seats-loading">
+              {[...Array(18)].map((_, i) => <div key={i} className="fb-seat-skeleton" />)}
             </div>
           ) : seats.length === 0 ? (
-            <div className="tb-seats-empty">No seat data found.</div>
+            <div className="fb-seats-empty">No seat data found.</div>
           ) : (
-            <div className="tb-cabin">
+            <div className="fb-cabin">
               <SeatMapGrid seats={seats} selectedSeat={selectedSeat} onSelect={setSelectedSeat} />
             </div>
           )}
         </div>
 
-        {/* 02 — Add-ons */}
-        <div className="tb-section">
-          <h3 className="tb-section-title">
-            <span className="tb-section-num">02</span>Add-ons
-          </h3>
-          <div className="tb-options">
-            <div className="tb-option" onClick={() => setHasPet(!hasPet)}>
-              <div className="tb-option-info">
-                <span className="tb-option-icon">🐾</span>
-                <div><span className="tb-option-name">Pet</span></div>
-              </div>
-              <div className={`tb-toggle${hasPet ? " tb-toggle--on" : ""}`}>
-                <span className="tb-toggle-knob" />
-              </div>
-            </div>
-
-            <div className="tb-option" onClick={() => setHasChild(!hasChild)}>
-              <div className="tb-option-info">
-                <span className="tb-option-icon">👶</span>
-                <div><span className="tb-option-name">Child</span></div>
-              </div>
-              <div className={`tb-toggle${hasChild ? " tb-toggle--on" : ""}`}>
-                <span className="tb-toggle-knob" />
-              </div>
-            </div>
-
-            <div className="tb-option tb-option--luggage">
-              <div className="tb-option-info">
-                <span className="tb-option-icon">🧳</span>
-                <div>
-                  <span className="tb-option-name">Luggage weight</span>
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", display: "block" }}>
-                    Included: {luggageLimit} kg
-                  </span>
+        {/* 02 Extras */}
+        {!isExpired && (
+          <div className="fb-section">
+            <h3 className="fb-section-title">
+              <span className="fb-section-num">02</span>Extras
+            </h3>
+            <div className="fb-options">
+              <div className="fb-option" onClick={() => setHasPet(!hasPet)}>
+                <div className="fb-option-info">
+                  <span className="fb-option-icon">🐾</span>
+                  <div><span className="fb-option-name">Pet on board</span></div>
+                </div>
+                <div className={`fb-toggle${hasPet ? " fb-toggle--on" : ""}`}>
+                  <span className="fb-toggle-knob" />
                 </div>
               </div>
-              <div className="tb-counter">
-                <button className="tb-counter-btn" onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}>−</button>
-                <span className="tb-counter-val">{luggageKg} kg</span>
-                <button className="tb-counter-btn" onClick={() => setLuggageKg(luggageKg + 5)}>+</button>
+
+              <div className="fb-option" onClick={() => setHasChild(!hasChild)}>
+                <div className="fb-option-info">
+                  <span className="fb-option-icon">👶</span>
+                  <div><span className="fb-option-name">Travelling with child</span></div>
+                </div>
+                <div className={`fb-toggle${hasChild ? " fb-toggle--on" : ""}`}>
+                  <span className="fb-toggle-knob" />
+                </div>
+              </div>
+
+              <div className="fb-option fb-option--luggage">
+                <div className="fb-option-info">
+                  <span className="fb-option-icon">🧳</span>
+                  <div>
+                    <span className="fb-option-name">Luggage weight</span>
+                    <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.28)", display: "block" }}>
+                      Included: {includedLuggage} kg
+                    </span>
+                  </div>
+                </div>
+                <div className="fb-counter">
+                  <button className="fb-counter-btn" onClick={() => setLuggageKg(Math.max(0, luggageKg - 5))}>−</button>
+                  <span className="fb-counter-val">{luggageKg} kg</span>
+                  <button className="fb-counter-btn" onClick={() => setLuggageKg(Math.min(50, luggageKg + 5))}>+</button>
+                </div>
               </div>
             </div>
+
+            <textarea
+              className="fb-note" rows={3} value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="Special requests or notes..."
+            />
           </div>
+        )}
 
-          <textarea
-            className="tb-note"
-            rows={3}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Special note..."
-          />
-        </div>
-
-        {/* Order summary */}
-        {selectedSeat && (
-          <div className="tb-order-summary">
-            <div className="tb-order-row">
-              <span>Base price</span>
-              <span>{basePrice.toFixed(2)} ₼</span>
+        {selectedSeat && !isExpired && (
+          <div className="fb-order-summary">
+            <div className="fb-order-row">
+              <span>Base price</span><span>{basePrice.toFixed(2)} ₼</span>
             </div>
             {seatExtra > 0 && (
-              <div className="tb-order-row">
-                <span>Class ({selectedSeat.variantName})</span>
-                <span>+{seatExtra.toFixed(2)} ₼</span>
+              <div className="fb-order-row">
+                <span>Seat class ({displayClass})</span><span>+{seatExtra.toFixed(2)} ₼</span>
               </div>
             )}
             {luggageExtra > 0 && (
-              <div className="tb-order-row">
-                <span>Extra luggage ({luggageKg - luggageLimit} kg)</span>
-                <span>+{luggageExtra.toFixed(2)} ₼</span>
+              <div className="fb-order-row">
+                <span>Extra luggage ({luggageKg - includedLuggage} kg)</span><span>+{luggageExtra.toFixed(2)} ₼</span>
               </div>
             )}
-            <div className="tb-order-divider" />
-            <div className="tb-order-total">
-              <span>Total</span>
-              <span>{totalPrice} ₼</span>
+            <div className="fb-order-divider" />
+            <div className="fb-order-total">
+              <span>Total</span><span>{totalPrice} ₼</span>
             </div>
           </div>
         )}
 
-        {error && (
-          <div className="tb-error"><span>⚠</span> {error}</div>
-        )}
+        {error && <div className="fb-error"><span>⚠</span> {error}</div>}
 
-        <button
-          className={`tb-buy-btn${buying ? " tb-buy-btn--loading" : ""}${!selectedSeat ? " tb-buy-btn--disabled" : ""}`}
-          onClick={() => selectedSeat && setShowPayment(true)}
-          disabled={buying || !selectedSeat}
-        >
-          {buying
-            ? <><span className="tb-spinner" /> Processing...</>
-            : <>Purchase Ticket · {totalPrice} ₼</>
-          }
-        </button>
+        {isExpired ? (
+          <button className="fb-buy-btn fb-buy-btn--expired" disabled>🕐 Train has departed</button>
+        ) : (
+          <button
+            className={`fb-buy-btn${buying ? " fb-buy-btn--loading" : ""}${!selectedSeat ? " fb-buy-btn--disabled" : ""}`}
+            onClick={() => !isExpired && selectedSeat && setShowPayment(true)}
+            disabled={buying || !selectedSeat}
+          >
+            {buying ? (<><span className="fb-spinner" /> Processing...</>) : (<>Book Now · {totalPrice} ₼</>)}
+          </button>
+        )}
       </div>
 
       {showPayment && (
         <PaymentModal
-          amount={totalPrice}
-          loading={buying}
+          amount={totalPrice} loading={buying}
           onCancel={() => setShowPayment(false)}
           onConfirm={() => { setShowPayment(false); handleBuy(); }}
         />

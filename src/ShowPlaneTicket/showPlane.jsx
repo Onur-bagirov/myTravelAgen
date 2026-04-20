@@ -66,8 +66,8 @@ const VARIANT_COLORS = {
 function getVariantMeta(name = "") {
   return (
     VARIANT_COLORS[name.toLowerCase()] || {
-      accent: "#a0a8c0",
-      bg: "rgba(160,168,192,0.1)",
+      accent: "#ff8080",
+      bg: "rgba(255,128,128,0.12)",
       label: name,
     }
   );
@@ -121,6 +121,34 @@ function getCountryMeta(countryName = "") {
   return COUNTRY_DATA[key] || { code: countryName.slice(0, 2).toUpperCase(), flag: "🌐" };
 }
 
+function extractVariants(ticket) {
+  const names = new Set();
+
+  if (Array.isArray(ticket.seatGroups)) {
+    ticket.seatGroups.forEach(g => {
+      if (g.variantName) names.add(g.variantName.trim());
+    });
+  }
+
+  if (Array.isArray(ticket.variantGroups)) {
+    ticket.variantGroups.forEach(g => {
+      if (g.variantName || g.name) names.add((g.variantName || g.name).trim());
+    });
+  }
+
+  if (Array.isArray(ticket.variants)) {
+    ticket.variants.forEach(v => {
+      if (v.name) names.add(v.name.trim());
+    });
+  }
+
+  if (names.size === 0 && ticket.variantName && ticket.variantName.trim()) {
+    names.add(ticket.variantName.trim());
+  }
+
+  return [...names];
+}
+
 function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -141,11 +169,7 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   const updatePos = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setDropPos({
-        top: rect.bottom + 6,
-        left: rect.left,
-        width: rect.width,
-      });
+      setDropPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
     }
   };
 
@@ -156,67 +180,34 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
     return () => window.removeEventListener("scroll", handleScroll, true);
   }, [open]);
 
-  const handleOpen = () => {
-    updatePos();
-    setOpen(o => !o);
-  };
+  const handleOpen = () => { updatePos(); setOpen(o => !o); };
 
   const filtered = locations.filter(l =>
     l.name?.toLowerCase().includes(search.toLowerCase()) ||
     l.country?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSelect = (id) => {
-    onChange(id);
-    setOpen(false);
-    setSearch("");
-  };
+  const handleSelect = (id) => { onChange(id); setOpen(false); setSearch(""); };
 
   const dropdown = open ? createPortal(
-    <div
-      className="loc-dropdown"
-      style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, bottom: "auto" }}
-    >
+    <div className="loc-dropdown" style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width }}>
       <div className="loc-search-wrap">
         <span className="loc-search-icon">🔍</span>
-        <input
-          className="loc-search-input"
-          placeholder="Search locations..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          autoFocus
-        />
+        <input className="loc-search-input" placeholder="Search locations..." value={search} onChange={e => setSearch(e.target.value)} autoFocus />
       </div>
       <div className="loc-list">
-        <button
-          type="button"
-          className={`loc-item loc-item--all ${!value ? "loc-item--active" : ""}`}
-          onClick={() => handleSelect("")}
-        >
+        <button type="button" className={`loc-item loc-item--all ${!value ? "loc-item--active" : ""}`} onClick={() => handleSelect("")}>
           <span className="loc-item-icon">🌍</span>
-          <div className="loc-item-text">
-            <span className="loc-item-all-label">All Locations</span>
-          </div>
+          <div className="loc-item-text"><span className="loc-item-all-label">All Locations</span></div>
           {!value && <span className="loc-item-check">✓</span>}
         </button>
-
-        {filtered.length === 0 && (
-          <div className="loc-no-results">No locations found</div>
-        )}
-
+        {filtered.length === 0 && <div className="loc-no-results">No locations found</div>}
         {filtered.map(loc => {
           const meta = getCountryMeta(loc.country || "");
           const isActive = String(loc.id) === String(value);
           return (
-            <button
-              type="button"
-              key={loc.id}
-              className={`loc-item ${isActive ? "loc-item--active" : ""}`}
-              onClick={() => handleSelect(String(loc.id))}
-            >
-              <span className="loc-item-avatar" data-code={meta.code}>
-                {meta.flag}
-              </span>
+            <button type="button" key={loc.id} className={`loc-item ${isActive ? "loc-item--active" : ""}`} onClick={() => handleSelect(String(loc.id))}>
+              <span className="loc-item-avatar" data-code={meta.code}>{meta.flag}</span>
               <div className="loc-item-text">
                 <span className="loc-item-country">{(loc.country || "").toUpperCase()}</span>
                 <span className="loc-item-city">{loc.name}</span>
@@ -233,25 +224,16 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   return (
     <div className="loc-select-wrap" ref={ref}>
       <label className="loc-select-label">{label}</label>
-      <button
-        ref={triggerRef}
-        type="button"
-        className={`loc-select-trigger ${open ? "loc-select-trigger--open" : ""}`}
-        onClick={handleOpen}
-      >
+      <button ref={triggerRef} type="button" className={`loc-select-trigger ${open ? "loc-select-trigger--open" : ""}`} onClick={handleOpen}>
         {selected ? (
           <span className="loc-trigger-inner">
-            <span className="loc-trigger-flag">
-              {getCountryMeta(selected.country || "").flag}
-            </span>
+            <span className="loc-trigger-flag">{getCountryMeta(selected.country || "").flag}</span>
             <span className="loc-trigger-name">{selected.name}</span>
           </span>
         ) : (
           <span className="loc-trigger-placeholder">{placeholder}</span>
         )}
-        <span className={`loc-trigger-chevron ${open ? "loc-trigger-chevron--up" : ""}`}>
-          ›
-        </span>
+        <span className={`loc-trigger-chevron ${open ? "loc-trigger-chevron--up" : ""}`}>›</span>
       </button>
       {dropdown}
     </div>
@@ -328,58 +310,31 @@ function EditModal({ ticket, onClose, onSaved }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.airline.trim()) {
-      errs.airline = "Airline is required.";
-    } else if (form.airline.trim().length < 2) {
-      errs.airline = "Airline must be at least 2 characters.";
-    } else if (form.airline.trim().length > 60) {
-      errs.airline = "Airline must be at most 60 characters.";
-    } else if (!/^[a-zA-Z0-9 .'\-&]+$/.test(form.airline.trim())) {
-      errs.airline = "Airline contains invalid characters.";
-    }
-    if (!form.gate.trim()) {
-      errs.gate = "Gate is required.";
-    } else if (form.gate.trim().length > 10) {
-      errs.gate = "Gate must be at most 10 characters.";
-    } else if (!/^[A-Za-z0-9\-]+$/.test(form.gate.trim())) {
-      errs.gate = "Gate must be letters and numbers only (e.g. A12).";
-    }
-    if (!form.plane.trim()) {
-      errs.plane = "Plane is required.";
-    } else if (form.plane.trim().length < 2) {
-      errs.plane = "Plane must be at least 2 characters.";
-    } else if (form.plane.trim().length > 60) {
-      errs.plane = "Plane must be at most 60 characters.";
-    }
-    if (form.meal.trim().length > 60) {
-      errs.meal = "Meal must be at most 60 characters.";
-    }
+    if (!form.airline.trim()) errs.airline = "Airline is required.";
+    else if (form.airline.trim().length < 2) errs.airline = "Airline must be at least 2 characters.";
+    else if (form.airline.trim().length > 60) errs.airline = "Airline must be at most 60 characters.";
+    else if (!/^[a-zA-Z0-9 .'\-&]+$/.test(form.airline.trim())) errs.airline = "Airline contains invalid characters.";
+    if (!form.gate.trim()) errs.gate = "Gate is required.";
+    else if (form.gate.trim().length > 10) errs.gate = "Gate must be at most 10 characters.";
+    else if (!/^[A-Za-z0-9\-]+$/.test(form.gate.trim())) errs.gate = "Gate must be letters and numbers only (e.g. A12).";
+    if (!form.plane.trim()) errs.plane = "Plane is required.";
+    else if (form.plane.trim().length < 2) errs.plane = "Plane must be at least 2 characters.";
+    else if (form.plane.trim().length > 60) errs.plane = "Plane must be at most 60 characters.";
+    if (form.meal.trim().length > 60) errs.meal = "Meal must be at most 60 characters.";
     const kg = Number(form.luggageKg);
-    if (String(form.luggageKg).trim() === "" || isNaN(kg)) {
-      errs.luggageKg = "Luggage must be a number.";
-    } else if (kg < 0) {
-      errs.luggageKg = "Luggage cannot be negative.";
-    } else if (kg > 500) {
-      errs.luggageKg = "Luggage cannot exceed 500 kg.";
-    } else if (!Number.isInteger(kg * 10)) {
-      errs.luggageKg = "Max 1 decimal place allowed (e.g. 23.5).";
-    }
-    if (!form.dueDate) {
-      errs.dueDate = "Date & time is required.";
-    } else {
-      const dt = new Date(form.dueDate);
-      if (isNaN(dt.getTime())) errs.dueDate = "Invalid date/time.";
-    }
+    if (String(form.luggageKg).trim() === "" || isNaN(kg)) errs.luggageKg = "Luggage must be a number.";
+    else if (kg < 0) errs.luggageKg = "Luggage cannot be negative.";
+    else if (kg > 500) errs.luggageKg = "Luggage cannot exceed 500 kg.";
+    else if (!Number.isInteger(kg * 10)) errs.luggageKg = "Max 1 decimal place allowed (e.g. 23.5).";
+    if (!form.dueDate) errs.dueDate = "Date & time is required.";
+    else { const dt = new Date(form.dueDate); if (isNaN(dt.getTime())) errs.dueDate = "Invalid date/time."; }
     return errs;
   };
 
   const handleSubmit = async () => {
     setError(null);
     const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setValidationErrors(errs);
-      return;
-    }
+    if (Object.keys(errs).length > 0) { setValidationErrors(errs); return; }
     setValidationErrors({});
     setSaving(true);
     try {
@@ -394,28 +349,11 @@ function EditModal({ ticket, onClose, onSaved }) {
         variantId: form.variantId ? parseInt(form.variantId) : null,
         dueDate:   new Date(form.dueDate).toISOString(),
       };
-
-      const res = await fetch(`${BASE_URL}/PlaneTicket`, {
-        method:  "PUT",
-        headers: authHeaders(),
-        body:    JSON.stringify(body),
-      });
-
+      const res = await fetch(`${BASE_URL}/PlaneTicket`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.data) {
-        throw new Error(
-          json?.message ||
-          "Update failed. The ticket may be in a non-editable state (Used / Expired / Missed)."
-        );
-      }
-
+      if (!res.ok || !json?.data) throw new Error(json?.message || "Update failed.");
       const chosenVariant = variants.find(v => v.id === parseInt(form.variantId));
-      onSaved({
-        ...body,
-        variantName: chosenVariant?.name ?? ticket.variantName,
-        state: form.state,
-        dueDate: body.dueDate,
-      });
+      onSaved({ ...body, variantName: chosenVariant?.name ?? ticket.variantName, state: form.state, dueDate: body.dueDate });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -431,53 +369,38 @@ function EditModal({ ticket, onClose, onSaved }) {
       <div className="modal-box edit-modal-box" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
         <div className="edit-modal-title">✏️ Edit Ticket #{ticket.id}</div>
-
         {error && <div className="seatmap-error">⚠ {error}</div>}
-
         <div className="edit-form">
           <div className="edit-field">
             <label>Airline <span className="edit-required">*</span></label>
-            <input name="airline" value={form.airline} onChange={handleChange} placeholder="e.g. AZAL"
-              className={validationErrors.airline ? "edit-input--error" : ""} />
+            <input name="airline" value={form.airline} onChange={handleChange} placeholder="e.g. AZAL" className={validationErrors.airline ? "edit-input--error" : ""} />
             {validationErrors.airline && <span className="edit-field-error">{validationErrors.airline}</span>}
           </div>
           <div className="edit-field">
             <label>Gate <span className="edit-required">*</span></label>
-            <input name="gate" value={form.gate} onChange={handleChange} placeholder="e.g. A12"
-              className={validationErrors.gate ? "edit-input--error" : ""} />
+            <input name="gate" value={form.gate} onChange={handleChange} placeholder="e.g. A12" className={validationErrors.gate ? "edit-input--error" : ""} />
             {validationErrors.gate && <span className="edit-field-error">{validationErrors.gate}</span>}
           </div>
           <div className="edit-field">
             <label>Plane <span className="edit-required">*</span></label>
-            <input name="plane" value={form.plane} onChange={handleChange} placeholder="e.g. Boeing 737"
-              className={validationErrors.plane ? "edit-input--error" : ""} />
+            <input name="plane" value={form.plane} onChange={handleChange} placeholder="e.g. Boeing 737" className={validationErrors.plane ? "edit-input--error" : ""} />
             {validationErrors.plane && <span className="edit-field-error">{validationErrors.plane}</span>}
           </div>
           <div className="edit-field">
             <label>Meal</label>
-            <input name="meal" value={form.meal} onChange={handleChange} placeholder="e.g. Vegetarian"
-              className={validationErrors.meal ? "edit-input--error" : ""} />
+            <input name="meal" value={form.meal} onChange={handleChange} placeholder="e.g. Vegetarian" className={validationErrors.meal ? "edit-input--error" : ""} />
             {validationErrors.meal && <span className="edit-field-error">{validationErrors.meal}</span>}
           </div>
           <div className="edit-field">
             <label>Luggage (kg)</label>
-            <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange}
-              className={validationErrors.luggageKg ? "edit-input--error" : ""} />
+            <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange} className={validationErrors.luggageKg ? "edit-input--error" : ""} />
             {validationErrors.luggageKg && <span className="edit-field-error">{validationErrors.luggageKg}</span>}
           </div>
-
           <div className="edit-field edit-field--full">
             <label>Date &amp; Time <span className="edit-required">*</span></label>
-            <input
-              name="dueDate"
-              type="datetime-local"
-              value={form.dueDate}
-              onChange={handleChange}
-              className={validationErrors.dueDate ? "edit-input--error" : ""}
-            />
+            <input name="dueDate" type="datetime-local" value={form.dueDate} onChange={handleChange} className={validationErrors.dueDate ? "edit-input--error" : ""} />
             {validationErrors.dueDate && <span className="edit-field-error">{validationErrors.dueDate}</span>}
           </div>
-
           <div className="edit-field edit-field--full">
             <label>State</label>
             <div className="state-option-list state-option-list--inline">
@@ -485,17 +408,10 @@ function EditModal({ ticket, onClose, onSaved }) {
                 const sb = stateBadge(opt);
                 const isActive = opt === form.state;
                 return (
-                  <button
-                    key={opt}
-                    type="button"
+                  <button key={opt} type="button"
                     className={`state-option-btn${isActive ? " state-option-btn--active" : ""}`}
-                    style={{
-                      "--s-color":  sb.color,
-                      "--s-bg":     sb.bg,
-                      "--s-border": sb.border,
-                    }}
-                    onClick={() => setForm(f => ({ ...f, state: opt }))}
-                  >
+                    style={{ "--s-color": sb.color, "--s-bg": sb.bg, "--s-border": sb.border }}
+                    onClick={() => setForm(f => ({ ...f, state: opt }))}>
                     {sb.label}
                     {isActive && <span className="state-option-check">✓</span>}
                   </button>
@@ -503,25 +419,19 @@ function EditModal({ ticket, onClose, onSaved }) {
               })}
             </div>
           </div>
-
           <div className="edit-field">
             <label>Variant</label>
             <select name="variantId" value={form.variantId} onChange={handleChange} className="spt-select">
               <option value="">— Select Variant —</option>
               {variants.map(v => (
-                <option key={v.id} value={v.id}>
-                  {v.name.charAt(0).toUpperCase() + v.name.slice(1)}
-                </option>
+                <option key={v.id} value={v.id}>{v.name.charAt(0).toUpperCase() + v.name.slice(1)}</option>
               ))}
             </select>
           </div>
         </div>
-
         <div className="edit-actions">
           <button className="edit-cancel-btn" onClick={onClose} disabled={saving}>Cancel</button>
-          <button className="edit-save-btn"   onClick={handleSubmit} disabled={saving}>
-            {saving ? "Saving…" : "Save Changes"}
-          </button>
+          <button className="edit-save-btn" onClick={handleSubmit} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>
         </div>
       </div>
     </div>
@@ -553,10 +463,7 @@ function SeatMapModal({ ticket, onClose }) {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          `${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=plane`,
-          { headers: authHeaders() }
-        );
+        const res = await fetch(`${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=plane`, { headers: authHeaders() });
         if (!res.ok) throw new Error("Seats could not be loaded");
         const data = await res.json();
         const list = data?.data ?? data ?? [];
@@ -576,11 +483,7 @@ function SeatMapModal({ ticket, onClose }) {
 
   const maxRow = parsedSeats.reduce((m, s) => Math.max(m, s.row), 0);
   const cols   = [...new Set(parsedSeats.map(s => s.col))].sort();
-  const displayCols =
-    cols.length >= 6
-      ? [cols[0], cols[1], cols[2], "", cols[3], cols[4], cols[5]]
-      : cols;
-
+  const displayCols = cols.length >= 6 ? [cols[0], cols[1], cols[2], "", cols[3], cols[4], cols[5]] : cols;
   const seatIndex = {};
   parsedSeats.forEach(s => { seatIndex[s.name] = s; });
 
@@ -592,7 +495,6 @@ function SeatMapModal({ ticket, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
-
         <div className="modal-header">
           <div className="modal-airline">{ticket.airline}</div>
           <div className="modal-route">
@@ -605,13 +507,11 @@ function SeatMapModal({ ticket, onClose }) {
             <span>{fmtDate(ticket.dueDate)} · {fmtTime(ticket.dueDate)}</span>
           </div>
         </div>
-
         <div className="modal-stats">
           <div className="modal-stat modal-stat--free">🟢 {available} Available</div>
           <div className="modal-stat modal-stat--occ">🔴 {occupied} Occupied</div>
           <div className="modal-stat">💺 {seats.length} Total</div>
         </div>
-
         {variantLegend.length > 0 && (
           <div className="seatmap-legend">
             {variantLegend.map(v => {
@@ -629,10 +529,8 @@ function SeatMapModal({ ticket, onClose }) {
             </div>
           </div>
         )}
-
         {loading && <div className="seatmap-loading">Loading seats...</div>}
         {error   && <div className="seatmap-error">⚠ {error}</div>}
-
         {!loading && !error && seats.length > 0 && (
           <div className="seatmap-cabin">
             <div className="seat-row seat-row--header">
@@ -660,12 +558,50 @@ function SeatMapModal({ ticket, onClose }) {
             })}
           </div>
         )}
-
-        {!loading && !error && seats.length === 0 && (
-          <div className="seatmap-empty">No seats found for this ticket.</div>
-        )}
+        {!loading && !error && seats.length === 0 && <div className="seatmap-empty">No seats found for this ticket.</div>}
       </div>
     </div>
+  );
+}
+
+function VariantBadgeRow({ ticket }) {
+  const [variantNames, setVariantNames] = useState(() => extractVariants(ticket));
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch(`${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=plane`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        const unique = [...new Set(list.map(s => s.variantName).filter(Boolean))];
+        if (unique.length > 0) setVariantNames(unique);
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, [ticket.id]);
+
+  if (variantNames.length === 0) return null;
+
+  return (
+    <>
+      {variantNames.map(name => {
+        const meta = getVariantMeta(name);
+        const label = name.charAt(0).toUpperCase() + name.slice(1);
+        return (
+          <span
+            key={name}
+            className="spt-variant-badge"
+            style={{
+              color:       meta.accent,
+              background:  meta.bg,
+              borderColor: meta.accent + "55",
+            }}
+          >
+            {meta.label || label}
+          </span>
+        );
+      })}
+    </>
   );
 }
 
@@ -674,35 +610,19 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
   const [showEdit,    setShowEdit]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting,    setDeleting]    = useState(false);
-
   const [currentState, setCurrentState] = useState(ticket.state);
 
   const isAdmin   = role === "Admin";
   const isCompany = role === "Company";
   const sb        = stateBadge(currentState);
 
-  const variantName  = ticket.variantName && ticket.variantName.trim() !== "" ? ticket.variantName : null;
-  const variantMeta  = getVariantMeta(variantName || "");
-  const variantLabel = variantName
-    ? variantName.charAt(0).toUpperCase() + variantName.slice(1)
-    : "—";
-
   const handleDeleteConfirmed = async () => {
     setShowConfirm(false);
     setDeleting(true);
     try {
-      const res = await fetch(`${BASE_URL}/PlaneTicket/${ticket.id}`, {
-        method:  "DELETE",
-        headers: authHeaders(),
-      });
-
+      const res = await fetch(`${BASE_URL}/PlaneTicket/${ticket.id}`, { method: "DELETE", headers: authHeaders() });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.data) {
-        throw new Error(
-          json?.message || `Failed to delete ticket #${ticket.id}. It may not exist.`
-        );
-      }
-
+      if (!res.ok || !json?.data) throw new Error(json?.message || `Failed to delete ticket #${ticket.id}.`);
       onToast(`Ticket #${ticket.id} has been successfully deleted.`, "success");
       onDeleted(ticket.id);
     } catch (err) {
@@ -718,41 +638,23 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
 
         <div className="spt-card-topbar">
           <div className="spt-card-airline">{ticket.airline}</div>
-
           {(isAdmin || isCompany) && (
             <div className="spt-card-actions">
-              <button
-                className="spt-action-btn spt-action-btn--edit"
-                onClick={() => setShowEdit(true)}
-                title="Edit Ticket"
-              >✏️</button>
+              <button className="spt-action-btn spt-action-btn--edit" onClick={() => setShowEdit(true)} title="Edit Ticket">✏️</button>
               {isAdmin && (
-                <button
-                  className="spt-action-btn spt-action-btn--delete"
-                  onClick={() => setShowConfirm(true)}
-                  disabled={deleting}
-                  title="Delete Ticket"
-                >{deleting ? "…" : "🗑️"}</button>
+                <button className="spt-action-btn spt-action-btn--delete" onClick={() => setShowConfirm(true)} disabled={deleting} title="Delete Ticket">
+                  {deleting ? "…" : "🗑️"}
+                </button>
               )}
             </div>
           )}
         </div>
 
         <div className="spt-card-state-row">
-          <span
-            className="spt-state-badge"
-            style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}
-          >
+          <span className="spt-state-badge" style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}>
             {sb.label}
           </span>
-          {variantName && (
-            <span
-              className="spt-variant-badge"
-              style={{ color: variantMeta.accent, background: variantMeta.bg, borderColor: variantMeta.accent + "55" }}
-            >
-              {variantMeta.label || variantLabel}
-            </span>
-          )}
+          <VariantBadgeRow ticket={ticket} />
         </div>
 
         <div className="spt-card-route">
@@ -774,57 +676,21 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
         </div>
 
         <div className="spt-card-info">
-          <div className="spt-info-item">
-            <span className="spt-info-label">DATE</span>
-            <span className="spt-info-val">{fmtDate(ticket.dueDate)}</span>
-          </div>
-          <div className="spt-info-item">
-            <span className="spt-info-label">TIME</span>
-            <span className="spt-info-val">{fmtTime(ticket.dueDate)}</span>
-          </div>
-          <div className="spt-info-item">
-            <span className="spt-info-label">GATE</span>
-            <span className="spt-info-val">{ticket.gate}</span>
-          </div>
-          <div className="spt-info-item">
-            <span className="spt-info-label">PLANE</span>
-            <span className="spt-info-val">{ticket.plane}</span>
-          </div>
-          <div className="spt-info-item">
-            <span className="spt-info-label">MEAL</span>
-            <span className="spt-info-val">{ticket.meal || "—"}</span>
-          </div>
-          <div className="spt-info-item">
-            <span className="spt-info-label">LUGGAGE</span>
-            <span className="spt-info-val">{ticket.luggageKg ?? "—"} kg</span>
-          </div>
-          <div className="spt-info-item">
-            <span className="spt-info-label">PRICE</span>
-            <span className="spt-info-val spt-info-val--price">
-              {ticket.price > 0 ? `${ticket.price} ₼` : "—"}
-            </span>
-          </div>
-          <div className="spt-info-item">
-            <span className="spt-info-label">SEATS</span>
-            <span className={`spt-info-val ${ticket.availableSeats < 5 ? "spt-info-val--low" : "spt-info-val--ok"}`}>
-              {ticket.availableSeats}
-            </span>
-          </div>
-          <div
-            className="spt-info-item spt-info-item--variant"
-            style={{
-              "--v-color": variantName ? variantMeta.accent : "#a0a8c0",
-              "--v-bg":    variantName ? variantMeta.bg     : "rgba(160,168,192,0.1)",
-            }}
-          >
-            <span className="spt-info-label">VARIANT</span>
-            <span
-              className="spt-info-val spt-info-val--variant"
-              style={{ color: variantName ? variantMeta.accent : "#ffffff" }}
-            >
-              {variantLabel}
-            </span>
-          </div>
+          {[
+            ["DATE",    fmtDate(ticket.dueDate)],
+            ["TIME",    fmtTime(ticket.dueDate)],
+            ["GATE",    ticket.gate],
+            ["PLANE",   ticket.plane],
+            ["MEAL",    ticket.meal || "—"],
+            ["LUGGAGE", `${ticket.luggageKg ?? "—"} kg`],
+            ["PRICE",   ticket.price > 0 ? `${ticket.price} ₼` : "—", "price"],
+            ["SEATS",   ticket.availableSeats, ticket.availableSeats < 5 ? "low" : "ok"],
+          ].map(([label, val, mod]) => (
+            <div key={label} className="spt-info-item">
+              <span className="spt-info-label">{label}</span>
+              <span className={`spt-info-val${mod ? ` spt-info-val--${mod}` : ""}`}>{val}</span>
+            </div>
+          ))}
         </div>
 
         <div className="spt-card-countdown">🕐 {countdown(ticket.dueDate)}</div>
@@ -903,14 +769,11 @@ export default function ShowPlaneTicket() {
         const d = new Date(date);
         if (!isNaN(d.getTime())) params.set("Date", d.toISOString());
       }
-
       const res = await fetch(`${BASE_URL}/PlaneTicket?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error(`Server Error: ${res.status}`);
       const data = await res.json();
-
       const all = Array.isArray(data?.data) ? data.data : [];
       const filtered = all.filter(t => !isExpired(t.dueDate));
-
       setTickets(filtered);
       setTotalCount((data?.totalDataCount ?? 0) - (all.length - filtered.length));
     } catch (err) {
@@ -933,9 +796,7 @@ export default function ShowPlaneTicket() {
 
   return (
     <div className="spt-page">
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="spt-header">
         <div className="spt-title-block">
@@ -953,26 +814,13 @@ export default function ShowPlaneTicket() {
             <label>Airline</label>
             <input type="text" placeholder="e.g. AZAL" value={airline} onChange={e => setAirline(e.target.value)} />
           </div>
-
-          <LocationSelect
-            label="From"
-            value={fromId}
-            onChange={setFromId}
-            locations={locations}
-          />
-          <LocationSelect
-            label="To"
-            value={toId}
-            onChange={setToId}
-            locations={locations}
-          />
-
+          <LocationSelect label="From" value={fromId} onChange={setFromId} locations={locations} />
+          <LocationSelect label="To"   value={toId}   onChange={setToId}   locations={locations} />
           <div className="spt-filter-group">
             <label>Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} />
           </div>
         </div>
-
         <div className="spt-filter-actions">
           <button className="spt-search-btn" onClick={() => { setPageNumber(1); fetchTickets(); }}>Search</button>
           <button className="spt-reset-btn"  onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); }}>Reset</button>
@@ -995,9 +843,7 @@ export default function ShowPlaneTicket() {
           <div className="spt-state">
             <span className="spt-empty-icon">✈️</span>
             <p>No tickets found.</p>
-            <button className="spt-create-btn" onClick={() => navigate("/create-plane-ticket")}>
-              ＋ Create First Ticket
-            </button>
+            <button className="spt-create-btn" onClick={() => navigate("/create-plane-ticket")}>＋ Create First Ticket</button>
           </div>
         )}
         {!loading && !error && tickets.length > 0 && (
@@ -1008,40 +854,23 @@ export default function ShowPlaneTicket() {
                 ticket={ticket}
                 isNew={ticket.id === highlightId}
                 role={role}
-                onDeleted={id => {
-                  setTickets(prev => prev.filter(t => t.id !== id));
-                  setTotalCount(prev => prev - 1);
-                }}
+                onDeleted={id => { setTickets(prev => prev.filter(t => t.id !== id)); setTotalCount(prev => prev - 1); }}
                 onEdited={updatedBody => {
                   setTickets(prev => prev.map(t =>
                     t.id === updatedBody.id
-                      ? {
-                          ...t,
-                          airline:     updatedBody.airline,
-                          gate:        updatedBody.gate,
-                          plane:       updatedBody.plane,
-                          meal:        updatedBody.meal,
-                          luggageKg:   updatedBody.luggageKg,
-                          variantId:   updatedBody.variantId,
-                          variantName: updatedBody.variantName ?? t.variantName,
-                          state:       updatedBody.state ?? t.state,
-                          dueDate:     updatedBody.dueDate ?? t.dueDate,
-                        }
+                      ? { ...t, airline: updatedBody.airline, gate: updatedBody.gate, plane: updatedBody.plane, meal: updatedBody.meal, luggageKg: updatedBody.luggageKg, variantId: updatedBody.variantId, variantName: updatedBody.variantName ?? t.variantName, state: updatedBody.state ?? t.state, dueDate: updatedBody.dueDate ?? t.dueDate }
                       : t
                   ));
                   showToast(`Ticket #${updatedBody.id} updated successfully.`, "success");
                 }}
                 onStateChanged={updated => {
-                  setTickets(prev => prev.map(t =>
-                    t.id === updated.id ? { ...t, state: updated.state } : t
-                  ));
+                  setTickets(prev => prev.map(t => t.id === updated.id ? { ...t, state: updated.state } : t));
                 }}
                 onToast={showToast}
               />
             ))}
           </div>
         )}
-
         {!loading && totalPages > 1 && (
           <div className="spt-pagination">
             <button disabled={pageNumber <= 1}          onClick={() => setPageNumber(p => p - 1)}>← Previous</button>

@@ -157,6 +157,62 @@
   color: #ff9090;
 }
 
+.cpt-group-box {
+  background: rgba(255, 77, 77, 0.04);
+  border: 1px solid rgba(255, 77, 77, 0.18);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.cpt-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.cpt-group-header span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff8080;
+  letter-spacing: 0.05em;
+}
+
+.cpt-remove-btn {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  color: #f87171;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.cpt-remove-btn:hover { background: rgba(248, 113, 113, 0.2); }
+
+.cpt-add-group-btn {
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  border: 1px dashed rgba(255, 77, 77, 0.3);
+  border-radius: 10px;
+  color: #ff8080;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  margin-top: 4px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.cpt-add-group-btn:hover {
+  background: rgba(255, 77, 77, 0.06);
+  border-color: rgba(255, 77, 77, 0.5);
+}
 .cpt-submit-btn {
   width: 100%;
   padding: 15px;
@@ -332,45 +388,17 @@
 .var-trigger:focus { outline: none; border-color: #ff4d4d; box-shadow: 0 0 0 2px rgba(255,77,77,0.15); }
 .var-trigger--open { border-color: #ff4d4d; box-shadow: 0 0 0 2px rgba(255,77,77,0.15); }
 
-.var-trigger-inner {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex: 1;
-  overflow: hidden;
-}
-
-.var-trigger-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.var-trigger-name {
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-}
-
-.var-trigger-price {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.45);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
+.var-trigger-inner { display: flex; align-items: center; gap: 7px; flex: 1; overflow: hidden; }
+.var-trigger-icon { font-size: 14px; flex-shrink: 0; line-height: 1; }
+.var-trigger-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.var-trigger-price { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.45); white-space: nowrap; flex-shrink: 0; }
 .var-trigger-placeholder { color: rgba(255,255,255,0.25); font-size: 13px; }
 
 .var-panel {
   position: absolute;
   z-index: 9999;
   top: calc(100% + 5px);
-  left: 0;
-  right: 0;
+  left: 0; right: 0;
   background: #1a0f1f;
   border: 1px solid rgba(255,77,77,0.22);
   border-radius: 10px;
@@ -387,49 +415,18 @@
 .var-panel::-webkit-scrollbar-thumb { background: rgba(255,77,77,0.25); border-radius: 2px; }
 
 .var-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border-radius: 7px;
-  cursor: pointer;
-  transition: background 0.12s;
-  border: 1px solid transparent;
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 7px; cursor: pointer;
+  transition: background 0.12s; border: 1px solid transparent;
 }
 
 .var-row:hover { background: rgba(255,255,255,0.06); }
+.var-row--selected { background: rgba(var(--vc-rgb, 255,77,77), 0.1); border-color: rgba(255,255,255,0.08); }
 
-.var-row--selected {
-  background: rgba(var(--vc-rgb, 255,77,77), 0.1);
-  border-color: rgba(255,255,255,0.08);
-}
+.var-row-icon { font-size: 13px; color: var(--vc, #ff8080); flex-shrink: 0; width: 18px; text-align: center; line-height: 1; }
+.var-row-name { font-size: 13px; font-weight: 600; color: var(--vc, #fff); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.var-row-price { font-size: 12px; font-weight: 700; color: var(--vc, rgba(255,255,255,0.6)); flex-shrink: 0; white-space: nowrap; }
 
-.var-row-icon {
-  font-size: 13px;
-  color: var(--vc, #ff8080);
-  flex-shrink: 0;
-  width: 18px;
-  text-align: center;
-  line-height: 1;
-}
-
-.var-row-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vc, #fff);
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.var-row-price {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--vc, rgba(255,255,255,0.6));
-  flex-shrink: 0;
-  white-space: nowrap;
-}
 
 @media (max-width: 640px) {
   .cpt-page { padding: 20px 14px 60px; }

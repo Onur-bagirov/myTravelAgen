@@ -25,7 +25,7 @@ function getUserRole() {
   } catch { return null; }
 }
 
-const isAdmin = (role) => role === "Admin";
+const isAdmin   = (role) => role === "Admin";
 const isCompany = (role) => role === "Company";
 
 const getUserId = () => {
@@ -60,6 +60,23 @@ function fmt(iso) {
 }
 
 const PALETTE = ["#38bdf8", "#a78bfa", "#34d399", "#fb923c", "#f472b6", "#facc15"];
+
+/* ── Variant colour map (same style as plane page) ── */
+const VARIANT_COLORS = {
+  "first class": { accent: "#c9a84c", bg: "rgba(201,168,76,0.15)",   label: "✦ First Class" },
+  business:      { accent: "#7eb8f7", bg: "rgba(126,184,247,0.15)", label: "◈ Business"   },
+  economy:       { accent: "#a0a8c0", bg: "rgba(160,168,192,0.15)", label: "◇ Economy"    },
+};
+
+function getVariantMeta(name = "") {
+  return (
+    VARIANT_COLORS[name.toLowerCase().trim()] || {
+      accent: "#ff8080",
+      bg:     "rgba(255,128,128,0.12)",
+      label:  name,
+    }
+  );
+}
 
 function parseSeatName(name) {
   const m = name?.match(/^(\d+)([A-K])$/);
@@ -103,11 +120,56 @@ function getCountryMeta(countryName = "") {
   return COUNTRY_DATA[key] || { code: countryName.slice(0, 2).toUpperCase(), flag: "🌐" };
 }
 
+/* ══════════════════════════════════════════════════════════
+   ── VariantBadgeRow — fetches seats & shows all variants ──
+   ══════════════════════════════════════════════════════════ */
+function VariantBadgeRow({ ticketId }) {
+  const [variantNames, setVariantNames] = useState([]);
+
+  useEffect(() => {
+    fetch(
+      `${BASE_URL}/Seat/by-ticket?TicketId=${ticketId}&TicketType=train`,
+      { headers: authHeaders() }
+    )
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        const unique = [...new Set(list.map(s => s.variantName).filter(Boolean))];
+        setVariantNames(unique);
+      })
+      .catch(() => {});
+  }, [ticketId]);
+
+  if (variantNames.length === 0) return null;
+
+  return (
+    <>
+      {variantNames.map(name => {
+        const meta  = getVariantMeta(name);
+        const label = name.charAt(0).toUpperCase() + name.slice(1);
+        return (
+          <span
+            key={name}
+            className="st-variant-badge"
+            style={{
+              color:       meta.accent,
+              background:  meta.bg,
+              borderColor: meta.accent + "55",
+            }}
+          >
+            {meta.label || label}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
+  const [open, setOpen]       = useState(false);
+  const [search, setSearch]   = useState("");
   const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
-  const ref = useRef(null);
+  const ref        = useRef(null);
   const triggerRef = useRef(null);
 
   const selected = locations.find(l => String(l.id) === String(value));
@@ -123,11 +185,7 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   const updatePos = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setDropPos({
-        top: rect.bottom + 6,
-        left: rect.left,
-        width: rect.width,
-      });
+      setDropPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
     }
   };
 
@@ -138,67 +196,33 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
     return () => window.removeEventListener("scroll", handleScroll, true);
   }, [open]);
 
-  const handleOpen = () => {
-    updatePos();
-    setOpen(o => !o);
-  };
+  const handleOpen   = () => { updatePos(); setOpen(o => !o); };
+  const handleSelect = (id) => { onChange(id); setOpen(false); setSearch(""); };
 
   const filtered = locations.filter(l =>
     l.name?.toLowerCase().includes(search.toLowerCase()) ||
     l.country?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSelect = (id) => {
-    onChange(id);
-    setOpen(false);
-    setSearch("");
-  };
-
   const dropdown = open ? createPortal(
-    <div
-      className="loc-dropdown"
-      style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, bottom: "auto" }}
-    >
+    <div className="loc-dropdown" style={{ position: "fixed", top: dropPos.top, left: dropPos.left, width: dropPos.width, bottom: "auto" }}>
       <div className="loc-search-wrap">
         <span className="loc-search-icon">🔍</span>
-        <input
-          className="loc-search-input"
-          placeholder="Search locations..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          autoFocus
-        />
+        <input className="loc-search-input" placeholder="Search locations..." value={search} onChange={e => setSearch(e.target.value)} autoFocus />
       </div>
       <div className="loc-list">
-        <button
-          type="button"
-          className={`loc-item loc-item--all ${!value ? "loc-item--active" : ""}`}
-          onClick={() => handleSelect("")}
-        >
+        <button type="button" className={`loc-item loc-item--all ${!value ? "loc-item--active" : ""}`} onClick={() => handleSelect("")}>
           <span className="loc-item-icon">🌍</span>
-          <div className="loc-item-text">
-            <span className="loc-item-all-label">All Locations</span>
-          </div>
+          <div className="loc-item-text"><span className="loc-item-all-label">All Locations</span></div>
           {!value && <span className="loc-item-check">✓</span>}
         </button>
-
-        {filtered.length === 0 && (
-          <div className="loc-no-results">No locations found</div>
-        )}
-
+        {filtered.length === 0 && <div className="loc-no-results">No locations found</div>}
         {filtered.map(loc => {
-          const meta = getCountryMeta(loc.country || "");
+          const meta     = getCountryMeta(loc.country || "");
           const isActive = String(loc.id) === String(value);
           return (
-            <button
-              type="button"
-              key={loc.id}
-              className={`loc-item ${isActive ? "loc-item--active" : ""}`}
-              onClick={() => handleSelect(String(loc.id))}
-            >
-              <span className="loc-item-avatar" data-code={meta.code}>
-                {meta.flag}
-              </span>
+            <button type="button" key={loc.id} className={`loc-item ${isActive ? "loc-item--active" : ""}`} onClick={() => handleSelect(String(loc.id))}>
+              <span className="loc-item-avatar" data-code={meta.code}>{meta.flag}</span>
               <div className="loc-item-text">
                 <span className="loc-item-country">{(loc.country || "").toUpperCase()}</span>
                 <span className="loc-item-city">{loc.name}</span>
@@ -215,25 +239,16 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   return (
     <div className="loc-select-wrap" ref={ref}>
       <label className="loc-select-label">{label}</label>
-      <button
-        ref={triggerRef}
-        type="button"
-        className={`loc-select-trigger ${open ? "loc-select-trigger--open" : ""}`}
-        onClick={handleOpen}
-      >
+      <button ref={triggerRef} type="button" className={`loc-select-trigger ${open ? "loc-select-trigger--open" : ""}`} onClick={handleOpen}>
         {selected ? (
           <span className="loc-trigger-inner">
-            <span className="loc-trigger-flag">
-              {getCountryMeta(selected.country || "").flag}
-            </span>
+            <span className="loc-trigger-flag">{getCountryMeta(selected.country || "").flag}</span>
             <span className="loc-trigger-name">{selected.name}</span>
           </span>
         ) : (
           <span className="loc-trigger-placeholder">{placeholder}</span>
         )}
-        <span className={`loc-trigger-chevron ${open ? "loc-trigger-chevron--up" : ""}`}>
-          ›
-        </span>
+        <span className={`loc-trigger-chevron ${open ? "loc-trigger-chevron--up" : ""}`}>›</span>
       </button>
       {dropdown}
     </div>
@@ -281,8 +296,8 @@ function EditModal({ ticket, onClose, onSaved }) {
     trainNumber:  ticket.trainNumber  || "",
     vagonNumber:  ticket.vagonNumber  ?? "",
   });
-  const [saving, setSaving]                   = useState(false);
-  const [error, setError]                     = useState(null);
+  const [saving, setSaving]                     = useState(false);
+  const [error, setError]                       = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
   const handleChange = e => {
@@ -292,31 +307,18 @@ function EditModal({ ticket, onClose, onSaved }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.trainCompany.trim()) {
-      errs.trainCompany = "Train company is required.";
-    } else if (form.trainCompany.trim().length < 2) {
-      errs.trainCompany = "Train company must be at least 2 characters.";
-    } else if (form.trainCompany.trim().length > 60) {
-      errs.trainCompany = "Train company must be at most 60 characters.";
-    } else if (!/^[a-zA-Z0-9 .\'\-&]+$/.test(form.trainCompany.trim())) {
-      errs.trainCompany = "Train company contains invalid characters.";
-    }
-    if (!form.trainNumber.trim()) {
-      errs.trainNumber = "Train number is required.";
-    } else if (form.trainNumber.trim().length > 20) {
-      errs.trainNumber = "Train number must be at most 20 characters.";
-    } else if (!/^[A-Za-z0-9\-]+$/.test(form.trainNumber.trim())) {
-      errs.trainNumber = "Train number must be letters and numbers only.";
-    }
+    if (!form.trainCompany.trim()) errs.trainCompany = "Train company is required.";
+    else if (form.trainCompany.trim().length < 2) errs.trainCompany = "Train company must be at least 2 characters.";
+    else if (form.trainCompany.trim().length > 60) errs.trainCompany = "Train company must be at most 60 characters.";
+    else if (!/^[a-zA-Z0-9 .\'\-&]+$/.test(form.trainCompany.trim())) errs.trainCompany = "Train company contains invalid characters.";
+    if (!form.trainNumber.trim()) errs.trainNumber = "Train number is required.";
+    else if (form.trainNumber.trim().length > 20) errs.trainNumber = "Train number must be at most 20 characters.";
+    else if (!/^[A-Za-z0-9\-]+$/.test(form.trainNumber.trim())) errs.trainNumber = "Train number must be letters and numbers only.";
     if (form.vagonNumber !== "" && form.vagonNumber !== null) {
       const v = Number(form.vagonNumber);
-      if (isNaN(v) || !Number.isInteger(v)) {
-        errs.vagonNumber = "Vagon number must be a whole number.";
-      } else if (v < 1) {
-        errs.vagonNumber = "Vagon number must be at least 1.";
-      } else if (v > 999) {
-        errs.vagonNumber = "Vagon number cannot exceed 999.";
-      }
+      if (isNaN(v) || !Number.isInteger(v)) errs.vagonNumber = "Vagon number must be a whole number.";
+      else if (v < 1) errs.vagonNumber = "Vagon number must be at least 1.";
+      else if (v > 999) errs.vagonNumber = "Vagon number cannot exceed 999.";
     }
     return errs;
   };
@@ -324,10 +326,7 @@ function EditModal({ ticket, onClose, onSaved }) {
   const handleSubmit = async () => {
     setError(null);
     const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setValidationErrors(errs);
-      return;
-    }
+    if (Object.keys(errs).length > 0) { setValidationErrors(errs); return; }
     setValidationErrors({});
     setSaving(true);
     try {
@@ -338,11 +337,7 @@ function EditModal({ ticket, onClose, onSaved }) {
         vagonNumber:  form.vagonNumber !== "" ? parseInt(form.vagonNumber) : null,
         state:        0,
       };
-      const res = await fetch(`${BASE_URL}/TrainTicket`, {
-        method:  "PUT",
-        headers: authHeaders(),
-        body:    JSON.stringify(body),
-      });
+      const res = await fetch(`${BASE_URL}/TrainTicket`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         throw new Error(text || `Server error: ${res.status}`);
@@ -384,9 +379,7 @@ function EditModal({ ticket, onClose, onSaved }) {
         </div>
         <div className="st-edit-actions">
           <button className="st-edit-cancel-btn" onClick={onClose} disabled={saving}>Cancel</button>
-          <button className="st-edit-save-btn" onClick={handleSubmit} disabled={saving}>
-            {saving ? "Saving…" : "Save Changes"}
-          </button>
+          <button className="st-edit-save-btn" onClick={handleSubmit} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>
         </div>
       </div>
     </div>
@@ -396,12 +389,12 @@ function EditModal({ ticket, onClose, onSaved }) {
 function SeatMap({ seats, selectedSeatId, onSelect }) {
   if (!seats.length) return <p className="st-no-seats">No seats found for this ticket.</p>;
 
-  const maxRow = Math.max(...seats.map((s) => parseSeatName(s.name).row));
-  const maxCol = Math.max(...seats.map((s) => parseSeatName(s.name).col));
+  const maxRow = Math.max(...seats.map(s => parseSeatName(s.name).row));
+  const maxCol = Math.max(...seats.map(s => parseSeatName(s.name).col));
 
   const grid = Array.from({ length: maxRow }, (_, ri) =>
     Array.from({ length: maxCol + 1 }, (_, ci) =>
-      seats.find((s) => {
+      seats.find(s => {
         const p = parseSeatName(s.name);
         return p.row === ri + 1 && p.col === ci;
       }) ?? null
@@ -410,13 +403,13 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
 
   const variantColors = {};
   let colorIdx = 0;
-  seats.forEach((s) => {
+  seats.forEach(s => {
     if (s.variantId !== undefined && !variantColors[s.variantId])
       variantColors[s.variantId] = PALETTE[colorIdx++ % PALETTE.length];
   });
 
-  const available = seats.filter((s) => !s.isOccupied).length;
-  const occupied  = seats.filter((s) => s.isOccupied).length;
+  const available = seats.filter(s => !s.isOccupied).length;
+  const occupied  = seats.filter(s =>  s.isOccupied).length;
 
   return (
     <>
@@ -427,7 +420,7 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
       </div>
       <div className="st-seatmap-legend">
         {Object.entries(variantColors).map(([vid, color]) => {
-          const sample = seats.find((s) => String(s.variantId) === String(vid));
+          const sample = seats.find(s => String(s.variantId) === String(vid));
           if (!sample) return null;
           return (
             <span key={vid} className="st-legend-item">
@@ -453,11 +446,7 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
               return (
                 <div key={seat.id} className="st-seat-wrapper">
                   <button
-                    className={[
-                      "st-seat-btn",
-                      seat.isOccupied ? "st-seat--occupied" : "st-seat--free",
-                      isSelected ? "st-seat--selected" : "",
-                    ].filter(Boolean).join(" ")}
+                    className={["st-seat-btn", seat.isOccupied ? "st-seat--occupied" : "st-seat--free", isSelected ? "st-seat--selected" : ""].filter(Boolean).join(" ")}
                     style={!seat.isOccupied && !isSelected ? { "--seat-color": color, "--seat-bg": `${color}22` } : {}}
                     disabled={seat.isOccupied}
                     onClick={() => !seat.isOccupied && onSelect(seat)}
@@ -493,8 +482,8 @@ function BookingModal({ ticket, onClose }) {
     if (!ticket?.id) return;
     setLoadingSeats(true);
     fetch(`${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=train`)
-      .then((r) => r.json())
-      .then((d) => setSeats(Array.isArray(d?.data) ? d.data : []))
+      .then(r => r.json())
+      .then(d => setSeats(Array.isArray(d?.data) ? d.data : []))
       .catch(() => setSeatsError("Failed to load seats."))
       .finally(() => setLoadingSeats(false));
   }, [ticket?.id]);
@@ -509,21 +498,19 @@ function BookingModal({ ticket, onClose }) {
         id: Number(ticket.id), userId: Number(userId),
         dueDate: ticket.dueDate, chosenSeatId: Number(selectedSeat.id), state: 1,
       };
-      const res = await fetch(`${BASE_URL}/TrainTicket/fill`, {
-        method: "PUT", headers: authHeaders(), body: JSON.stringify(body),
-      });
+      const res     = await fetch(`${BASE_URL}/TrainTicket/fill`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
       const rawText = await res.text();
       let result = null;
       try { result = rawText ? JSON.parse(rawText) : null; } catch { result = null; }
       if (!res.ok) {
         let errMsg = result?.message || result?.title || `Server error: ${res.status}`;
         if (result?.errors) errMsg = Object.values(result.errors).flat().join(", ");
-        setSeats((prev) => prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
+        setSeats(prev => prev.map(s => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
         setSelectedSeat(null);
         throw new Error(errMsg);
       }
       if (!result?.data) {
-        setSeats((prev) => prev.map((s) => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
+        setSeats(prev => prev.map(s => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
         setSelectedSeat(null);
         throw new Error("This seat is already taken. Please choose another.");
       }
@@ -535,7 +522,7 @@ function BookingModal({ ticket, onClose }) {
   const toName   = ticket.to?.split(",")[0]   ?? "—";
 
   if (success) return (
-    <div className="st-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="st-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="st-modal">
         <button className="st-modal-close" onClick={onClose}>✕</button>
         <div className="st-modal-company">{ticket.trainCompany}</div>
@@ -558,7 +545,7 @@ function BookingModal({ ticket, onClose }) {
 
   return (
     <>
-      <div className="st-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="st-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
         <div className="st-modal">
           <button className="st-modal-close" onClick={onClose}>✕</button>
           <div className="st-modal-company">{ticket.trainCompany}</div>
@@ -605,6 +592,7 @@ function BookingModal({ ticket, onClose }) {
   );
 }
 
+/* ── Ticket Card ── */
 function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const [showEdit,    setShowEdit]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -613,7 +601,7 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const adminMode   = isAdmin(role);
   const companyMode = isCompany(role);
 
-  const seats = ticket.availableSeats;
+  const seats      = ticket.availableSeats;
   const seatsClass = seats <= 5 ? "st-info-val--low" : seats <= 15 ? "st-info-val--warn" : "st-info-val--ok";
 
   const fromCode = (ticket.from?.split(",")[0] ?? "???").slice(0, 3).toUpperCase();
@@ -650,21 +638,28 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   return (
     <>
       <div className="st-card">
+        {/* ── Header: company + badges + actions ── */}
         <div className="st-card-header">
           <div className="st-card-company">{ticket.trainCompany}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span className="st-card-status">⏳ Pending</span>
             {(adminMode || companyMode) && (
               <button className="st-action-btn st-action-btn--edit"
-                onClick={(e) => { e.stopPropagation(); setShowEdit(true); }} title="Edit Ticket">✏️</button>
+                onClick={e => { e.stopPropagation(); setShowEdit(true); }} title="Edit Ticket">✏️</button>
             )}
             {adminMode && (
               <button className="st-action-btn st-action-btn--delete"
-                onClick={(e) => { e.stopPropagation(); setShowConfirm(true); }}
+                onClick={e => { e.stopPropagation(); setShowConfirm(true); }}
                 disabled={deleting} title="Delete Ticket">{deleting ? "…" : "🗑️"}</button>
             )}
           </div>
         </div>
+
+        {/* ── Variant badges row ── */}
+        <div className="st-card-badge-row">
+          <VariantBadgeRow ticketId={ticket.id} />
+        </div>
+
+        {/* ── Route ── */}
         <div className="st-card-route">
           <div className="st-card-city">
             <span className="st-card-code">{fromCode}</span>
@@ -682,6 +677,8 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
             <span className="st-card-city-name">{toFull}</span>
           </div>
         </div>
+
+        {/* ── Info grid ── */}
         <div className="st-card-info">
           <div className="st-info-item">
             <span className="st-info-label">DATE</span>
@@ -706,11 +703,13 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
             <span className={`st-info-val ${seatsClass}`}>{seats}</span>
           </div>
         </div>
+
         <button className="st-seatmap-btn" onClick={onClick}>💺 Seat Map</button>
       </div>
+
       {showEdit && (
         <EditModal ticket={ticket} onClose={() => setShowEdit(false)}
-          onSaved={(updatedBody) => { onEdited(updatedBody); onToast(`Ticket #${updatedBody.id} updated successfully.`, "success"); }} />
+          onSaved={updatedBody => { onEdited(updatedBody); onToast(`Ticket #${updatedBody.id} updated successfully.`, "success"); }} />
       )}
       {showConfirm && (
         <ConfirmDeleteModal ticketId={ticket.id} onConfirm={handleDeleteConfirmed} onCancel={() => setShowConfirm(false)} />
@@ -719,19 +718,19 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   );
 }
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE   = 9;
 const EMPTY_FILTERS = { trainCompany: "", date: "", fromLocationId: "", toLocationId: "" };
 
 export default function ShowTrainTickets() {
-  const [tickets, setTickets]           = useState([]);
-  const [totalCount, setTotalCount]     = useState(0);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
-  const [page, setPage]                 = useState(1);
-  const [totalPages, setTotalPages]     = useState(1);
-  const [locations, setLocations]       = useState([]);
+  const [tickets,     setTickets]     = useState([]);
+  const [totalCount,  setTotalCount]  = useState(0);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
+  const [page,        setPage]        = useState(1);
+  const [totalPages,  setTotalPages]  = useState(1);
+  const [locations,   setLocations]   = useState([]);
   const [activeTicket, setActiveTicket] = useState(null);
-  const [toast, setToast]               = useState(null);
+  const [toast,       setToast]       = useState(null);
 
   const role = getUserRole();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -739,18 +738,18 @@ export default function ShowTrainTickets() {
 
   useEffect(() => {
     fetch(`${BASE_URL}/Location?Limit=200&Page=1`)
-      .then((r) => r.json())
-      .then((d) => setLocations(Array.isArray(d?.data) ? d.data : []));
+      .then(r => r.json())
+      .then(d => setLocations(Array.isArray(d?.data) ? d.data : []));
   }, []);
 
   const fetchTickets = useCallback(async (p = 1) => {
     setLoading(true); setError(null);
     try {
       const params = new URLSearchParams({ PageNumber: String(p), PageSize: String(PAGE_SIZE) });
-      if (filters.trainCompany)   params.set("TrainCompany", filters.trainCompany);
-      if (filters.date)           params.set("Date", new Date(filters.date).toISOString());
+      if (filters.trainCompany)   params.set("TrainCompany",   filters.trainCompany);
+      if (filters.date)           params.set("Date",           new Date(filters.date).toISOString());
       if (filters.fromLocationId) params.set("FromLocationId", filters.fromLocationId);
-      if (filters.toLocationId)   params.set("ToLocationId", filters.toLocationId);
+      if (filters.toLocationId)   params.set("ToLocationId",   filters.toLocationId);
 
       const res  = await fetch(`${BASE_URL}/TrainTicket?${params}`);
       const json = await res.json();
@@ -766,7 +765,7 @@ export default function ShowTrainTickets() {
 
   useEffect(() => { fetchTickets(page); }, [page, fetchTickets]);
 
-  const handleReset = () => { setFilters(EMPTY_FILTERS); setPage(1); };
+  const handleReset  = () => { setFilters(EMPTY_FILTERS); setPage(1); };
   const handleSearch = () => { setPage(1); fetchTickets(1); };
 
   return (
@@ -788,29 +787,18 @@ export default function ShowTrainTickets() {
           <div className="st-filter-group">
             <label>Company</label>
             <input type="text" placeholder="e.g. ADY" value={filters.trainCompany}
-              onChange={(e) => setFilters({ ...filters, trainCompany: e.target.value })} />
+              onChange={e => setFilters({ ...filters, trainCompany: e.target.value })} />
           </div>
-          <LocationSelect
-            label="From"
-            value={filters.fromLocationId}
-            onChange={(val) => setFilters({ ...filters, fromLocationId: val })}
-            locations={locations}
-          />
-          <LocationSelect
-            label="To"
-            value={filters.toLocationId}
-            onChange={(val) => setFilters({ ...filters, toLocationId: val })}
-            locations={locations}
-          />
+          <LocationSelect label="From" value={filters.fromLocationId} onChange={val => setFilters({ ...filters, fromLocationId: val })} locations={locations} />
+          <LocationSelect label="To"   value={filters.toLocationId}   onChange={val => setFilters({ ...filters, toLocationId: val })}   locations={locations} />
           <div className="st-filter-group">
             <label>Date</label>
-            <input type="date" value={filters.date}
-              onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
+            <input type="date" value={filters.date} onChange={e => setFilters({ ...filters, date: e.target.value })} />
           </div>
         </div>
         <div className="st-filter-actions">
           <button className="st-search-btn" onClick={handleSearch}>Search</button>
-          <button className="st-reset-btn" onClick={handleReset}>Reset</button>
+          <button className="st-reset-btn"  onClick={handleReset}>Reset</button>
         </div>
       </div>
 
@@ -827,11 +815,14 @@ export default function ShowTrainTickets() {
         )}
         {!loading && !error && tickets.length > 0 && (
           <div className="st-grid">
-            {tickets.map((t) => (
-              <TicketCard key={t.id} ticket={t} role={role}
+            {tickets.map(t => (
+              <TicketCard
+                key={t.id}
+                ticket={t}
+                role={role}
                 onClick={() => setActiveTicket(t)}
-                onDeleted={(id) => { setTickets(prev => prev.filter(tk => tk.id !== id)); setTotalCount(c => c - 1); }}
-                onEdited={(updatedBody) => {
+                onDeleted={id => { setTickets(prev => prev.filter(tk => tk.id !== id)); setTotalCount(c => c - 1); }}
+                onEdited={updatedBody => {
                   setTickets(prev => prev.map(tk =>
                     tk.id === updatedBody.id
                       ? { ...tk, trainCompany: updatedBody.trainCompany, trainNumber: updatedBody.trainNumber, vagonNumber: updatedBody.vagonNumber }
@@ -845,9 +836,9 @@ export default function ShowTrainTickets() {
         )}
         {!loading && totalPages > 1 && (
           <div className="st-pagination">
-            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>← Previous</button>
+            <button disabled={page === 1}          onClick={() => setPage(p => p - 1)}>← Previous</button>
             <span>{page} / {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>Next →</button>
+            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next →</button>
           </div>
         )}
       </div>

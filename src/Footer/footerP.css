@@ -98,7 +98,7 @@
   gap: 2px;
 }
 
-.footer-links li a {
+.footer-links li {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -112,7 +112,7 @@
   letter-spacing: 0.01em;
 }
 
-.footer-links li a::before {
+.footer-links li::before {
   content: '';
   width: 0;
   height: 1.5px;
@@ -121,12 +121,12 @@
   flex-shrink: 0;
 }
 
-.footer-links li a:hover {
+.footer-links li :hover {
   color: #fff;
   gap: 12px;
 }
 
-.footer-links li a:hover::before {
+.footer-links li:hover::before {
   width: 14px;
 }
 

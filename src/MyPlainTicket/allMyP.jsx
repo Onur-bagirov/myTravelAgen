@@ -35,22 +35,43 @@ function countdown(d) {
   return `${days} days left`;
 }
 function isExpired(t) { return new Date(t.dueDate) < new Date(); }
-function finalPrice(t) { return (t.price * (t.discount || 1)).toFixed(2); }
+function finalPrice(t) {
+  const base = Number(t.price || 0);
+  return (t.discount > 0 && t.discount < 1 ? base * t.discount : base).toFixed(2);
+}
 
 const STATE_MAP = {
-  Booked:   { cls: "s-booked",   label: "Booked"   },
-  Pending:  { cls: "s-pending",  label: "Pending"  },
-  Canceled: { cls: "s-canceled", label: "Canceled" },
-  Expired:  { cls: "s-expired",  label: "Expired"  },
-  Delayed:  { cls: "s-delayed",  label: "Delayed"  },
+  Booked:   { cls: "pill-used",     label: "Booked"   },
+  Pending:  { cls: "pill-pending",  label: "Pending"  },
+  Canceled: { cls: "pill-canceled", label: "Canceled" },
+  Expired:  { cls: "pill-used",     label: "Used"     },
+  Delayed:  { cls: "pill-delayed",  label: "Delayed"  },
 };
 
-function TicketCard({ t, idx }) {
-  const exp    = isExpired(t);
-  const cd     = countdown(t.dueDate);
-  const st     = STATE_MAP[t.state] ?? { cls: "s-expired", label: t.state };
-  const hasDsc = t.discount > 0 && t.discount < 1;
-  const varName = t.variant?.name ?? "Standard";
+function TicketCard({ t, idx, onReturn }) {
+  const [returning, setReturning] = useState(false);
+  const exp     = isExpired(t);
+  const stKey   = exp && t.state === "Booked" ? "Expired" : t.state;
+  const st      = STATE_MAP[stKey] ?? { cls: "pill-used", label: t.state };
+  const cd      = countdown(t.dueDate);
+  const hasDsc  = t.discount > 0 && t.discount < 1;
+  const varName = t.variant?.name ?? "Biznez";
+
+  async function handleReturn() {
+    if (!window.confirm("Are you sure you want to return this ticket?")) return;
+    setReturning(true);
+    try {
+      const res = await fetch(`${API_BASE}/PlaneTicket/return/${t.id}`, {
+        method: "POST",
+        headers: getHeaders(),
+      });
+      if (!res.ok) throw new Error("Return failed.");
+      onReturn(t.id);
+    } catch (e) {
+      alert(e.message);
+      setReturning(false);
+    }
+  }
 
   return (
     <div
@@ -58,152 +79,129 @@ function TicketCard({ t, idx }) {
       style={{ animationDelay: `${idx * 0.07}s` }}
     >
       <div className="bp-main">
-        <div className="bp-header">
-          <div className="bp-header-left">
-            <div className="bp-plane-icon">✈</div>
-            <span className="bp-title">BOARDING PASS</span>
-            <span className="bp-title-sep">·</span>
-            <span className="bp-class-badge">{varName.toUpperCase()}</span>
+        <div className="bp-topbar">
+          <div className="bp-topbar-left">
+            <div className="bp-icon-btn">✈</div>
+            <span className="bp-topbar-title">BOARDING PASS</span>
+            <span className="bp-topbar-sep">·</span>
+            <span className="bp-topbar-variant">{varName.toUpperCase()}</span>
           </div>
-          <div className="bp-header-right">
-            <span className="bp-status-pill bp-status-booked">{st.label}</span>
+          <div className="bp-topbar-pills">
+            <span className={`bp-pill ${st.cls}`}>{st.label}</span>
             {t.variant?.isPriority && (
-              <>
-                <span className="bp-status-dot">·</span>
-                <span className="bp-status-pill bp-status-priority">Priority</span>
-              </>
+              <span className="bp-pill pill-priority">Priority</span>
             )}
           </div>
         </div>
 
         <div className="bp-route">
-          <div className="bp-from-block">
-            <span className="bp-from-label">From</span>
-            <div style={{ display: "flex", alignItems: "baseline" }}>
-              <span className="bp-iata">{t.from ?? t.fromCity ?? "—"}</span>
-              <span className="bp-iata-dot"> •</span>
-            </div>
-            {t.fromCity && t.from && (
-              <span className="bp-city-name">{t.fromCity}</span>
-            )}
+          <div className="bp-city-col">
+            <span className="bp-city-label">FROM</span>
+            <p className="bp-city">
+              {t.from ?? t.fromCity ?? "—"}
+              <span className="bp-city-dot">•</span>
+            </p>
           </div>
 
-          <div className="bp-track">
+          <div className="bp-route-track">
             <div className="bp-track-line">
               <span className="bp-dot bp-dot--filled" />
               <span className="bp-dash" />
-              <span className="bp-fly-ico">✈</span>
+              <span className="bp-track-plane">✈</span>
               <span className="bp-dash" />
               <span className="bp-dot" />
             </div>
-            {exp && (
-              <span className="bp-route-sub">COMPLETED</span>
-            )}
-            {!exp && cd && (
-              <span className="bp-route-sub bp-route-sub--green">{cd}</span>
-            )}
-            {!exp && !cd && (
-              <span className="bp-route-sub">DIRECT</span>
-            )}
+            {exp ? (
+              <span className="bp-track-badge">Completed</span>
+            ) : cd ? (
+              <span className="bp-track-badge bp-track-badge--live">{cd.toUpperCase()}</span>
+            ) : null}
           </div>
 
-          <div className="bp-to-block">
-            <span className="bp-to-label">To</span>
-            <div style={{ display: "flex", alignItems: "baseline" }}>
-              <span className="bp-iata">{t.to ?? t.toCity ?? "—"}</span>
-            </div>
-            {t.toCity && t.to && (
-              <span className="bp-city-name" style={{ textAlign: "right" }}>{t.toCity}</span>
-            )}
+          <div className="bp-city-col bp-city-col--r">
+            <span className="bp-city-label">TO</span>
+            <p className="bp-city">{t.to ?? t.toCity ?? "—"}</p>
           </div>
         </div>
-        <div className="bp-details-row">
-          <div className="bp-detail-item">
-            <span className="bp-detail-label">Passenger</span>
-            <span className="bp-detail-val bp-detail-val--pax">
+        <div className="bp-info-row">
+          <div className="bp-info-item">
+            <span className="bp-info-label">Passenger</span>
+            <span className="bp-info-val bp-info-val--name">
               {t.passengerName ?? t.passenger ?? t.userName ?? t.fullName ?? t.name ?? "—"}
             </span>
           </div>
-          <div className="bp-detail-item">
-            <span className="bp-detail-label">Boarding</span>
-            <span className="bp-detail-val">{fmtTime(t.dueDate)}</span>
+          <div className="bp-info-item">
+            <span className="bp-info-label">Boarding</span>
+            <span className="bp-info-val">{fmtTime(t.dueDate)}</span>
           </div>
-          <div className="bp-detail-item">
-            <span className="bp-detail-label">Arrival Est.</span>
-            <span className="bp-detail-val">{fmtArrival(t.dueDate)}</span>
+          <div className="bp-info-item">
+            <span className="bp-info-label">Arrival Est.</span>
+            <span className="bp-info-val">{fmtArrival(t.dueDate)}</span>
           </div>
-          <div className="bp-detail-item">
-            <span className="bp-detail-label">Date</span>
-            <span className="bp-detail-val">{fmtDateInfo(t.dueDate)}</span>
+          <div className="bp-info-item">
+            <span className="bp-info-label">Date</span>
+            <span className="bp-info-val">{fmtDateInfo(t.dueDate)}</span>
           </div>
         </div>
-
         <div className="bp-chips">
-          {t.gate && (
-            <span className="bp-chip bp-chip--gate">Gate {t.gate}</span>
-          )}
-          {t.seat?.name && (
-            <span className="bp-chip bp-chip--class">{t.seat.name}</span>
-          )}
-          {t.meal && (
-            <span className="bp-chip bp-chip--meal">{t.meal}</span>
-          )}
-          {t.totalLuggageKg > 0 && (
-            <span className="bp-chip bp-chip--bag">{t.totalLuggageKg} kg luggage</span>
-          )}
-          {t.hasPet && (
-            <span className="bp-chip bp-chip--misc">🐾 Pet</span>
-          )}
-          {t.hasChild && (
-            <span className="bp-chip bp-chip--misc">👶 Child</span>
-          )}
+          {t.gate          && <span className="bp-chip">Gate {t.gate}</span>}
+          {t.seat?.name    && <span className="bp-chip">{t.seat.name}</span>}
+          {t.meal          && <span className="bp-chip">{t.meal}</span>}
+          {t.totalLuggageKg > 0 && <span className="bp-chip">{t.totalLuggageKg} kg luggage</span>}
+          {t.hasPet        && <span className="bp-chip">🐾 Pet</span>}
+          {t.hasChild      && <span className="bp-chip">👶 Child</span>}
         </div>
 
         {t.note && <div className="bp-note">📝 {t.note}</div>}
-      </div>
 
-      <div className="bp-divider" />
+        {!exp && (
+          <div className="bp-return-row">
+            <button
+              className={`bp-return-btn${returning ? " bp-return-btn--busy" : ""}`}
+              onClick={handleReturn}
+              disabled={returning}
+            >
+              {returning ? "Processing…" : "↩ Return Ticket"}
+            </button>
+          </div>
+        )}
+      </div>
       
       <div className="bp-sidebar">
         <div className="bp-sb-row">
           <span className="bp-sb-label">Airline</span>
-          <span className="bp-sb-val">{t.airline}</span>
+          <span className="bp-sb-val">{t.airline ?? "—"}</span>
         </div>
-
         {t.plane && (
           <div className="bp-sb-row">
             <span className="bp-sb-label">Flight</span>
             <span className="bp-sb-val">{t.plane}</span>
           </div>
         )}
-
         <div className="bp-sb-row">
           <span className="bp-sb-label">Date</span>
           <span className="bp-sb-val bp-sb-val--sm">{fmtDateSidebar(t.dueDate)}</span>
         </div>
-
         {t.gate && (
           <div className="bp-sb-row">
             <span className="bp-sb-label">Gate</span>
             <span className="bp-sb-val">{t.gate}</span>
           </div>
         )}
-
         <div className="bp-sb-badges">
-          <span className={`bp-badge ${st.cls}`}>{st.label}</span>
+          <span className={`bp-sb-pill ${st.cls}`}>{st.label}</span>
           {t.variant?.isPriority && (
-            <span className="bp-badge bp-badge--pri">Priority</span>
+            <span className="bp-sb-pill pill-priority">Priority</span>
           )}
         </div>
-
-        <div className="bp-sb-price-section">
-          <div className="bp-sb-price-label">Price</div>
+        <div className="bp-sb-price">
+          <span className="bp-sb-label">Price</span>
           {hasDsc && (
-            <div className="bp-sb-price-orig">{t.price.toFixed(2)} ₼</div>
+            <span className="bp-sb-orig">{Number(t.price).toFixed(2)} ₼</span>
           )}
-          <div className="bp-sb-price-val">
-            {finalPrice(t)}<span className="bp-sb-currency"> ₼</span>
-          </div>
+          <span className="bp-sb-amount">
+            {finalPrice(t)}<span className="bp-sb-cur"> ₼</span>
+          </span>
         </div>
       </div>
     </div>
@@ -224,7 +222,6 @@ export default function AllMyP() {
       })
       .then(data => {
         const arr = Array.isArray(data) ? data : [];
-        if (arr.length > 0) console.log("🎫 Ticket fields:", Object.keys(arr[0]), arr[0]);
         setTickets(arr);
         setLoading(false);
       })
@@ -233,6 +230,10 @@ export default function AllMyP() {
         setLoading(false);
       });
   }, []);
+
+  function handleReturn(id) {
+    setTickets(prev => prev.filter(t => t.id !== id));
+  }
 
   const visible = tickets.filter(t =>
     filter === "active"  ? !isExpired(t) :
@@ -243,7 +244,6 @@ export default function AllMyP() {
   return (
     <div className="bp-page">
       <div className="bp-inner">
-
         <div className="bp-page-header">
           <div>
             <h1 className="bp-page-title">My Plane Tickets</h1>
@@ -273,14 +273,9 @@ export default function AllMyP() {
             ))}
           </div>
         )}
-
         {!loading && error && (
-          <div className="bp-empty">
-            <span className="bp-empty-ico">⚠</span>
-            <p>{error}</p>
-          </div>
+          <div className="bp-empty"><span className="bp-empty-ico">⚠</span><p>{error}</p></div>
         )}
-
         {!loading && !error && visible.length === 0 && (
           <div className="bp-empty">
             <span className="bp-empty-ico">✈</span>
@@ -291,15 +286,13 @@ export default function AllMyP() {
             </p>
           </div>
         )}
-
         {!loading && !error && visible.length > 0 && (
           <div className="bp-list">
             {visible.map((t, i) => (
-              <TicketCard key={t.id} t={t} idx={i} />
+              <TicketCard key={t.id} t={t} idx={i} onReturn={handleReturn} />
             ))}
           </div>
         )}
-
       </div>
     </div>
   );

@@ -11,9 +11,7 @@ const getUserId = () => {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     return payload.uid || null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 };
 
 const getHeaders = () => ({
@@ -28,321 +26,410 @@ const getUserName = async () => {
     const data = await res.json();
     const u = data?.data ?? data;
     return [u.name, u.surname].filter(Boolean).join(" ") || null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 };
 
-// ─── Barcode SVG ──────────────────────────────────────────────────────────────
-function BarcodeSVG({ vertical = false }) {
-  const bars = [3, 1, 4, 1, 2, 3, 1, 2, 1, 4, 1, 2, 3, 1, 1, 4, 2, 1, 3, 1, 2, 1, 3, 2, 1, 4, 1];
+function BarcodeSide({ seed = 0 }) {
+  const heights = [14,20,10,28,16,22,12,26,18,14,24,10,20,16,28,12,22,18,10,26,14,20,10];
+  return (
+    <div className="bp-barcode-side">
+      {heights.map((v, i) => (
+        <div
+          key={i}
+          className="bp-barcode-bar"
+          style={{ height: `${((v + seed) % 24) + 6}px` }}
+        />
+      ))}
+    </div>
+  );
+}
 
-  if (vertical) {
-    return (
-      <svg
-        width="72"
-        height="14"
-        viewBox="0 0 72 14"
-        xmlns="http://www.w3.org/2000/svg"
-        className="bp-stub-barcode"
-      >
-        {bars.reduce(
-          (acc, w, i) => {
-            const x = acc.x;
-            if (i % 2 === 0) {
-              acc.els.push(
-                <rect key={i} x={x} y={0} width={w} height={14} fill="rgba(255,255,255,0.78)" rx="0.5" />
-              );
-            }
-            acc.x += w + 1;
-            return acc;
-          },
-          { x: 0, els: [] }
-        ).els}
-      </svg>
-    );
+function cardAccentClass(name = "") {
+  const n = (name || "").toLowerCase();
+  if (n.includes("first"))    return "ft-card--first";
+  if (n.includes("economy"))  return "ft-card--economy";
+  return                             "ft-card--business";
+}
+
+function variantMeta(name = "") {
+  const n = (name || "").toLowerCase();
+  if (n.includes("first"))   return { color: "#f59e0b" };
+  if (n.includes("economy")) return { color: "#22c55e" };
+  return                            { color: "#ef4444" };
+}
+
+function TicketCard({
+  flight, fromLabel, toLabel, isExpired,
+  formatTime, formatArrivalFromFlight, formatDate,
+  passengerName, displayClass, selectedSeat,
+  seats, onSelectVariant,
+}) {
+  const accentClass = cardAccentClass(displayClass);
+  const initial = (flight?.airline || "A")[0].toUpperCase();
+  const departTime  = formatTime(flight?.dueDate);
+  const arrivalTime = formatArrivalFromFlight(flight);
+
+  const variantMap = new Map();
+  (seats || []).forEach(s => {
+    if (!variantMap.has(s.variantId)) {
+      variantMap.set(s.variantId, {
+        id:    s.variantId,
+        name:  s.variantName,
+        price: s.variantPrice ?? 0,
+      });
+    }
+  });
+  const variants = [...variantMap.values()];
+  const basePrice = Number(flight?.price || 0);
+
+  return (
+    <div className={`ft-card ${accentClass}${isExpired ? " bp-card--expired" : ""}`}
+         style={{ marginBottom: "1.5rem", cursor: "default" }}
+         onClick={e => e.stopPropagation()}>
+
+      <div className="ft-card-body">
+        <div className="ft-top">
+          <div className="ft-airline-block">
+            <div className="ft-airline-logo">
+              <span className="ft-airline-initial">{initial}</span>
+            </div>
+            <div className="ft-airline-info">
+              <span className="ft-airline-name">{flight?.airline || "—"}</span>
+              <span className="ft-plane-model">{flight?.plane || "—"}</span>
+            </div>
+          </div>
+          <div className="ft-flight-meta">
+            <span className="ft-flight-date">{formatDate(flight?.dueDate)}</span>
+            <span className="ft-flight-num">{flight?.gate || "—"}</span>
+          </div>
+        </div>
+
+        <div className="ft-route">
+          <div className="ft-time-block">
+            <span className="ft-time">{departTime ?? "--:--"}</span>
+            <span className="ft-city">{(fromLabel || flight?.from || "—").toUpperCase()}</span>
+          </div>
+
+          <div className="ft-route-center">
+            <span className="ft-duration">DIRECT</span>
+            <div className="ft-line">
+              <span className="ft-line-dot" />
+              <span className="ft-line-bar" />
+              <span className="ft-plane-fly">✈</span>
+              <span className="ft-line-bar" />
+              <span className="ft-line-dot" />
+            </div>
+          </div>
+
+          <div className="ft-time-block ft-time-block--right">
+            <span className="ft-time">{arrivalTime ?? "--:--"}</span>
+            <span className="ft-city ft-city--arrival">{(toLabel || flight?.to || "—").toUpperCase()}</span>
+          </div>
+        </div>
+
+        <div className="ft-divider" />
+
+        {variants.length > 0 && (
+          <div className="ft-variants-section">
+            <span className="ft-variants-label">Select Class</span>
+            <div className="ft-variants-row">
+              {variants.map(v => {
+                const meta     = variantMeta(v.name);
+                const isActive = (displayClass || "").toLowerCase() === (v.name || "").toLowerCase();
+                const vPrice   = Math.round(basePrice + Number(v.price));
+                return (
+                  <button key={v.id} type="button"
+                    className={`vbtn${isActive ? " active" : ""}`}
+                    style={{ "--vcolor": meta.color }}
+                    onClick={() => onSelectVariant && onSelectVariant(v)}>
+                    <span className="vbtn-dot" style={{ background: meta.color }} />
+                    <span className="vbtn-name">{v.name}</span>
+                    <span className="vbtn-price">{vPrice} ₼</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="ft-divider" />
+
+        <div className="ft-bottom">
+          <div className="ft-tags">
+            {flight?.availableSeats != null && (
+              <span className="ft-tag">
+                <span className="ft-tag-dot green" />
+                {flight.availableSeats} seats
+              </span>
+            )}
+            {flight?.luggageKg != null && (
+              <span className="ft-tag">🧳 {flight.luggageKg} kg</span>
+            )}
+            {flight?.meal && (
+              <span className="ft-tag">🍽 {flight.meal}</span>
+            )}
+            {flight?.gate && (
+              <span className="ft-tag">Gate {flight.gate}</span>
+            )}
+            {selectedSeat && (
+              <span className="ft-tag" style={{ color: "#fff", borderColor: "rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.12)" }}>
+                ✦ Seat {selectedSeat.name}
+              </span>
+            )}
+            {passengerName && (
+              <span className="ft-tag" style={{ fontStyle: "italic", opacity: 0.7 }}>{passengerName}</span>
+            )}
+          </div>
+        </div>
+
+        {isExpired && (
+          <div className="bp-expired-overlay">
+            <span>EXPIRED</span>
+          </div>
+        )}
+      </div>
+
+      <div className="ft-card-side">
+        <div className="ft-side-row">
+          <span className="ft-side-label">PLANE</span>
+          <span className="ft-side-value">{flight?.plane || "—"}</span>
+        </div>
+        <div className="ft-side-row">
+          <span className="ft-side-label">DATE</span>
+          <span className="ft-side-value">{formatDate(flight?.dueDate)}</span>
+        </div>
+        <div className="ft-side-row">
+          <span className="ft-side-label">GATE</span>
+          <span className="ft-side-value">{flight?.gate || "—"}</span>
+        </div>
+        <div className="ft-side-row">
+          <span className="ft-side-label">DEP.</span>
+          <span className="ft-side-value">{departTime || "--:--"}</span>
+        </div>
+        <div className="ft-side-row">
+          <span className="ft-side-label">ARR.</span>
+          <span className="ft-side-value">{arrivalTime || "--:--"}</span>
+        </div>
+        <BarcodeSide seed={flight?.id || 0} />
+      </div>
+    </div>
+  );
+}
+const THEMES = [
+  {
+    accent: "#f59e0b", freeBg: "rgba(245,158,11,0.08)", freeBorder: "rgba(245,158,11,0.32)",
+    selBg: "rgba(245,158,11,0.22)", selBorder: "#f59e0b", selShadow: "rgba(245,158,11,0.35)",
+    zoneBg: "rgba(245,158,11,0.03)", zoneBorder: "rgba(245,158,11,0.14)",
+    headBg: "rgba(245,158,11,0.05)", priceBg: "rgba(245,158,11,0.08)",
+  },
+  {
+    accent: "#ef4444", freeBg: "rgba(239,68,68,0.08)", freeBorder: "rgba(239,68,68,0.30)",
+    selBg: "rgba(239,68,68,0.22)", selBorder: "#ef4444", selShadow: "rgba(239,68,68,0.35)",
+    zoneBg: "rgba(239,68,68,0.03)", zoneBorder: "rgba(239,68,68,0.14)",
+    headBg: "rgba(239,68,68,0.05)", priceBg: "rgba(239,68,68,0.08)",
+  },
+  {
+    accent: "#22c55e", freeBg: "rgba(34,197,94,0.07)", freeBorder: "rgba(34,197,94,0.28)",
+    selBg: "rgba(34,197,94,0.22)", selBorder: "#22c55e", selShadow: "rgba(34,197,94,0.35)",
+    zoneBg: "rgba(34,197,94,0.02)", zoneBorder: "rgba(34,197,94,0.13)",
+    headBg: "rgba(34,197,94,0.04)", priceBg: "rgba(34,197,94,0.07)",
+  },
+];
+const getTheme = (idx) => THEMES[Math.min(idx, THEMES.length - 1)];
+
+const CLASS_ICONS = { BUSINESS: "◆", FIRST: "★", ECONOMY: "●" };
+function classIcon(name) {
+  if (!name) return "●";
+  const u = name.toUpperCase();
+  return Object.entries(CLASS_ICONS).find(([k]) => u.includes(k))?.[1] ?? "●";
+}
+
+function SeatBtn({ seat, seatId, selectedSeat, onSelect, theme }) {
+  if (!seat) return <div className="sb-empty" />;
+  const isSelected = selectedSeat?.id === seat.id;
+  const isTaken    = seat.isOccupied;
+  let style = {};
+  if (!isTaken) {
+    if (isSelected) {
+      style = {
+        background: theme.selBg,
+        borderColor: theme.selBorder,
+        boxShadow: `0 0 0 1px ${theme.selBorder}, 0 4px 12px ${theme.selShadow}`,
+      };
+    } else {
+      style = {
+        background: theme.freeBg,
+        borderColor: theme.freeBorder,
+      };
+    }
   }
 
-  return null;
-}
-
-// ─── Plane Watermark ──────────────────────────────────────────────────────────
-function PlaneWatermark() {
-  return (
-    <svg
-      className="bp-watermark"
-      viewBox="0 0 300 200"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <ellipse cx="150" cy="110" rx="120" ry="28" fill="none" stroke="currentColor" strokeWidth="8" />
-      <path d="M80 110 L20 160 L100 140 Z" fill="none" stroke="currentColor" strokeWidth="7" />
-      <path d="M220 110 L280 160 L200 140 Z" fill="none" stroke="currentColor" strokeWidth="7" />
-      <path d="M255 100 L290 60 L270 100 Z" fill="none" stroke="currentColor" strokeWidth="6" />
-      <ellipse cx="38" cy="113" rx="18" ry="10" fill="none" stroke="currentColor" strokeWidth="5" />
-      <circle cx="100" cy="103" r="6" fill="none" stroke="currentColor" strokeWidth="4" />
-      <circle cx="125" cy="101" r="6" fill="none" stroke="currentColor" strokeWidth="4" />
-      <circle cx="150" cy="100" r="6" fill="none" stroke="currentColor" strokeWidth="4" />
-      <circle cx="175" cy="100" r="6" fill="none" stroke="currentColor" strokeWidth="4" />
-      <circle cx="200" cy="101" r="6" fill="none" stroke="currentColor" strokeWidth="4" />
-    </svg>
-  );
-}
-
-// ─── Boarding Pass Card ───────────────────────────────────────────────────────
-function BoardingPassCard({ flight, fromLabel, toLabel, isExpired, formatTime, formatArrival, formatDate }) {
-  return (
-    <div className={`bp-card${isExpired ? " bp-card--expired" : ""}`}>
-      {/* ── LEFT MAIN ── */}
-      <div className="bp-main">
-        <PlaneWatermark />
-
-        <div className="bp-top-row">
-          <div className="bp-title-group">
-            <div className="bp-title-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
-              </svg>
-            </div>
-            <span className="bp-title-text">Boarding Pass</span>
-          </div>
-          {flight.ticketClass && (
-            <div className="bp-class-badge">{flight.ticketClass}</div>
-          )}
-        </div>
-
-        <div className="bp-meta-row">
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Airline</span>
-            <span className="bp-meta-value">{flight.airline || "—"}</span>
-          </div>
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Flight</span>
-            <span className="bp-meta-value">{flight.plane || "—"}</span>
-          </div>
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Date</span>
-            <span className="bp-meta-value">{formatDate(flight.dueDate)}</span>
-          </div>
-        </div>
-
-        <div className="bp-route">
-          <div className="bp-city-block">
-            <span className="bp-time">{formatTime(flight.dueDate)}</span>
-            <span className="bp-city">{fromLabel}</span>
-          </div>
-
-          <div className="bp-route-mid">
-            <div className="bp-dotline">
-              <span className="bp-dot" />
-              <div className="bp-dash" />
-              <svg className="bp-plane-mid" width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
-              </svg>
-              <div className="bp-dash" />
-              <span className="bp-dot" />
-            </div>
-            <span className="bp-dur">
-              {flight.durationMinutes
-                ? `~${Math.floor(flight.durationMinutes / 60)}h${flight.durationMinutes % 60 > 0 ? ` ${flight.durationMinutes % 60}m` : ""} · Direct`
-                : "~2h · Direct"}
-            </span>
-          </div>
-
-          <div className="bp-city-block bp-city-block--right">
-            <span className="bp-time">{formatArrival(flight.dueDate, flight.durationMinutes)}</span>
-            <span className="bp-city">{toLabel}</span>
-          </div>
-        </div>
-
-        <div className="bp-info-row">
-          <div className="bp-info-item">
-            <span className="bp-meta-label">Gate</span>
-            <span className="bp-info-val bp-info-val--accent">{flight.gate ?? "—"}</span>
-          </div>
-          <div className="bp-info-item">
-            <span className="bp-meta-label">Boarding</span>
-            <span className="bp-info-val bp-info-val--accent">{formatTime(flight.dueDate)}</span>
-          </div>
-          {flight.meal && (
-            <div className="bp-info-item">
-              <span className="bp-meta-label">Meal</span>
-              <span className="bp-info-val">{flight.meal}</span>
-            </div>
-          )}
-          {flight.luggageKg != null && (
-            <div className="bp-info-item">
-              <span className="bp-meta-label">Luggage</span>
-              <span className="bp-info-val">{flight.luggageKg} kg</span>
-            </div>
-          )}
-          {flight.seatNo && (
-            <div className="bp-info-item">
-              <span className="bp-meta-label">Seat</span>
-              <span className="bp-info-val bp-info-val--accent">{flight.seatNo}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="bp-divider" />
-
-        <div className="bp-pax-row">
-          <div className="bp-meta-item">
-            <span className="bp-meta-label">Passenger Name</span>
-            <span className="bp-meta-value" style={{ fontSize: "15px", color: "#fff", fontFamily: "'Syne', sans-serif", fontWeight: 700 }}>
-              {flight.passengerName || "—"}
-            </span>
-          </div>
-        </div>
-
-        <p className="bp-notice">Gate closes 40 minutes before departure</p>
-      </div>
-
-      {/* ── TEAR LINE ── */}
-      <div className="bp-tear" />
-
-      {/* ── RIGHT STUB ── */}
-      <div className="bp-stub">
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Airline</span>
-          <span className="bp-stub-value">{flight.airline || "—"}</span>
-        </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Flight</span>
-          <span className="bp-stub-value">{flight.plane || "—"}</span>
-        </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Date</span>
-          <span className="bp-stub-value" style={{ fontSize: "10px" }}>{formatDate(flight.dueDate)}</span>
-        </div>
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Gate</span>
-          <span className="bp-stub-value" style={{ fontSize: "20px", fontWeight: 700 }}>{flight.gate ?? "—"}</span>
-        </div>
-        {flight.seatNo && (
-          <>
-            <div className="bp-stub-divider" />
-            <div className="bp-stub-meta">
-              <span className="bp-stub-label">Seat</span>
-              <span className="bp-stub-value" style={{ fontSize: "20px", fontWeight: 700 }}>{flight.seatNo}</span>
-            </div>
-          </>
-        )}
-        <div className="bp-stub-divider" />
-        <div className="bp-stub-meta">
-          <span className="bp-stub-label">Passenger</span>
-          <span className="bp-stub-pax">{flight.passengerName || "—"}</span>
-        </div>
-        <div className="bp-stub-route">{fromLabel} → {toLabel}</div>
-        <BarcodeSVG vertical />
-      </div>
-    </div>
-  );
-}
-
-// ─── Seat Map Sub-component ───────────────────────────────────────────────────
-function SeatMapGrid({ seats, selectedSeat, onSelect }) {
-  const seatByKey = {};
-  seats.forEach((s) => { seatByKey[s.name] = s; });
-
-  const variantGroups = seats.reduce((acc, s) => {
-    if (!acc[s.variantName]) acc[s.variantName] = { name: s.variantName, price: s.variantPrice };
-    return acc;
-  }, {});
-
-  const rows = [...new Set(seats.map((s) => parseInt(s.name)))].sort((a, b) => a - b);
-  const COLS = ["A", "B", "C", "D", "E", "F"];
-
-  return (
-    <div className="sm-wrap">
-      {Object.values(variantGroups).map((vg) => (
-        <div key={vg.name} className="sm-variant-header">
-          <span className="sm-class-name">{vg.name}</span>
-          <span className="sm-price-tag">+{vg.price} ₼</span>
-        </div>
-      ))}
-
-      <div className="sm-col-headers">
-        <div className="sm-row-num-cell" />
-        <div className="sm-col-h">A</div>
-        <div className="sm-col-h">B</div>
-        <div className="sm-col-h">C</div>
-        <div className="sm-aisle-spacer" />
-        <div className="sm-col-h">D</div>
-        <div className="sm-col-h">E</div>
-        <div className="sm-col-h">F</div>
-      </div>
-
-      {rows.map((row) => (
-        <div key={row} className="sm-row">
-          <div className="sm-row-num-cell">{row}</div>
-          {COLS.map((col, ci) => {
-            const seatId = `${row}${col}`;
-            const seat = seatByKey[seatId];
-            if (ci === 3) {
-              return [
-                <div key="aisle" className="sm-aisle-spacer" />,
-                <SeatButton key={seatId} seat={seat} seatId={seatId} selectedSeat={selectedSeat} onSelect={onSelect} />,
-              ];
-            }
-            return <SeatButton key={seatId} seat={seat} seatId={seatId} selectedSeat={selectedSeat} onSelect={onSelect} />;
-          })}
-        </div>
-      ))}
-
-      <div className="sm-legend">
-        <span className="sm-legend-item"><span className="sm-legend-dot sm-legend-dot--free" /> Free</span>
-        <span className="sm-legend-item"><span className="sm-legend-dot sm-legend-dot--taken" /> Occupied</span>
-        <span className="sm-legend-item"><span className="sm-legend-dot sm-legend-dot--selected" /> Selected</span>
-      </div>
-    </div>
-  );
-}
-
-function SeatButton({ seat, seatId, selectedSeat, onSelect }) {
-  if (!seat) return <div className="sm-seat sm-seat--empty" />;
-  const isSelected = selectedSeat?.id === seat.id;
-  const isTaken = seat.isOccupied;
-  let stateClass = "sm-seat--free";
-  if (isTaken) stateClass = "sm-seat--taken";
-  else if (isSelected) stateClass = "sm-seat--selected";
   return (
     <button
-      className={`sm-seat ${stateClass}`}
+      className={`sb${isTaken ? " sb--taken" : ""}${isSelected ? " sb--selected" : ""}`}
+      style={style}
       disabled={isTaken}
       onClick={() => !isTaken && onSelect(seat)}
-      aria-label={`Oturacaq ${seatId}`}
+      aria-label={`Seat ${seatId}${isTaken ? " — occupied" : ""}`}
     >
-      {seatId}
+      <span className="sb-id">{seatId}</span>
+      {isSelected && <span className="sb-check">✓</span>}
     </button>
   );
 }
 
-// ─── Main FlightBooking Component ─────────────────────────────────────────────
+function VariantBlock({ variantName, variantPrice, seats, selectedSeat, onSelect, themeIdx }) {
+  const theme = getTheme(themeIdx);
+  const byKey = {};
+  seats.forEach(s => { byKey[s.name] = s; });
+
+  const rows = [
+    ...new Set(
+      seats.map(s => { const m = s.name.match(/^(\d+)/); return m ? parseInt(m[1]) : null; }).filter(Boolean)
+    ),
+  ].sort((a, b) => a - b);
+
+  const ALL_LEFT  = ["A", "B", "C"];
+  const ALL_RIGHT = ["D", "E", "F"];
+  const used      = new Set(seats.map(s => s.name.replace(/[0-9]/g, "")));
+  const LEFT      = ALL_LEFT.filter(c => used.has(c));
+  const RIGHT     = ALL_RIGHT.filter(c => used.has(c));
+  const showAisle = LEFT.length > 0 && RIGHT.length > 0;
+
+  const tpl = [
+    "20px",
+    ...LEFT.map(() => "1fr"),
+    showAisle ? "12px" : null,
+    ...RIGHT.map(() => "1fr"),
+  ].filter(Boolean).join(" ");
+
+  return (
+    <div className="vb" style={{
+      "--accent": theme.accent, "--zone-bg": theme.zoneBg,
+      "--zone-border": theme.zoneBorder, "--head-bg": theme.headBg, "--price-bg": theme.priceBg,
+    }}>
+      <div className="vb-header">
+        <div className="vb-header-left">
+          <span className="vb-icon">{classIcon(variantName)}</span>
+          <span className="vb-header-name">{variantName}</span>
+        </div>
+        {variantPrice > 0 && <span className="vb-header-price">+{variantPrice} ₼</span>}
+      </div>
+
+      <div className="vb-grid">
+        <div className="vb-grid-row vb-col-header-row" style={{ "--tpl": tpl }}>
+          <div />
+          {LEFT.map(c  => <div key={c}  className="vb-col-h">{c}</div>)}
+          {showAisle   && <div />}
+          {RIGHT.map(c => <div key={c}  className="vb-col-h">{c}</div>)}
+        </div>
+        {rows.map(row => (
+          <div key={row} className="vb-grid-row" style={{ "--tpl": tpl }}>
+            <div className="vb-row-num">{row}</div>
+            {LEFT.map(col => {
+              const id = `${row}${col}`, s = byKey[id];
+              return s
+                ? <SeatBtn key={id} seat={s} seatId={id} selectedSeat={selectedSeat} onSelect={onSelect} theme={theme} />
+                : <div key={id} className="sb-empty" />;
+            })}
+            {showAisle && <div className="vb-aisle" />}
+            {RIGHT.map(col => {
+              const id = `${row}${col}`, s = byKey[id];
+              return s
+                ? <SeatBtn key={id} seat={s} seatId={id} selectedSeat={selectedSeat} onSelect={onSelect} theme={theme} />
+                : <div key={id} className="sb-empty" />;
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SeatMapGrid({ seats, selectedSeat, onSelect }) {
+  const groups = {};
+  seats.forEach(s => {
+    const k = s.variantName || "ECONOMY";
+    if (!groups[k]) groups[k] = { name: k, price: s.variantPrice ?? 0, seats: [] };
+    groups[k].seats.push(s);
+  });
+  const sorted = Object.values(groups).sort((a, b) => b.price - a.price);
+
+  return (
+    <div className="sm-outer">
+      <div className="sm-front-bar">
+        <span className="sm-front-line" />
+        <span className="sm-front-lbl">
+          <span className="sm-front-icon">
+            <svg viewBox="0 0 24 24" fill="#ef4444" width="11" height="11">
+              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+            </svg>
+          </span>
+          Front of plane
+        </span>
+        <span className="sm-front-line" />
+      </div>
+
+      {sorted.map((vg, idx) => (
+        <div key={vg.name}>
+          <VariantBlock
+            variantName={vg.name} variantPrice={vg.price}
+            seats={vg.seats} selectedSeat={selectedSeat}
+            onSelect={onSelect} themeIdx={idx}
+          />
+          {idx < sorted.length - 1 && (
+            <div className="sm-sep">
+              <span className="sm-sep-line" />
+              <span className="sm-sep-txt">· · · · ·</span>
+              <span className="sm-sep-line" />
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="sm-legend">
+        {sorted.map((vg, idx) => {
+          const t = getTheme(idx);
+          return (
+            <span key={vg.name} className="sm-leg">
+              <span className="sm-leg-dot" style={{ background: t.freeBg, borderColor: t.freeBorder }} />
+              {vg.name}
+            </span>
+          );
+        })}
+        <span className="sm-leg">
+          <span className="sm-leg-dot" style={{ background: "rgba(239,68,68,0.14)", borderColor: "rgba(239,68,68,0.38)" }} />
+          Taken
+        </span>
+        <span className="sm-leg">
+          <span className="sm-leg-dot" style={{ background: "rgba(239,68,68,0.22)", borderColor: "#ef4444" }} />
+          Selected
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSuccess }) {
-  const [seats, setSeats] = useState([]);
-  const [seatsLoading, setSeatsLoading] = useState(true);
-  const [selectedSeat, setSelectedSeat] = useState(null);
-  const [hasPet, setHasPet] = useState(false);
-  const [hasChild, setHasChild] = useState(false);
-  const [luggageKg, setLuggageKg] = useState(flight?.luggageKg ?? 0);
-  const [note, setNote] = useState("");
-  const [buying, setBuying] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
+  const [seats,         setSeats]         = useState([]);
+  const [seatsLoading,  setSeatsLoading]  = useState(true);
+  const [selectedSeat,  setSelectedSeat]  = useState(null);
+  const [hasPet,        setHasPet]        = useState(false);
+  const [hasChild,      setHasChild]      = useState(false);
+  const [luggageKg,     setLuggageKg]     = useState(flight?.luggageKg ?? 0);
+  const [note,          setNote]          = useState("");
+  const [buying,        setBuying]        = useState(false);
+  const [error,         setError]         = useState("");
+  const [success,       setSuccess]       = useState(false);
+  const [showPayment,   setShowPayment]   = useState(false);
   const [passengerName, setPassengerName] = useState(flight?.passengerName ?? "");
-  const [displayClass, setDisplayClass] = useState(flight?.variantName ?? null);
+  const [displayClass,  setDisplayClass]  = useState(flight?.variantName ?? null);
 
   const isExpired = flight?.dueDate ? new Date(flight.dueDate) < new Date() : false;
 
   useEffect(() => {
     if (!flight?.id) return;
-
-    const fetchSeats = async () => {
+    (async () => {
       setSeatsLoading(true);
       try {
         const res = await fetch(
@@ -351,43 +438,34 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         );
         if (!res.ok) throw new Error("Seats could not be loaded.");
         const data = await res.json();
-        const fetchedSeats = Array.isArray(data.data) ? data.data : [];
-        setSeats(fetchedSeats);
-
-        if (!flight?.variantName && fetchedSeats.length > 0) {
-          setDisplayClass(fetchedSeats[0].variantName ?? null);
-        }
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setSeatsLoading(false);
-      }
-    };
-
-    fetchSeats();
-
-    getUserName().then((name) => {
-      if (name) setPassengerName(name);
-    });
+        const list = Array.isArray(data.data) ? data.data : [];
+        setSeats(list);
+        if (!flight?.variantName && list.length > 0) setDisplayClass(list[0].variantName ?? null);
+      } catch (e) { setError(e.message); }
+      finally { setSeatsLoading(false); }
+    })();
+    getUserName().then(n => { if (n) setPassengerName(n); });
   }, [flight?.id]);
 
   useEffect(() => {
-    if (selectedSeat) {
-      setDisplayClass(selectedSeat.variantName ?? displayClass);
-    } else {
-      setDisplayClass(flight?.variantName ?? seats[0]?.variantName ?? null);
-    }
+    if (selectedSeat) setDisplayClass(selectedSeat.variantName ?? displayClass);
+    else setDisplayClass(flight?.variantName ?? seats[0]?.variantName ?? null);
   }, [selectedSeat]);
 
+  function handleVariantSelect(variant) {
+    setDisplayClass(variant.name);
+    if (selectedSeat && selectedSeat.variantName !== variant.name) {
+      setSelectedSeat(null);
+    }
+  }
+
   async function handleBuy() {
-    if (isExpired) { setError("This flight has already departed. Please select another flight."); return; }
-    if (!selectedSeat) { setError("Please select a seat."); return; }
+    if (isExpired)    { setError("This flight has already departed."); return; }
+    if (!selectedSeat){ setError("Please select a seat."); return; }
     const userId = getUserId();
-    if (!userId) { setError("Session expired. Please log in again."); return; }
+    if (!userId)      { setError("Session expired. Please log in again."); return; }
 
-    setBuying(true);
-    setError("");
-
+    setBuying(true); setError("");
     try {
       const body = {
         id: Number(selectedSeat.planeTicketId ?? flight.id),
@@ -403,50 +481,46 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
       };
 
       const res = await fetch(`${API_BASE}/PlaneTicket/fill`, {
-        method: "PUT",
-        headers: getHeaders(),
-        body: JSON.stringify(body),
+        method: "PUT", headers: getHeaders(), body: JSON.stringify(body),
       });
-
-      const rawText = await res.text();
+      const raw = await res.text();
       let result = null;
-      try { result = rawText ? JSON.parse(rawText) : null; } catch { result = null; }
+      try { result = raw ? JSON.parse(raw) : null; } catch {}
 
-      // ✅ FIX: Yalnız res.ok yoxla — data field-i null/false ola bilər, bu xəta deyil
       if (!res.ok) {
-        let errMsg = result?.message || result?.title || `Server error: ${res.status}`;
-        if (result?.errors) errMsg = Object.values(result.errors).flat().join(", ");
-        setSeats((prev) => prev.map((s) => (s.id === selectedSeat.id ? { ...s, isOccupied: true } : s)));
+        let msg = result?.message || result?.title || `Error ${res.status}`;
+        if (result?.errors) msg = Object.values(result.errors).flat().join(", ");
+        setSeats(p => p.map(s => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
         setSelectedSeat(null);
-        throw new Error(errMsg);
+        throw new Error(msg);
       }
 
-      // ✅ res.ok === true → uğurludur, artıq result.data yoxlanmır
       setSuccess(true);
       if (onSuccess) setTimeout(() => onSuccess(result?.data ?? {}), 2000);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBuying(false);
+    } catch (e) { setError(e.message); }
+    finally { setBuying(false); }
+  }
+
+  function formatTime(d) {
+    if (!d) return "--:--";
+    const dt = new Date(d);
+    return `${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
+  }
+
+  function formatArrivalFromFlight(f) {
+    if (!f) return "--:--";
+    if (f.arrivalDate) return formatTime(f.arrivalDate);
+    if (f.dueDate) {
+      const dt = new Date(f.dueDate);
+      dt.setMinutes(dt.getMinutes() + (f.durationMinutes || 120));
+      return `${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
     }
+    return "--:--";
   }
 
-  function formatTime(dateStr) {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-  }
-
-  function formatArrival(dateStr, durationMinutes = 120) {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    d.setMinutes(d.getMinutes() + (durationMinutes || 120));
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-  }
-
-  function formatDate(dateStr) {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+  function formatDate(d) {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
 
   const basePrice       = Number(flight?.price || 0);
@@ -455,33 +529,26 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
   const luggageExtra    = luggageKg > includedLuggage ? (luggageKg - includedLuggage) * 2 : 0;
   const totalPrice      = selectedSeat ? (basePrice + seatExtra + luggageExtra).toFixed(2) : "—";
 
-  // ── Guard ──
-  if (!flight) {
-    return (
-      <div className="fb-page">
-        <div className="fb-inner">
-          <button className="fb-back" onClick={onBack}>← Back</button>
-          <p style={{ color: "#aaa", textAlign: "center", marginTop: "2rem" }}>No flight selected.</p>
-        </div>
+  if (!flight) return (
+    <div className="fb-page">
+      <div className="fb-inner">
+        <button className="fb-back" onClick={onBack}>← Back</button>
+        <p style={{ color: "rgba(255,255,255,0.28)", textAlign: "center", marginTop: "2rem" }}>No flight selected.</p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // ── Success screen ──
-  if (success) {
-    return (
-      <div className="fb-page">
-        <div className="fb-inner fb-success-screen">
-          <div className="fb-success-circle">✓</div>
-          <h2 className="fb-success-title">Ticket Booked!</h2>
-          <p className="fb-success-sub">Your flight from {fromLabel} → {toLabel} is confirmed.</p>
-          <p className="fb-success-seat">Seat: <strong>{selectedSeat?.name}</strong></p>
-        </div>
+  if (success) return (
+    <div className="fb-page">
+      <div className="fb-inner fb-success-screen">
+        <div className="fb-success-circle">✓</div>
+        <h2 className="fb-success-title">Ticket Booked!</h2>
+        <p className="fb-success-sub">Your flight from {fromLabel} → {toLabel} is confirmed.</p>
+        <p className="fb-success-seat">Seat: <strong>{selectedSeat?.name}</strong></p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // ── Main screen ──
   return (
     <div className="fb-page">
       <div className="fb-inner">
@@ -497,22 +564,20 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           </div>
         )}
 
-        <BoardingPassCard
-          flight={{
-            ...flight,
-            passengerName,
-            ticketClass: displayClass,
-            seatNo: selectedSeat?.name ?? null,
-          }}
+        <TicketCard
+          flight={flight}
           fromLabel={fromLabel}
           toLabel={toLabel}
           isExpired={isExpired}
           formatTime={formatTime}
-          formatArrival={formatArrival}
+          formatArrivalFromFlight={formatArrivalFromFlight}
           formatDate={formatDate}
+          passengerName={passengerName}
+          displayClass={displayClass}
+          selectedSeat={selectedSeat}
+          seats={seats}
+          onSelectVariant={handleVariantSelect}
         />
-
-        {/* Section 01: Seat selection */}
         <div className={`fb-section${isExpired ? " fb-section--disabled" : ""}`}>
           <h3 className="fb-section-title">
             <span className="fb-section-num">01</span>Select a Seat
@@ -521,9 +586,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
             <div className="fb-seats-empty">This flight has departed. Seat selection is unavailable.</div>
           ) : seatsLoading ? (
             <div className="fb-seats-loading">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="fb-seat-skeleton" />
-              ))}
+              {[...Array(18)].map((_, i) => <div key={i} className="fb-seat-skeleton" />)}
             </div>
           ) : seats.length === 0 ? (
             <div className="fb-seats-empty">No seat data found.</div>
@@ -534,7 +597,6 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
           )}
         </div>
 
-        {/* Section 02: Extras */}
         {!isExpired && (
           <div className="fb-section">
             <h3 className="fb-section-title">
@@ -566,7 +628,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
                   <span className="fb-option-icon">🧳</span>
                   <div>
                     <span className="fb-option-name">Luggage weight</span>
-                    <span style={{ fontSize: "12px", color: "#888", display: "block" }}>
+                    <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.28)", display: "block" }}>
                       Included: {includedLuggage} kg
                     </span>
                   </div>
@@ -580,10 +642,8 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
             </div>
 
             <textarea
-              className="fb-note"
-              rows={3}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              className="fb-note" rows={3} value={note}
+              onChange={e => setNote(e.target.value)}
               placeholder="Special requests or notes..."
             />
           </div>
@@ -592,25 +652,21 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
         {selectedSeat && !isExpired && (
           <div className="fb-order-summary">
             <div className="fb-order-row">
-              <span>Base price</span>
-              <span>{basePrice.toFixed(2)} ₼</span>
+              <span>Base price</span><span>{basePrice.toFixed(2)} ₼</span>
             </div>
             {seatExtra > 0 && (
               <div className="fb-order-row">
-                <span>Seat class ({displayClass})</span>
-                <span>+{seatExtra.toFixed(2)} ₼</span>
+                <span>Seat class ({displayClass})</span><span>+{seatExtra.toFixed(2)} ₼</span>
               </div>
             )}
             {luggageExtra > 0 && (
               <div className="fb-order-row">
-                <span>Extra luggage ({luggageKg - includedLuggage} kg)</span>
-                <span>+{luggageExtra.toFixed(2)} ₼</span>
+                <span>Extra luggage ({luggageKg - includedLuggage} kg)</span><span>+{luggageExtra.toFixed(2)} ₼</span>
               </div>
             )}
             <div className="fb-order-divider" />
-            <div className="fb-order-row fb-order-total">
-              <span>Total</span>
-              <span>{totalPrice} ₼</span>
+            <div className="fb-order-total">
+              <span>Total</span><span>{totalPrice} ₼</span>
             </div>
           </div>
         )}
@@ -632,8 +688,7 @@ export default function FlightBooking({ flight, fromLabel, toLabel, onBack, onSu
 
       {showPayment && (
         <PaymentModal
-          amount={totalPrice}
-          loading={buying}
+          amount={totalPrice} loading={buying}
           onCancel={() => setShowPayment(false)}
           onConfirm={() => { setShowPayment(false); handleBuy(); }}
         />

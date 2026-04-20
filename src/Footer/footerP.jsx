@@ -37,21 +37,21 @@ export default function Footer() {
           <div className="footer-col">
             <h4 className="footer-col-title">Quick Links</h4>
             <ul className="footer-links">
-              <li><a href="/">Home</a></li>
-              <li><a href="/about">About</a></li>
-              <li><a href="/select-ticket">Buy Tickets</a></li>
-              <li><a href="/All-My-Tic">My Tickets</a></li>
-              <li><a href="/user-profile">My Profile</a></li>
+              <li>Home</li>
+              <li>About</li>
+              <li>Buy Tickets</li>
+              <li>My Tickets</li>
+              <li>My Profile</li>
             </ul>
           </div>
           <div className="footer-col">
             <h4 className="footer-col-title">Services</h4>
             <ul className="footer-links">
-              <li><a href="/show-plane-ticket">Plane Tickets</a></li>
-              <li><a href="/Show-Train-T">Train Tickets</a></li>
-              <li><a href="/show-ticket">Bus Tickets</a></li>
-              <li><a href="/buy-seats">Seat Map</a></li>
-              <li><a href="/All-My-P">Priority Boarding</a></li>
+              <li>Plane Tickets</li>
+              <li>Train Tickets</li>
+              <li>Bus Tickets</li>
+              <li>Seat Map</li>
+              <li>Priority Boarding</li>
             </ul>
           </div>
           <div className="footer-col footer-contact">

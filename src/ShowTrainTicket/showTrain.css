@@ -48,7 +48,6 @@
   color: rgba(255,255,255,0.45);
 }
 
-/* ── Filters ── */
 .st-filters {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -155,7 +154,6 @@
   color: #fff;
 }
 
-/* ── Content / States ── */
 .st-content { min-height: 200px; }
 
 .st-state {
@@ -189,14 +187,12 @@
 
 .st-empty-icon { font-size: 48px; }
 
-/* ── Grid ── */
 .st-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
 }
 
-/* ── Card ── */
 .st-card {
   position: relative;
   background: rgba(255, 255, 255, 0.05);
@@ -928,11 +924,6 @@
   .st-modal-route { font-size: 20px; }
 }
 
-
-/* ══════════════════════════════════════════════════════════
-   ── LOCATION SELECT (Custom Dropdown) ─────────────────────
-   ══════════════════════════════════════════════════════════ */
-
 .loc-select-wrap {
   position: relative;
   display: flex;
@@ -948,7 +939,6 @@
   color: rgba(255,255,255,0.5);
 }
 
-/* Trigger button — matches the other filter inputs exactly */
 .loc-select-trigger {
   display: flex;
   align-items: center;
@@ -1015,7 +1005,6 @@
   transform: rotate(-90deg);
 }
 
-/* ── Dropdown panel ── */
 .loc-dropdown {
   position: fixed;
   z-index: 99999;
@@ -1034,7 +1023,6 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── Search input inside dropdown ── */
 .loc-search-wrap {
   display: flex;
   align-items: center;
@@ -1063,7 +1051,6 @@
   color: rgba(255,255,255,0.25);
 }
 
-/* ── Scrollable list ── */
 .loc-list {
   max-height: 240px;
   overflow-y: auto;
@@ -1072,7 +1059,6 @@
   scrollbar-color: rgba(255,77,77,0.25) transparent;
 }
 
-/* ── Individual location row ── */
 .loc-item {
   display: flex;
   align-items: center;
@@ -1100,7 +1086,6 @@
   background: rgba(255,77,77,0.15);
 }
 
-/* ── "All Locations" special row ── */
 .loc-item--all .loc-item-all-label {
   font-size: 13px;
   font-weight: 600;
@@ -1111,7 +1096,6 @@
   color: #fff;
 }
 
-/* ── Avatar circle with flag ── */
 .loc-item-avatar {
   width: 34px;
   height: 34px;
@@ -1139,7 +1123,6 @@
   flex-shrink: 0;
 }
 
-/* ── Text block: country + city ── */
 .loc-item-text {
   display: flex;
   flex-direction: column;
@@ -1166,7 +1149,6 @@
   text-overflow: ellipsis;
 }
 
-/* ── Active check ── */
 .loc-item-check {
   font-size: 12px;
   color: #ff7070;
@@ -1174,7 +1156,33 @@
   font-weight: 800;
 }
 
-/* ── No results ── */
+.st-card-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  min-height: 4px; 
+}
+
+.st-variant-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  letter-spacing: 0.04em;
+  animation: st-fadeSlideIn 0.25s ease both;
+}
+
+@keyframes st-fadeSlideIn {
+  from { opacity: 0; transform: translateX(-5px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 .loc-no-results {
   padding: 20px;
   text-align: center;

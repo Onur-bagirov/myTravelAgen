@@ -10,7 +10,6 @@ import SignIn from "./SiginInPage/sign";
 import Emailcode from "./EmailCode/Emailcode";
 import CreateTicket from "./CreateTicket/ticket";
 import Profile from "./UserProfile/profile";
-import BuySeats from "./BuySeats/SeatMap";
 import ForgotPassword from "./ForgotPassword/password";
 import CreateExecutive from "./CreateExecutive/CreateExecutive";
 import SelectTicket from "./TicketSection/selectTicket";
@@ -55,7 +54,6 @@ function App() {
             <Route path="/user-profile" element={<Profile />} />
             <Route path="/Pay-Mod" element={<PaymentModal />} />
             <Route path="/buy" element={<Buy />} />
-            <Route path="/buy-seats" element={<BuySeats />} />
             <Route path="/ticket/train" element={<TrainTicket />} />
             <Route path="/ticket/plane" element={<PlanetTicket />} />
             <Route path="/Book-Train-T" element={<TrainBooking />} />

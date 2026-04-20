@@ -1,16 +1,79 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import "./profile.css";
 
 const API_BASE = "http://localhost:5251/api/Auth";
 
+const toAbsoluteUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `http://localhost:5251${path}`;
+};
+
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
 });
 
-const Avatar = ({ name, surname }) => {
+const parseBirthday = (raw) => {
+  if (!raw) return "";
+  const str = raw.toString().slice(0, 10);
+  return str === "0001-01-01" ? "" : str;
+};
+
+const Avatar = ({ name, surname, photoUrl, editing, onFileSelect }) => {
+  const fileRef = useRef(null);
   const initials = `${name?.[0] ?? ""}${surname?.[0] ?? ""}`.toUpperCase() || "?";
-  return <div className="profile-avatar">{initials}</div>;
+
+  const handleClick = () => { if (editing) fileRef.current?.click(); };
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      alert("Yalnız JPG, PNG, WEBP və ya GIF icazəlidir.");
+      e.target.value = ""; return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Fayl 5 MB-dan böyük ola bilməz.");
+      e.target.value = ""; return;
+    }
+    onFileSelect(file);
+    e.target.value = "";
+  };
+
+  return (
+    <div
+      className={`profile-avatar${editing ? " profile-avatar--edit" : ""}`}
+      onClick={handleClick}
+    >
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        style={{ display: "none" }}
+        onChange={handleFile}
+      />
+
+      {photoUrl
+        ? <img src={photoUrl} alt="Profil" className="avatar-img" />
+        : <span>{initials}</span>
+      }
+
+      {editing && (
+        <div className="avatar-edit-overlay">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5"
+            strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span>Dəyiş</span>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const Dash = () => <span className="field-dash">—</span>;
@@ -20,7 +83,6 @@ const Toast = ({ message, type, onClose }) => {
     const t = setTimeout(onClose, 3500);
     return () => clearTimeout(t);
   }, [onClose]);
-
   return (
     <div className={`toast ${type === "error" ? "toast-error" : "toast-success"}`}>
       {message}
@@ -30,7 +92,6 @@ const Toast = ({ message, type, onClose }) => {
 
 const FieldError = ({ message }) =>
   message ? <span className="profile-field-error">{message}</span> : null;
-
 
 const mapEditErrors = (message) => {
   const msg = message?.toLowerCase() || "";
@@ -57,16 +118,12 @@ const PasswordPanel = ({ onCancel, onSuccess }) => {
 
   const submit = async () => {
     setErrors({});
-
     if (!pw.current || !pw.next || !pw.confirm) {
-      setErrors({ general: "Please fill in all fields." });
-      return;
+      setErrors({ general: "Please fill in all fields." }); return;
     }
     if (pw.next !== pw.confirm) {
-      setErrors({ confirm: "New passwords do not match." });
-      return;
+      setErrors({ confirm: "New passwords do not match." }); return;
     }
-
     setLoading(true);
     try {
       await axios.put(
@@ -90,43 +147,24 @@ const PasswordPanel = ({ onCancel, onSuccess }) => {
           <p className="pw-panel-title">Change Password</p>
           <button className="pw-close-btn" onClick={onCancel}>✕</button>
         </div>
-
         {errors.general && <FieldError message={errors.general} />}
-
-        <div className="pw-field">
-          <span className="field-label">Current Password</span>
-          <input
-            className={`field-input ${errors.current ? "input-error" : ""}`}
-            type="password"
-            value={pw.current}
-            onChange={(e) => { setPw(p => ({ ...p, current: e.target.value })); setErrors(p => ({ ...p, current: "" })); }}
-          />
-          <FieldError message={errors.current} />
-        </div>
-
-        <div className="pw-field">
-          <span className="field-label">New Password</span>
-          <input
-            className={`field-input ${errors.next ? "input-error" : ""}`}
-            type="password"
-            value={pw.next}
-            onChange={(e) => { setPw(p => ({ ...p, next: e.target.value })); setErrors(p => ({ ...p, next: "" })); }}
-          />
-          <FieldError message={errors.next} />
-        </div>
-
-        <div className="pw-field">
-          <span className="field-label">Confirm New Password</span>
-          <input
-            className={`field-input ${errors.confirm ? "input-error" : ""}`}
-            type="password"
-            value={pw.confirm}
-            onChange={(e) => { setPw(p => ({ ...p, confirm: e.target.value })); setErrors(p => ({ ...p, confirm: "" })); }}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-          />
-          <FieldError message={errors.confirm} />
-        </div>
-
+        {[
+          { key: "current", label: "Current Password" },
+          { key: "next",    label: "New Password" },
+          { key: "confirm", label: "Confirm New Password" },
+        ].map(({ key, label }) => (
+          <div className="pw-field" key={key}>
+            <span className="field-label">{label}</span>
+            <input
+              className={`field-input ${errors[key] ? "input-error" : ""}`}
+              type="password"
+              value={pw[key]}
+              onChange={(e) => { setPw(p => ({ ...p, [key]: e.target.value })); setErrors(p => ({ ...p, [key]: "" })); }}
+              onKeyDown={(e) => key === "confirm" && e.key === "Enter" && submit()}
+            />
+            <FieldError message={errors[key]} />
+          </div>
+        ))}
         <div className="divider" />
         <div className="pw-actions">
           <button onClick={onCancel} className="btn-secondary">Cancel</button>
@@ -140,14 +178,17 @@ const PasswordPanel = ({ onCancel, onSuccess }) => {
 };
 
 export default function Profile() {
-  const [user, setUser]       = useState(null);
-  const [draft, setDraft]     = useState(null);
-  const [editing, setEditing] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const [saving, setSaving]   = useState(false);
-  const [showPw, setShowPw]   = useState(false);
-  const [toast, setToast]     = useState(null);
+  const [user, setUser]             = useState(null);
+  const [draft, setDraft]           = useState(null);
+  const [editing, setEditing]       = useState(false);
+  const [fetching, setFetching]     = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [showPw, setShowPw]         = useState(false);
+  const [toast, setToast]           = useState(null);
   const [editErrors, setEditErrors] = useState({});
+  const [photoUrl, setPhotoUrl]         = useState(null);
+  const [serverPhotoUrl, setServerPhotoUrl] = useState(null);
+  const [pendingPhoto, setPendingPhoto] = useState(null);
 
   const notify = useCallback((message, type = "success") => {
     setToast({ message, type });
@@ -156,7 +197,6 @@ export default function Profile() {
   const fetchProfile = useCallback(async () => {
     const token = localStorage.getItem("userToken");
     if (!token) { setFetching(false); return; }
-
     try {
       const res = await axios.get(`${API_BASE}/me`, getAuthHeader());
       const rawData = res.data?.data || res.data;
@@ -165,14 +205,18 @@ export default function Profile() {
         surname:  rawData.surname  || rawData.Surname  || "",
         email:    rawData.email    || rawData.Email    || "",
         fin:      rawData.fin      || rawData.Fin      || "",
-        birthday: (rawData.birthday || rawData.Birthday)
-          ? (rawData.birthday || rawData.Birthday).slice(0, 10)
-          : "",
+        birthday: parseBirthday(rawData.birthday || rawData.Birthday),
       };
       setUser(p);
       setDraft(p);
       localStorage.setItem("firstName", p.name);
-      localStorage.setItem("lastName", p.surname);
+      localStorage.setItem("lastName",  p.surname);
+
+      const photo = toAbsoluteUrl(
+        rawData.profilePicture || rawData.ProfilePicture || null
+      );
+      setPhotoUrl(photo);
+      setServerPhotoUrl(photo);
     } catch {
       notify("Failed to load profile data.", "error");
     } finally {
@@ -184,35 +228,70 @@ export default function Profile() {
 
   const isAdmin = user?.email?.toLowerCase() === "admin@gmail.com";
 
-  const startEdit  = () => { setDraft({ ...user }); setEditErrors({}); setEditing(true); };
-  const cancelEdit = () => { setDraft({ ...user }); setEditErrors({}); setEditing(false); };
-  const onChange   = (e) => {
+  const startEdit = () => {
+    setDraft({ ...user });
+    setEditErrors({});
+    setPendingPhoto(null);
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setDraft({ ...user });
+    setEditErrors({});
+    setPendingPhoto(null);
+    setPhotoUrl(serverPhotoUrl);
+    setEditing(false);
+  };
+
+  const onChange = (e) => {
     setDraft(p => ({ ...p, [e.target.name]: e.target.value }));
     setEditErrors(p => ({ ...p, [e.target.name]: "" }));
+  };
+
+  const handleFileSelect = (file) => {
+    setPhotoUrl(URL.createObjectURL(file));
+    setPendingPhoto(file);
   };
 
   const saveEdit = async () => {
     setEditErrors({});
     setSaving(true);
     try {
-      await axios.put(
-        `${API_BASE}/edit-profile`,
-        {
-          name:     draft.name,
-          surname:  draft.surname,
-          email:    draft.email,
-          birthday: draft.birthday || null,
-          fin:      isAdmin ? null : draft.fin,
-        },
-        getAuthHeader()
+      const formData = new FormData();
+      formData.append("name",     draft.name);
+      formData.append("surname",  draft.surname);
+      formData.append("email",    draft.email);
+      formData.append("fin",      isAdmin ? "ADMIN01"    : (draft.fin || ""));
+      formData.append("birthday", isAdmin ? "1990-01-01" : (draft.birthday || ""));
+      if (pendingPhoto) formData.append("profilePicture", pendingPhoto);
+
+      const res = await axios.put(`${API_BASE}/edit-profile`, formData, getAuthHeader());
+
+      const updatedData = res.data?.data || res.data;
+      const newPic = toAbsoluteUrl(
+        updatedData?.profilePicture || updatedData?.ProfilePicture || null
       );
-      setUser({ ...draft });
-      localStorage.setItem("firstName", draft.name);
-      localStorage.setItem("lastName", draft.surname);
+      const finalUrl = newPic ?? photoUrl;
+      setPhotoUrl(finalUrl);
+      setServerPhotoUrl(finalUrl);
+
+      const updatedUser = {
+        ...draft,
+        birthday: parseBirthday(updatedData?.birthday) || draft.birthday,
+      };
+      setUser(updatedUser);
+      setDraft(updatedUser);
+      localStorage.setItem("firstName", updatedUser.name);
+      localStorage.setItem("lastName",  updatedUser.surname);
+
+      setPendingPhoto(null);
       setEditing(false);
       notify("Profile updated successfully.");
     } catch (err) {
-      const message = err.response?.data?.message || "An error occurred during update.";
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0] ||
+        "An error occurred during update.";
       setEditErrors(mapEditErrors(message));
     } finally {
       setSaving(false);
@@ -236,17 +315,24 @@ export default function Profile() {
 
   return (
     <div className="profile-wrapper">
-      {/* Header card */}
       <div className="profile-card profile-header">
-        <Avatar name={user.name} surname={user.surname} />
+        <Avatar
+          name={user.name}
+          surname={user.surname}
+          photoUrl={photoUrl}
+          editing={editing}
+          onFileSelect={handleFileSelect}
+        />
         <div>
           <p className="profile-fullname">{user.name} {user.surname}</p>
           <p className="profile-email-text">{user.email}</p>
           {isAdmin && <span className="badge-admin">System Admin</span>}
+          {editing && pendingPhoto && (
+            <p className="photo-hint">📎 {pendingPhoto.name}</p>
+          )}
         </div>
       </div>
 
-      {/* Info card */}
       <div className="profile-card">
         <p className="section-label">Account Information</p>
 
@@ -302,13 +388,15 @@ export default function Profile() {
         <div className="actions-row">
           {!editing ? (
             <>
-              <button onClick={startEdit}        className="btn-edit">Edit Profile</button>
+              <button onClick={startEdit}             className="btn-edit">Edit Profile</button>
               <button onClick={() => setShowPw(true)} className="btn-pw">Change Password</button>
-              <button onClick={logout}           className="btn-logout">Logout</button>
+              <button onClick={logout}                className="btn-logout">Logout</button>
             </>
           ) : (
             <>
-              <button onClick={saveEdit}  disabled={saving} className="btn-save">{saving ? "Saving..." : "Save Changes"}</button>
+              <button onClick={saveEdit}   disabled={saving} className="btn-save">
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
               <button onClick={cancelEdit} disabled={saving} className="btn-cancel">Cancel</button>
             </>
           )}
