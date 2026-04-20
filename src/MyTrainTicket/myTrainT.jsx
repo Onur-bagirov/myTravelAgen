@@ -129,8 +129,6 @@ function TrainTicketCard({ t, idx }) {
             <span className="amt-price">{finalPrice(t)} ₼</span>
           </div>
         </div>
-        {t.note && <div className="amt-note">📝 {t.note}</div>}
-
       </div>
     </div>
   );
