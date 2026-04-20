@@ -8,6 +8,16 @@ const getHeaders = () => ({
   "Content-Type": "application/json",
 });
 
+const getUserName = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/Auth/me`, { headers: getHeaders() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const u = data?.data ?? data;
+    return [u.name, u.surname].filter(Boolean).join(" ") || null;
+  } catch { return null; }
+};
+
 function fmtDateInfo(d) {
   return new Date(d).toLocaleDateString("en-US", {
     day: "numeric", month: "short", year: "numeric",
@@ -48,7 +58,7 @@ const STATE_MAP = {
   Delayed:  { cls: "pill-delayed",  label: "Delayed"  },
 };
 
-function TrainTicketCard({ t, idx, onReturn }) {
+function TrainTicketCard({ t, idx, onReturn, userName }) {
   const [returning, setReturning] = useState(false);
 
   const exp     = isExpired(t);
@@ -58,6 +68,9 @@ function TrainTicketCard({ t, idx, onReturn }) {
   const hasDsc  = t.discount > 0 && t.discount < 1;
 
   const varName = t.variantName ?? t.variant?.name ?? "Standart";
+
+  const passengerDisplay =
+    t.passengerName ?? t.passenger ?? t.userName ?? t.fullName ?? t.name ?? userName ?? "—";
 
   async function handleReturn() {
     if (!window.confirm("Are you sure you want to return this ticket?")) return;
@@ -130,7 +143,7 @@ function TrainTicketCard({ t, idx, onReturn }) {
           <div className="tr-info-item">
             <span className="tr-info-label">Passenger</span>
             <span className="tr-info-val tr-info-val--name">
-              {t.passengerName ?? t.passenger ?? t.userName ?? t.fullName ?? t.name ?? "—"}
+              {passengerDisplay}
             </span>
           </div>
           <div className="tr-info-item">
@@ -146,6 +159,7 @@ function TrainTicketCard({ t, idx, onReturn }) {
             <span className="tr-info-val">{fmtDateInfo(t.dueDate)}</span>
           </div>
         </div>
+
         <div className="tr-chips">
           {t.vagonNumber && (
             <span className="tr-chip">Coach {t.vagonNumber}</span>
@@ -163,6 +177,7 @@ function TrainTicketCard({ t, idx, onReturn }) {
         </div>
 
         {t.note && <div className="tr-note">📝 {t.note}</div>}
+
         {!exp && (
           <div className="tr-return-row">
             <button
@@ -218,12 +233,15 @@ function TrainTicketCard({ t, idx, onReturn }) {
 }
 
 export default function AllMyTrainTickets() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState("");
-  const [filter,  setFilter]  = useState("all");
+  const [tickets,  setTickets]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState("");
+  const [filter,   setFilter]   = useState("all");
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
+    getUserName().then(n => { if (n) setUserName(n); });
+
     fetch(`${API_BASE}/TrainTicket/my-tickets`, { headers: getHeaders() })
       .then(r => {
         if (!r.ok) throw new Error("Tickets could not be loaded.");
@@ -309,11 +327,11 @@ export default function AllMyTrainTickets() {
                 t={t}
                 idx={i}
                 onReturn={handleReturn}
+                userName={userName}
               />
             ))}
           </div>
         )}
-
       </div>
     </div>
   );

@@ -8,6 +8,16 @@ const getHeaders = () => ({
   "Content-Type": "application/json",
 });
 
+const getUserName = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/Auth/me`, { headers: getHeaders() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const u = data?.data ?? data;
+    return [u.name, u.surname].filter(Boolean).join(" ") || null;
+  } catch { return null; }
+};
+
 function fmtDateInfo(d) {
   return new Date(d).toLocaleDateString("en-US", {
     day: "numeric", month: "short", year: "numeric",
@@ -48,7 +58,7 @@ const STATE_MAP = {
   Delayed:  { cls: "pill-delayed",  label: "Delayed"  },
 };
 
-function TicketCard({ t, idx, onReturn }) {
+function TicketCard({ t, idx, onReturn, userName }) {
   const [returning, setReturning] = useState(false);
   const exp     = isExpired(t);
   const stKey   = exp && t.state === "Booked" ? "Expired" : t.state;
@@ -56,6 +66,9 @@ function TicketCard({ t, idx, onReturn }) {
   const cd      = countdown(t.dueDate);
   const hasDsc  = t.discount > 0 && t.discount < 1;
   const varName = t.variant?.name ?? "Biznez";
+
+  const passengerDisplay =
+    t.passengerName ?? t.passenger ?? t.userName ?? t.fullName ?? t.name ?? userName ?? "—";
 
   async function handleReturn() {
     if (!window.confirm("Are you sure you want to return this ticket?")) return;
@@ -123,11 +136,12 @@ function TicketCard({ t, idx, onReturn }) {
             <p className="bp-city">{t.to ?? t.toCity ?? "—"}</p>
           </div>
         </div>
+
         <div className="bp-info-row">
           <div className="bp-info-item">
             <span className="bp-info-label">Passenger</span>
             <span className="bp-info-val bp-info-val--name">
-              {t.passengerName ?? t.passenger ?? t.userName ?? t.fullName ?? t.name ?? "—"}
+              {passengerDisplay}
             </span>
           </div>
           <div className="bp-info-item">
@@ -143,6 +157,7 @@ function TicketCard({ t, idx, onReturn }) {
             <span className="bp-info-val">{fmtDateInfo(t.dueDate)}</span>
           </div>
         </div>
+
         <div className="bp-chips">
           {t.gate          && <span className="bp-chip">Gate {t.gate}</span>}
           {t.seat?.name    && <span className="bp-chip">{t.seat.name}</span>}
@@ -166,7 +181,7 @@ function TicketCard({ t, idx, onReturn }) {
           </div>
         )}
       </div>
-      
+
       <div className="bp-sidebar">
         <div className="bp-sb-row">
           <span className="bp-sb-label">Airline</span>
@@ -209,12 +224,15 @@ function TicketCard({ t, idx, onReturn }) {
 }
 
 export default function AllMyP() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState("");
-  const [filter,  setFilter]  = useState("all");
+  const [tickets,  setTickets]  = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState("");
+  const [filter,   setFilter]   = useState("all");
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
+    getUserName().then(n => { if (n) setUserName(n); });
+
     fetch(`${API_BASE}/PlaneTicket/my-tickets`, { headers: getHeaders() })
       .then(r => {
         if (!r.ok) throw new Error("Tickets could not be loaded.");
@@ -289,7 +307,13 @@ export default function AllMyP() {
         {!loading && !error && visible.length > 0 && (
           <div className="bp-list">
             {visible.map((t, i) => (
-              <TicketCard key={t.id} t={t} idx={i} onReturn={handleReturn} />
+              <TicketCard
+                key={t.id}
+                t={t}
+                idx={i}
+                onReturn={handleReturn}
+                userName={userName}
+              />
             ))}
           </div>
         )}
