@@ -38,8 +38,16 @@ function fmtTime(d) {
 }
 
 function countdown(d) {
-  const days = Math.ceil((new Date(d) - new Date()) / 86400000);
-  if (days < 0) return "Passed";
+  if (!d) return "—";
+  const now = new Date();
+  const target = new Date(d);
+  if (isNaN(target.getTime())) return "—";
+
+  const nowDay    = new Date(now.getFullYear(),    now.getMonth(),    now.getDate());
+  const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+  const days = Math.round((targetDay - nowDay) / 86400000);
+
+  if (days < 0)  return "Passed";
   if (days === 0) return "Today";
   if (days === 1) return "Tomorrow";
   return `${days} days left`;
@@ -53,8 +61,9 @@ function toDatetimeLocal(d) {
   if (!d) return "";
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return "";
-  const pad = n => String(n).padStart(2, "0");
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  const offset = dt.getTimezoneOffset() * 60000;
+  const local  = new Date(dt.getTime() - offset);
+  return local.toISOString().slice(0, 16);
 }
 
 const VARIANT_COLORS = {
@@ -74,7 +83,7 @@ function getVariantMeta(name = "") {
 }
 
 function stateBadge(state) {
-  const s = (state || "").toLowerCase();
+  const s = (STATE_NUM_TO_NAME[state] ?? state ?? "").toString().toLowerCase();
   if (s === "pending")   return { color: "#f59e0b", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.35)", label: "⏳ Pending" };
   if (s === "available") return { color: "#34d399", bg: "rgba(52,211,153,0.15)", border: "rgba(52,211,153,0.35)", label: "✅ Available" };
   if (s === "booked")    return { color: "#7eb8f7", bg: "rgba(126,184,247,0.15)", border: "rgba(126,184,247,0.35)", label: "🔒 Booked" };
@@ -84,6 +93,14 @@ function stateBadge(state) {
 
 const STATE_MAP = { Pending: 0, Available: 1, Booked: 2, Canceled: 4 };
 const STATE_NUM_TO_NAME = { 0: "Pending", 1: "Available", 2: "Booked", 4: "Canceled" };
+
+function normalizeState(state) {
+  if (typeof state === "number") return STATE_NUM_TO_NAME[state] ?? "Available";
+  if (typeof state === "string" && state in STATE_MAP) return state;
+  const n = parseInt(state, 10);
+  if (!isNaN(n) && n in STATE_NUM_TO_NAME) return STATE_NUM_TO_NAME[n];
+  return state ?? "Available";
+}
 
 const COUNTRY_DATA = {
   france:       { code: "FR", flag: "🇫🇷" },
@@ -123,45 +140,24 @@ function getCountryMeta(countryName = "") {
 
 function extractVariants(ticket) {
   const names = new Set();
-
-  if (Array.isArray(ticket.seatGroups)) {
-    ticket.seatGroups.forEach(g => {
-      if (g.variantName) names.add(g.variantName.trim());
-    });
-  }
-
-  if (Array.isArray(ticket.variantGroups)) {
-    ticket.variantGroups.forEach(g => {
-      if (g.variantName || g.name) names.add((g.variantName || g.name).trim());
-    });
-  }
-
-  if (Array.isArray(ticket.variants)) {
-    ticket.variants.forEach(v => {
-      if (v.name) names.add(v.name.trim());
-    });
-  }
-
-  if (names.size === 0 && ticket.variantName && ticket.variantName.trim()) {
-    names.add(ticket.variantName.trim());
-  }
-
+  if (Array.isArray(ticket.seatGroups)) ticket.seatGroups.forEach(g => { if (g.variantName) names.add(g.variantName.trim()); });
+  if (Array.isArray(ticket.variantGroups)) ticket.variantGroups.forEach(g => { if (g.variantName || g.name) names.add((g.variantName || g.name).trim()); });
+  if (Array.isArray(ticket.variants)) ticket.variants.forEach(v => { if (v.name) names.add(v.name.trim()); });
+  if (names.size === 0 && ticket.variantName?.trim()) names.add(ticket.variantName.trim());
   return [...names];
 }
 
+/* ── LocationSelect ── */
 function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
   const ref = useRef(null);
   const triggerRef = useRef(null);
-
   const selected = locations.find(l => String(l.id) === String(value));
 
   useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
+    function handleClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
@@ -181,12 +177,10 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   }, [open]);
 
   const handleOpen = () => { updatePos(); setOpen(o => !o); };
-
   const filtered = locations.filter(l =>
     l.name?.toLowerCase().includes(search.toLowerCase()) ||
     l.country?.toLowerCase().includes(search.toLowerCase())
   );
-
   const handleSelect = (id) => { onChange(id); setOpen(false); setSearch(""); };
 
   const dropdown = open ? createPortal(
@@ -240,6 +234,7 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   );
 }
 
+/* ── ConfirmDeleteModal ── */
 function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -259,12 +254,12 @@ function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   );
 }
 
+/* ── Toast ── */
 function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
     return () => clearTimeout(t);
   }, [onClose]);
-
   return (
     <div className={`spt-toast spt-toast--${type}`}>
       <span>{type === "success" ? "✅" : "❌"}</span>
@@ -274,11 +269,9 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
+/* ── EditModal ── */
 function EditModal({ ticket, onClose, onSaved }) {
-  const currentStateName =
-    typeof ticket.state === "number"
-      ? STATE_NUM_TO_NAME[ticket.state] ?? "Available"
-      : ticket.state ?? "Available";
+  const currentStateName = normalizeState(ticket.state);
 
   const [form, setForm] = useState({
     id:        ticket.id,
@@ -287,21 +280,12 @@ function EditModal({ ticket, onClose, onSaved }) {
     plane:     ticket.plane     || "",
     meal:      ticket.meal      || "",
     luggageKg: ticket.luggageKg ?? 0,
-    variantId: ticket.variantId ?? "",
     state:     currentStateName,
     dueDate:   toDatetimeLocal(ticket.dueDate),
   });
-  const [variants, setVariants] = useState([]);
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState(null);
+  const [saving,           setSaving]           = useState(false);
+  const [error,            setError]            = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
-
-  useEffect(() => {
-    fetch(`${BASE_URL}/Variant?Limit=50&Page=1`, { headers: authHeaders() })
-      .then(r => r.json())
-      .then(d => setVariants(Array.isArray(d?.data) ? d.data : []))
-      .catch(() => {});
-  }, []);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -314,20 +298,30 @@ function EditModal({ ticket, onClose, onSaved }) {
     else if (form.airline.trim().length < 2) errs.airline = "Airline must be at least 2 characters.";
     else if (form.airline.trim().length > 60) errs.airline = "Airline must be at most 60 characters.";
     else if (!/^[a-zA-Z0-9 .'\-&]+$/.test(form.airline.trim())) errs.airline = "Airline contains invalid characters.";
+
     if (!form.gate.trim()) errs.gate = "Gate is required.";
     else if (form.gate.trim().length > 10) errs.gate = "Gate must be at most 10 characters.";
     else if (!/^[A-Za-z0-9\-]+$/.test(form.gate.trim())) errs.gate = "Gate must be letters and numbers only (e.g. A12).";
+
     if (!form.plane.trim()) errs.plane = "Plane is required.";
     else if (form.plane.trim().length < 2) errs.plane = "Plane must be at least 2 characters.";
     else if (form.plane.trim().length > 60) errs.plane = "Plane must be at most 60 characters.";
-    if (form.meal.trim().length > 60) errs.meal = "Meal must be at most 60 characters.";
+
+    if (!form.meal.trim()) errs.meal = "Meal is required (e.g. Standard, Vegetarian).";
+    else if (form.meal.trim().length > 50) errs.meal = "Meal must be at most 50 characters.";
+
     const kg = Number(form.luggageKg);
     if (String(form.luggageKg).trim() === "" || isNaN(kg)) errs.luggageKg = "Luggage must be a number.";
     else if (kg < 0) errs.luggageKg = "Luggage cannot be negative.";
     else if (kg > 500) errs.luggageKg = "Luggage cannot exceed 500 kg.";
     else if (!Number.isInteger(kg * 10)) errs.luggageKg = "Max 1 decimal place allowed (e.g. 23.5).";
-    if (!form.dueDate) errs.dueDate = "Date & time is required.";
-    else { const dt = new Date(form.dueDate); if (isNaN(dt.getTime())) errs.dueDate = "Invalid date/time."; }
+
+    if (!form.dueDate) errs.dueDate = "Flight date and time is required.";
+    else {
+      const dt = new Date(form.dueDate);
+      if (isNaN(dt.getTime())) errs.dueDate = "Invalid date and time.";
+    }
+
     return errs;
   };
 
@@ -338,22 +332,51 @@ function EditModal({ ticket, onClose, onSaved }) {
     setValidationErrors({});
     setSaving(true);
     try {
+      const newDueDate = new Date(form.dueDate).toISOString();
+
       const body = {
-        id:        form.id,
-        airline:   form.airline.trim(),
-        gate:      form.gate.trim(),
-        plane:     form.plane.trim(),
-        meal:      form.meal.trim(),
-        luggageKg: parseFloat(form.luggageKg) || 0,
-        state:     STATE_MAP[form.state] ?? 1,
-        variantId: form.variantId ? parseInt(form.variantId) : null,
-        dueDate:   new Date(form.dueDate).toISOString(),
+        // 🔍 Backend bu dəyərlərlə ticket qrupunu tapır
+        airline:   ticket.airline,
+        plane:     ticket.plane,
+        gate:      ticket.gate,
+        meal:      ticket.meal,
+        luggageKg: ticket.luggageKg ?? 0,
+        dueDate:   ticket.dueDate,
+        fromId:    ticket.fromId,
+        toId:      ticket.toId,
+        variantId: ticket.variantId ?? null,
+
+        // ✏️ Yeni dəyərlər
+        newAirline:   form.airline.trim(),
+        newGate:      form.gate.trim(),
+        newMeal:      form.meal.trim() || "Standard",
+        newLuggageKg: parseFloat(form.luggageKg) || 0,
+        newState:     STATE_MAP[form.state] ?? 1,
+        newDueDate:   newDueDate,
       };
-      const res = await fetch(`${BASE_URL}/PlaneTicket`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
+
+      // ✅ /{id} YOX — PUT /PlaneTicket
+      const res = await fetch(`${BASE_URL}/PlaneTicket`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.data) throw new Error(json?.message || "Update failed.");
-      const chosenVariant = variants.find(v => v.id === parseInt(form.variantId));
-      onSaved({ ...body, variantName: chosenVariant?.name ?? ticket.variantName, state: form.state, dueDate: body.dueDate });
+      if (!res.ok) throw new Error(json?.message || (json?.errors ? JSON.stringify(json.errors) : "Update failed."));
+
+      onSaved({
+        id:          ticket.id,
+        airline:     form.airline.trim(),
+        gate:        form.gate.trim(),
+        plane:       form.plane.trim(),
+        meal:        form.meal.trim() || "Standard",
+        luggageKg:   parseFloat(form.luggageKg) || 0,
+        variantId:   ticket.variantId,
+        variantName: ticket.variantName,
+        state:       form.state,
+        dueDate:     newDueDate,
+      });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -373,39 +396,51 @@ function EditModal({ ticket, onClose, onSaved }) {
         <div className="edit-form">
           <div className="edit-field">
             <label>Airline <span className="edit-required">*</span></label>
-            <input name="airline" value={form.airline} onChange={handleChange} placeholder="e.g. AZAL" className={validationErrors.airline ? "edit-input--error" : ""} />
+            <input name="airline" value={form.airline} onChange={handleChange} placeholder="e.g. AZAL"
+              className={validationErrors.airline ? "edit-input--error" : ""} />
             {validationErrors.airline && <span className="edit-field-error">{validationErrors.airline}</span>}
           </div>
+
           <div className="edit-field">
             <label>Gate <span className="edit-required">*</span></label>
-            <input name="gate" value={form.gate} onChange={handleChange} placeholder="e.g. A12" className={validationErrors.gate ? "edit-input--error" : ""} />
+            <input name="gate" value={form.gate} onChange={handleChange} placeholder="e.g. A12"
+              className={validationErrors.gate ? "edit-input--error" : ""} />
             {validationErrors.gate && <span className="edit-field-error">{validationErrors.gate}</span>}
           </div>
+
           <div className="edit-field">
             <label>Plane <span className="edit-required">*</span></label>
-            <input name="plane" value={form.plane} onChange={handleChange} placeholder="e.g. Boeing 737" className={validationErrors.plane ? "edit-input--error" : ""} />
+            <input name="plane" value={form.plane} onChange={handleChange} placeholder="e.g. Boeing 737"
+              className={validationErrors.plane ? "edit-input--error" : ""} />
             {validationErrors.plane && <span className="edit-field-error">{validationErrors.plane}</span>}
           </div>
+
           <div className="edit-field">
             <label>Meal</label>
-            <input name="meal" value={form.meal} onChange={handleChange} placeholder="e.g. Vegetarian" className={validationErrors.meal ? "edit-input--error" : ""} />
+            <input name="meal" value={form.meal} onChange={handleChange} placeholder="e.g. Vegetarian"
+              className={validationErrors.meal ? "edit-input--error" : ""} />
             {validationErrors.meal && <span className="edit-field-error">{validationErrors.meal}</span>}
           </div>
+
           <div className="edit-field">
             <label>Luggage (kg)</label>
-            <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange} className={validationErrors.luggageKg ? "edit-input--error" : ""} />
+            <input name="luggageKg" type="number" min={0} value={form.luggageKg} onChange={handleChange}
+              className={validationErrors.luggageKg ? "edit-input--error" : ""} />
             {validationErrors.luggageKg && <span className="edit-field-error">{validationErrors.luggageKg}</span>}
           </div>
-          <div className="edit-field edit-field--full">
-            <label>Date &amp; Time <span className="edit-required">*</span></label>
-            <input name="dueDate" type="datetime-local" value={form.dueDate} onChange={handleChange} className={validationErrors.dueDate ? "edit-input--error" : ""} />
+
+          <div className="edit-field">
+            <label>Flight Date &amp; Time <span className="edit-required">*</span></label>
+            <input name="dueDate" type="datetime-local" value={form.dueDate} onChange={handleChange}
+              className={validationErrors.dueDate ? "edit-input--error" : ""} />
             {validationErrors.dueDate && <span className="edit-field-error">{validationErrors.dueDate}</span>}
           </div>
+
           <div className="edit-field edit-field--full">
             <label>State</label>
             <div className="state-option-list state-option-list--inline">
               {stateOptions.map(opt => {
-                const sb = stateBadge(opt);
+                const sb       = stateBadge(opt);
                 const isActive = opt === form.state;
                 return (
                   <button key={opt} type="button"
@@ -419,16 +454,8 @@ function EditModal({ ticket, onClose, onSaved }) {
               })}
             </div>
           </div>
-          <div className="edit-field">
-            <label>Variant</label>
-            <select name="variantId" value={form.variantId} onChange={handleChange} className="spt-select">
-              <option value="">— Select Variant —</option>
-              {variants.map(v => (
-                <option key={v.id} value={v.id}>{v.name.charAt(0).toUpperCase() + v.name.slice(1)}</option>
-              ))}
-            </select>
-          </div>
         </div>
+
         <div className="edit-actions">
           <button className="edit-cancel-btn" onClick={onClose} disabled={saving}>Cancel</button>
           <button className="edit-save-btn" onClick={handleSubmit} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>
@@ -438,6 +465,7 @@ function EditModal({ ticket, onClose, onSaved }) {
   );
 }
 
+/* ── SeatButton ── */
 function SeatButton({ seat }) {
   const meta = getVariantMeta(seat.variantName);
   return (
@@ -454,6 +482,7 @@ function SeatButton({ seat }) {
   );
 }
 
+/* ── SeatMapModal ── */
 function SeatMapModal({ ticket, onClose }) {
   const [seats,   setSeats]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -463,7 +492,7 @@ function SeatMapModal({ ticket, onClose }) {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=plane`, { headers: authHeaders() });
+        const res  = await fetch(`${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=plane`, { headers: authHeaders() });
         if (!res.ok) throw new Error("Seats could not be loaded");
         const data = await res.json();
         const list = data?.data ?? data ?? [];
@@ -476,17 +505,15 @@ function SeatMapModal({ ticket, onClose }) {
     })();
   }, [ticket.id]);
 
-  const parsedSeats = seats.map(s => {
+  const parsedSeats  = seats.map(s => {
     const match = s.name.match(/^(\d+)([A-Z]+)$/);
     return { ...s, row: match ? parseInt(match[1]) : 0, col: match ? match[2] : "" };
   });
-
-  const maxRow = parsedSeats.reduce((m, s) => Math.max(m, s.row), 0);
-  const cols   = [...new Set(parsedSeats.map(s => s.col))].sort();
-  const displayCols = cols.length >= 6 ? [cols[0], cols[1], cols[2], "", cols[3], cols[4], cols[5]] : cols;
-  const seatIndex = {};
+  const maxRow       = parsedSeats.reduce((m, s) => Math.max(m, s.row), 0);
+  const cols         = [...new Set(parsedSeats.map(s => s.col))].sort();
+  const displayCols  = cols.length >= 6 ? [cols[0], cols[1], cols[2], "", cols[3], cols[4], cols[5]] : cols;
+  const seatIndex    = {};
   parsedSeats.forEach(s => { seatIndex[s.name] = s; });
-
   const variantLegend = [...new Set(seats.map(s => s.variantName))];
   const available     = seats.filter(s => !s.isOccupied).length;
   const occupied      = seats.filter(s =>  s.isOccupied).length;
@@ -564,39 +591,30 @@ function SeatMapModal({ ticket, onClose }) {
   );
 }
 
+/* ── VariantBadgeRow ── */
 function VariantBadgeRow({ ticket }) {
   const [variantNames, setVariantNames] = useState(() => extractVariants(ticket));
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch(`${BASE_URL}/Seat/by-ticket?TicketId=${ticket.id}&TicketType=plane`, { headers: authHeaders() })
       .then(r => r.json())
       .then(data => {
-        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        const list   = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
         const unique = [...new Set(list.map(s => s.variantName).filter(Boolean))];
         if (unique.length > 0) setVariantNames(unique);
       })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+      .catch(() => {});
   }, [ticket.id]);
 
   if (variantNames.length === 0) return null;
-
   return (
     <>
       {variantNames.map(name => {
-        const meta = getVariantMeta(name);
+        const meta  = getVariantMeta(name);
         const label = name.charAt(0).toUpperCase() + name.slice(1);
         return (
-          <span
-            key={name}
-            className="spt-variant-badge"
-            style={{
-              color:       meta.accent,
-              background:  meta.bg,
-              borderColor: meta.accent + "55",
-            }}
-          >
+          <span key={name} className="spt-variant-badge"
+            style={{ color: meta.accent, background: meta.bg, borderColor: meta.accent + "55" }}>
             {meta.label || label}
           </span>
         );
@@ -605,12 +623,28 @@ function VariantBadgeRow({ ticket }) {
   );
 }
 
+/* ── TicketCard ── */
 function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, onToast }) {
-  const [showSeats,   setShowSeats]   = useState(false);
-  const [showEdit,    setShowEdit]    = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [deleting,    setDeleting]    = useState(false);
-  const [currentState, setCurrentState] = useState(ticket.state);
+  const [showSeats,    setShowSeats]    = useState(false);
+  const [showEdit,     setShowEdit]     = useState(false);
+  const [showConfirm,  setShowConfirm]  = useState(false);
+  const [deleting,     setDeleting]     = useState(false);
+  const [currentState, setCurrentState] = useState(() => normalizeState(ticket.state));
+
+  const editedDueDateRef = useRef(null);
+  const displayDueDate = editedDueDateRef.current ?? ticket.dueDate;
+
+  const prevTicketIdRef = useRef(ticket.id);
+  useEffect(() => {
+    if (prevTicketIdRef.current !== ticket.id) {
+      prevTicketIdRef.current = ticket.id;
+      editedDueDateRef.current = null;
+    }
+  }, [ticket.id]);
+
+  useEffect(() => {
+    setCurrentState(normalizeState(ticket.state));
+  }, [ticket.state]);
 
   const isAdmin   = role === "Admin";
   const isCompany = role === "Company";
@@ -620,9 +654,9 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
     setShowConfirm(false);
     setDeleting(true);
     try {
-      const res = await fetch(`${BASE_URL}/PlaneTicket/${ticket.id}`, { method: "DELETE", headers: authHeaders() });
+      const res  = await fetch(`${BASE_URL}/PlaneTicket/${ticket.id}`, { method: "DELETE", headers: authHeaders() });
       const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.data) throw new Error(json?.message || `Failed to delete ticket #${ticket.id}.`);
+      if (!res.ok) throw new Error(json?.message || `Failed to delete ticket #${ticket.id}.`);
       onToast(`Ticket #${ticket.id} has been successfully deleted.`, "success");
       onDeleted(ticket.id);
     } catch (err) {
@@ -677,8 +711,8 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
 
         <div className="spt-card-info">
           {[
-            ["DATE",    fmtDate(ticket.dueDate)],
-            ["TIME",    fmtTime(ticket.dueDate)],
+            ["DATE",    fmtDate(displayDueDate)],
+            ["TIME",    fmtTime(displayDueDate)],
             ["GATE",    ticket.gate],
             ["PLANE",   ticket.plane],
             ["MEAL",    ticket.meal || "—"],
@@ -693,24 +727,35 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
           ))}
         </div>
 
-        <div className="spt-card-countdown">🕐 {countdown(ticket.dueDate)}</div>
+        <div className="spt-card-countdown">🕐 {countdown(displayDueDate)}</div>
 
         <button className="spt-seatmap-btn" onClick={() => setShowSeats(true)}>
           💺 Seat Map
         </button>
       </div>
 
-      {showSeats   && <SeatMapModal ticket={ticket} onClose={() => setShowSeats(false)} />}
-      {showEdit    && (
+      {showSeats && (
+        <SeatMapModal
+          ticket={{ ...ticket, dueDate: displayDueDate }}
+          onClose={() => setShowSeats(false)}
+        />
+      )}
+
+      {showEdit && (
         <EditModal
-          ticket={{ ...ticket, state: currentState }}
+          ticket={{ ...ticket, state: currentState, dueDate: displayDueDate }}
           onClose={() => setShowEdit(false)}
           onSaved={updatedBody => {
-            setCurrentState(updatedBody.state);
-            onEdited(updatedBody);
+            const newState = normalizeState(updatedBody.state);
+            setCurrentState(newState);
+            if (updatedBody.dueDate) {
+              editedDueDateRef.current = updatedBody.dueDate;
+            }
+            onEdited({ ...updatedBody, state: newState });
           }}
         />
       )}
+
       {showConfirm && (
         <ConfirmDeleteModal
           ticketId={ticket.id}
@@ -722,6 +767,7 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
   );
 }
 
+/* ── ShowPlaneTicket (main page) ── */
 export default function ShowPlaneTicket() {
   const navigate = useNavigate();
   const role     = getUserRole();
@@ -747,6 +793,8 @@ export default function ShowPlaneTicket() {
   });
   const [highlightId, setHighlightId] = useState(newTicketId);
 
+  const editedMap = useRef({});
+
   useEffect(() => {
     fetch(`${BASE_URL}/Location?Limit=200&Page=1`, { headers: authHeaders() })
       .then(r => r.json())
@@ -754,36 +802,64 @@ export default function ShowPlaneTicket() {
       .catch(() => {});
   }, []);
 
+  const [fetchTrigger, setFetchTrigger] = useState(0);
+  const triggerFetch = useCallback(() => setFetchTrigger(n => n + 1), []);
+
+  const airlineRef    = useRef(airline);
+  const fromIdRef     = useRef(fromId);
+  const toIdRef       = useRef(toId);
+  const dateRef       = useRef(date);
+  const pageNumberRef = useRef(pageNumber);
+  useEffect(() => { airlineRef.current    = airline;    }, [airline]);
+  useEffect(() => { fromIdRef.current     = fromId;     }, [fromId]);
+  useEffect(() => { toIdRef.current       = toId;       }, [toId]);
+  useEffect(() => { dateRef.current       = date;       }, [date]);
+  useEffect(() => { pageNumberRef.current = pageNumber; }, [pageNumber]);
+
   const fetchTickets = useCallback(async () => {
-    if (airline.length > 50) { setError("Airline name is too long."); return; }
+    const _airline    = airlineRef.current;
+    const _fromId     = fromIdRef.current;
+    const _toId       = toIdRef.current;
+    const _date       = dateRef.current;
+    const _pageNumber = pageNumberRef.current;
+
+    if (_airline.length > 50) { setError("Airline name is too long."); return; }
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      params.set("PageNumber", pageNumber);
+      params.set("PageNumber", _pageNumber);
       params.set("PageSize",   pageSize);
-      if (airline.trim()) params.set("Airline", airline.trim());
-      if (fromId) params.set("FromLocationId", fromId);
-      if (toId)   params.set("ToLocationId",   toId);
-      if (date) {
-        const d = new Date(date);
+      if (_airline.trim()) params.set("Airline", _airline.trim());
+      if (_fromId) params.set("FromLocationId", _fromId);
+      if (_toId)   params.set("ToLocationId",   _toId);
+      if (_date) {
+        const d = new Date(_date);
         if (!isNaN(d.getTime())) params.set("Date", d.toISOString());
       }
       const res = await fetch(`${BASE_URL}/PlaneTicket?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error(`Server Error: ${res.status}`);
-      const data = await res.json();
-      const all = Array.isArray(data?.data) ? data.data : [];
+      const data     = await res.json();
+      const all      = Array.isArray(data?.data) ? data.data : [];
       const filtered = all.filter(t => !isExpired(t.dueDate));
-      setTickets(filtered);
+
+      const merged = filtered.map(t => {
+        const edited = editedMap.current[t.id];
+        if (!edited) return t;
+        return { ...t, ...edited };
+      });
+
+      setTickets(merged);
       setTotalCount((data?.totalDataCount ?? 0) - (all.length - filtered.length));
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [airline, fromId, toId, date, pageNumber]);
+  }, []);
 
-  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+  useEffect(() => { fetchTickets(); }, [fetchTrigger, fetchTickets]);
+  useEffect(() => { triggerFetch(); }, [pageNumber]); // eslint-disable-line
 
   useEffect(() => {
     if (!highlightId) return;
@@ -822,8 +898,8 @@ export default function ShowPlaneTicket() {
           </div>
         </div>
         <div className="spt-filter-actions">
-          <button className="spt-search-btn" onClick={() => { setPageNumber(1); fetchTickets(); }}>Search</button>
-          <button className="spt-reset-btn"  onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); }}>Reset</button>
+          <button className="spt-search-btn" onClick={() => { setPageNumber(1); triggerFetch(); }}>Search</button>
+          <button className="spt-reset-btn"  onClick={() => { setAirline(""); setFromId(""); setToId(""); setDate(""); setPageNumber(1); triggerFetch(); }}>Reset</button>
         </div>
       </div>
 
@@ -836,7 +912,7 @@ export default function ShowPlaneTicket() {
         {error && !loading && (
           <div className="spt-state spt-error">
             <span>⚠️</span><p>{error}</p>
-            <button onClick={fetchTickets}>Try Again</button>
+            <button onClick={triggerFetch}>Try Again</button>
           </div>
         )}
         {!loading && !error && tickets.length === 0 && (
@@ -854,17 +930,46 @@ export default function ShowPlaneTicket() {
                 ticket={ticket}
                 isNew={ticket.id === highlightId}
                 role={role}
-                onDeleted={id => { setTickets(prev => prev.filter(t => t.id !== id)); setTotalCount(prev => prev - 1); }}
+                onDeleted={id => {
+                  delete editedMap.current[id];
+                  setTickets(prev => prev.filter(t => t.id !== id));
+                  setTotalCount(prev => prev - 1);
+                }}
                 onEdited={updatedBody => {
+                  const newState = normalizeState(updatedBody.state);
+                  editedMap.current[updatedBody.id] = {
+                    airline:     updatedBody.airline,
+                    gate:        updatedBody.gate,
+                    plane:       updatedBody.plane,
+                    meal:        updatedBody.meal,
+                    luggageKg:   updatedBody.luggageKg,
+                    variantId:   updatedBody.variantId,
+                    variantName: updatedBody.variantName,
+                    state:       newState,
+                    dueDate:     updatedBody.dueDate,
+                  };
                   setTickets(prev => prev.map(t =>
                     t.id === updatedBody.id
-                      ? { ...t, airline: updatedBody.airline, gate: updatedBody.gate, plane: updatedBody.plane, meal: updatedBody.meal, luggageKg: updatedBody.luggageKg, variantId: updatedBody.variantId, variantName: updatedBody.variantName ?? t.variantName, state: updatedBody.state ?? t.state, dueDate: updatedBody.dueDate ?? t.dueDate }
+                      ? {
+                          ...t,
+                          airline:     updatedBody.airline,
+                          gate:        updatedBody.gate,
+                          plane:       updatedBody.plane,
+                          meal:        updatedBody.meal,
+                          luggageKg:   updatedBody.luggageKg,
+                          variantId:   updatedBody.variantId,
+                          variantName: updatedBody.variantName ?? t.variantName,
+                          state:       newState,
+                          dueDate:     updatedBody.dueDate ?? t.dueDate,
+                        }
                       : t
                   ));
                   showToast(`Ticket #${updatedBody.id} updated successfully.`, "success");
                 }}
                 onStateChanged={updated => {
-                  setTickets(prev => prev.map(t => t.id === updated.id ? { ...t, state: updated.state } : t));
+                  setTickets(prev => prev.map(t =>
+                    t.id === updated.id ? { ...t, state: normalizeState(updated.state) } : t
+                  ));
                 }}
                 onToast={showToast}
               />

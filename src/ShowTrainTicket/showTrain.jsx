@@ -37,6 +37,26 @@ const getUserId = () => {
   } catch { return null; }
 };
 
+const STATE_MAP = { Pending: 0, Available: 1, Booked: 2, Canceled: 4 };
+const STATE_NUM_TO_NAME = { 0: "Pending", 1: "Available", 2: "Booked", 4: "Canceled" };
+
+function normalizeState(state) {
+  if (typeof state === "number") return STATE_NUM_TO_NAME[state] ?? "Available";
+  if (typeof state === "string" && state in STATE_MAP) return state;
+  const n = parseInt(state, 10);
+  if (!isNaN(n) && n in STATE_NUM_TO_NAME) return STATE_NUM_TO_NAME[n];
+  return state ?? "Available";
+}
+
+function stateBadge(state) {
+  const s = (STATE_NUM_TO_NAME[state] ?? state ?? "").toString().toLowerCase();
+  if (s === "pending")   return { color: "#f59e0b", bg: "rgba(245,158,11,0.15)",  border: "rgba(245,158,11,0.35)",  label: "⏳ Pending"   };
+  if (s === "available") return { color: "#34d399", bg: "rgba(52,211,153,0.15)",  border: "rgba(52,211,153,0.35)",  label: "✅ Available" };
+  if (s === "booked")    return { color: "#7eb8f7", bg: "rgba(126,184,247,0.15)", border: "rgba(126,184,247,0.35)", label: "🔒 Booked"    };
+  if (s === "canceled")  return { color: "#f87171", bg: "rgba(248,113,113,0.15)", border: "rgba(248,113,113,0.35)", label: "❌ Canceled"  };
+  return { color: "#a0a8c0", bg: "rgba(160,168,192,0.1)", border: "rgba(160,168,192,0.3)", label: state };
+}
+
 function fmtDate(d) {
   if (!d) return "—";
   return new Date(d)
@@ -61,7 +81,6 @@ function fmt(iso) {
 
 const PALETTE = ["#38bdf8", "#a78bfa", "#34d399", "#fb923c", "#f472b6", "#facc15"];
 
-/* ── Variant colour map (same style as plane page) ── */
 const VARIANT_COLORS = {
   "first class": { accent: "#c9a84c", bg: "rgba(201,168,76,0.15)",   label: "✦ First Class" },
   business:      { accent: "#7eb8f7", bg: "rgba(126,184,247,0.15)", label: "◈ Business"   },
@@ -120,9 +139,7 @@ function getCountryMeta(countryName = "") {
   return COUNTRY_DATA[key] || { code: countryName.slice(0, 2).toUpperCase(), flag: "🌐" };
 }
 
-/* ══════════════════════════════════════════════════════════
-   ── VariantBadgeRow — fetches seats & shows all variants ──
-   ══════════════════════════════════════════════════════════ */
+/* ── VariantBadgeRow ── */
 function VariantBadgeRow({ ticketId }) {
   const [variantNames, setVariantNames] = useState([]);
 
@@ -165,6 +182,7 @@ function VariantBadgeRow({ ticketId }) {
   );
 }
 
+/* ── LocationSelect ── */
 function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
   const [open, setOpen]       = useState(false);
   const [search, setSearch]   = useState("");
@@ -255,6 +273,7 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   );
 }
 
+/* ── Toast ── */
 function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
@@ -270,6 +289,7 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
+/* ── ConfirmDeleteModal ── */
 function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   return (
     <div className="st-modal-overlay" onClick={onCancel}>
@@ -289,15 +309,29 @@ function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   );
 }
 
+/* ── EditModal ── */
 function EditModal({ ticket, onClose, onSaved }) {
+  const currentStateName = normalizeState(ticket.state);
+
+  const toLocalDT = (iso) => {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch { return ""; }
+  };
+
   const [form, setForm] = useState({
     id:           ticket.id,
     trainCompany: ticket.trainCompany || "",
     trainNumber:  ticket.trainNumber  || "",
     vagonNumber:  ticket.vagonNumber  ?? "",
+    dueDate:      toLocalDT(ticket.dueDate),
+    state:        currentStateName,
   });
-  const [saving, setSaving]                     = useState(false);
-  const [error, setError]                       = useState(null);
+  const [saving,           setSaving]           = useState(false);
+  const [error,            setError]            = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
   const handleChange = e => {
@@ -307,19 +341,41 @@ function EditModal({ ticket, onClose, onSaved }) {
 
   const validate = () => {
     const errs = {};
-    if (!form.trainCompany.trim()) errs.trainCompany = "Train company is required.";
-    else if (form.trainCompany.trim().length < 2) errs.trainCompany = "Train company must be at least 2 characters.";
-    else if (form.trainCompany.trim().length > 60) errs.trainCompany = "Train company must be at most 60 characters.";
-    else if (!/^[a-zA-Z0-9 .\'\-&]+$/.test(form.trainCompany.trim())) errs.trainCompany = "Train company contains invalid characters.";
-    if (!form.trainNumber.trim()) errs.trainNumber = "Train number is required.";
-    else if (form.trainNumber.trim().length > 20) errs.trainNumber = "Train number must be at most 20 characters.";
-    else if (!/^[A-Za-z0-9\-]+$/.test(form.trainNumber.trim())) errs.trainNumber = "Train number must be letters and numbers only.";
+
+    if (!form.trainCompany.trim())
+      errs.trainCompany = "Train company is required.";
+    else if (form.trainCompany.trim().length < 2)
+      errs.trainCompany = "Train company must be at least 2 characters.";
+    else if (form.trainCompany.trim().length > 60)
+      errs.trainCompany = "Train company must be at most 60 characters.";
+    else if (!/^[a-zA-Z0-9 .'\-&]+$/.test(form.trainCompany.trim()))
+      errs.trainCompany = "Train company contains invalid characters.";
+
+    if (!form.trainNumber.trim())
+      errs.trainNumber = "Train number is required.";
+    else if (form.trainNumber.trim().length > 20)
+      errs.trainNumber = "Train number must be at most 20 characters.";
+    else if (!/^[A-Za-z0-9\-]+$/.test(form.trainNumber.trim()))
+      errs.trainNumber = "Train number must be letters and numbers only.";
+
     if (form.vagonNumber !== "" && form.vagonNumber !== null) {
       const v = Number(form.vagonNumber);
-      if (isNaN(v) || !Number.isInteger(v)) errs.vagonNumber = "Vagon number must be a whole number.";
-      else if (v < 1) errs.vagonNumber = "Vagon number must be at least 1.";
-      else if (v > 999) errs.vagonNumber = "Vagon number cannot exceed 999.";
+      if (isNaN(v) || !Number.isInteger(v))
+        errs.vagonNumber = "Vagon number must be a whole number.";
+      else if (v < 1)
+        errs.vagonNumber = "Vagon number must be at least 1.";
+      else if (v > 999)
+        errs.vagonNumber = "Vagon number cannot exceed 999.";
     }
+
+    if (!form.dueDate)
+      errs.dueDate = "Departure date & time is required.";
+    else {
+      const chosen = new Date(form.dueDate);
+      if (isNaN(chosen.getTime()))
+        errs.dueDate = "Invalid date/time.";
+    }
+
     return errs;
   };
 
@@ -330,19 +386,34 @@ function EditModal({ ticket, onClose, onSaved }) {
     setValidationErrors({});
     setSaving(true);
     try {
+      // ✅ FIX 1: datetime-local input "YYYY-MM-DDTHH:MM" formatında lokal vaxt verir.
+      // new Date().toISOString() bunu UTC-ə çevirir → Bakıda (UTC+4) 4 saat fərq yaranır
+      // və backend fərqli tarix kimi qəbul edir. Sadəcə ":00" əlavə edib göndəririk.
+      const dueDateValue = form.dueDate ? form.dueDate + ":00" : null;
+
+      // ✅ FIX 2: Backend int (nullable deyil) gözləyir, null göndərəndə 0 olsun
+      const vagonValue = (form.vagonNumber !== "" && form.vagonNumber !== null)
+        ? parseInt(form.vagonNumber)
+        : 0;
+
       const body = {
         id:           form.id,
         trainCompany: form.trainCompany.trim(),
         trainNumber:  form.trainNumber.trim(),
-        vagonNumber:  form.vagonNumber !== "" ? parseInt(form.vagonNumber) : null,
-        state:        0,
+        vagonNumber:  vagonValue,
+        dueDate:      dueDateValue,
+        state:        STATE_MAP[form.state] ?? 1,
       };
-      const res = await fetch(`${BASE_URL}/TrainTicket`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `Server error: ${res.status}`);
-      }
-      onSaved(body);
+
+      const res = await fetch(`${BASE_URL}/TrainTicket/${form.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.message || (json?.errors ? JSON.stringify(json.errors) : `Server error: ${res.status}`));
+
+      onSaved({ ...body, state: form.state });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -351,41 +422,92 @@ function EditModal({ ticket, onClose, onSaved }) {
     }
   };
 
+  const stateOptions = Object.keys(STATE_MAP);
+
   return (
     <div className="st-modal-overlay" onClick={onClose}>
       <div className="st-edit-modal" onClick={e => e.stopPropagation()}>
         <button className="st-modal-close" onClick={onClose}>✕</button>
         <div className="st-edit-modal-title">✏️ Edit Ticket #{ticket.id}</div>
         {error && <div className="st-error-banner">⚠ {error}</div>}
+
         <div className="st-edit-form">
+          {/* Train Company */}
           <div className="st-edit-field">
             <label>Train Company <span className="st-edit-required">*</span></label>
             <input name="trainCompany" value={form.trainCompany} onChange={handleChange} placeholder="e.g. ADY"
               className={validationErrors.trainCompany ? "st-edit-input--error" : ""} />
             {validationErrors.trainCompany && <span className="st-edit-field-error">{validationErrors.trainCompany}</span>}
           </div>
+
+          {/* Train Number */}
           <div className="st-edit-field">
             <label>Train Number <span className="st-edit-required">*</span></label>
             <input name="trainNumber" value={form.trainNumber} onChange={handleChange} placeholder="e.g. T-101"
               className={validationErrors.trainNumber ? "st-edit-input--error" : ""} />
             {validationErrors.trainNumber && <span className="st-edit-field-error">{validationErrors.trainNumber}</span>}
           </div>
+
+          {/* Vagon Number */}
           <div className="st-edit-field">
             <label>Vagon Number</label>
             <input name="vagonNumber" type="number" min={1} value={form.vagonNumber} onChange={handleChange} placeholder="e.g. 5"
               className={validationErrors.vagonNumber ? "st-edit-input--error" : ""} />
             {validationErrors.vagonNumber && <span className="st-edit-field-error">{validationErrors.vagonNumber}</span>}
           </div>
+
+          {/* Departure Date & Time */}
+          <div className="st-edit-field">
+            <label>Departure Date & Time <span className="st-edit-required">*</span></label>
+            <div className={`st-datetime-wrap${validationErrors.dueDate ? " st-datetime-wrap--error" : ""}`}>
+              <span className="st-datetime-icon">🗓️</span>
+              <input
+                name="dueDate"
+                type="datetime-local"
+                value={form.dueDate}
+                onChange={handleChange}
+                className={`st-datetime-input${validationErrors.dueDate ? " st-edit-input--error" : ""}`}
+              />
+            </div>
+            {validationErrors.dueDate && <span className="st-edit-field-error">{validationErrors.dueDate}</span>}
+          </div>
+
+          {/* State */}
+          <div className="st-edit-field st-edit-field--full">
+            <label>State</label>
+            <div className="st-state-option-list">
+              {stateOptions.map(opt => {
+                const sb       = stateBadge(opt);
+                const isActive = opt === form.state;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={`st-state-option-btn${isActive ? " st-state-option-btn--active" : ""}`}
+                    style={{ "--s-color": sb.color, "--s-bg": sb.bg, "--s-border": sb.border }}
+                    onClick={() => setForm(f => ({ ...f, state: opt }))}
+                  >
+                    {sb.label}
+                    {isActive && <span className="st-state-option-check">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
+
         <div className="st-edit-actions">
           <button className="st-edit-cancel-btn" onClick={onClose} disabled={saving}>Cancel</button>
-          <button className="st-edit-save-btn" onClick={handleSubmit} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>
+          <button className="st-edit-save-btn"   onClick={handleSubmit} disabled={saving}>
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
+/* ── SeatMap ── */
 function SeatMap({ seats, selectedSeatId, onSelect }) {
   if (!seats.length) return <p className="st-no-seats">No seats found for this ticket.</p>;
 
@@ -466,6 +588,7 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
   );
 }
 
+/* ── BookingModal ── */
 function BookingModal({ ticket, onClose }) {
   const [seats, setSeats]               = useState([]);
   const [loadingSeats, setLoadingSeats] = useState(true);
@@ -592,14 +715,22 @@ function BookingModal({ ticket, onClose }) {
   );
 }
 
-/* ── Ticket Card ── */
+/* ── TicketCard ── */
 function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const [showEdit,    setShowEdit]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleting,    setDeleting]    = useState(false);
 
+  const [currentState, setCurrentState] = useState(() => normalizeState(ticket.state));
+
+  useEffect(() => {
+    setCurrentState(normalizeState(ticket.state));
+  }, [ticket.state]);
+
   const adminMode   = isAdmin(role);
   const companyMode = isCompany(role);
+
+  const sb = stateBadge(currentState);
 
   const seats      = ticket.availableSeats;
   const seatsClass = seats <= 5 ? "st-info-val--low" : seats <= 15 ? "st-info-val--warn" : "st-info-val--ok";
@@ -620,13 +751,12 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
     setShowConfirm(false);
     setDeleting(true);
     try {
-      const res = await fetch(`${BASE_URL}/TrainTicket`, {
-        method: "DELETE", headers: authHeaders(), body: JSON.stringify({ id: ticket.id }),
+      const res = await fetch(`${BASE_URL}/TrainTicket/${ticket.id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
       });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `Server error: ${res.status}`);
-      }
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.message || `Failed to delete ticket #${ticket.id}.`);
       onToast(`Ticket #${ticket.id} has been successfully deleted.`, "success");
       onDeleted(ticket.id);
     } catch (err) {
@@ -638,7 +768,6 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   return (
     <>
       <div className="st-card">
-        {/* ── Header: company + badges + actions ── */}
         <div className="st-card-header">
           <div className="st-card-company">{ticket.trainCompany}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -654,12 +783,16 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
           </div>
         </div>
 
-        {/* ── Variant badges row ── */}
         <div className="st-card-badge-row">
+          <span
+            className="st-state-badge"
+            style={{ color: sb.color, background: sb.bg, borderColor: sb.border }}
+          >
+            {sb.label}
+          </span>
           <VariantBadgeRow ticketId={ticket.id} />
         </div>
 
-        {/* ── Route ── */}
         <div className="st-card-route">
           <div className="st-card-city">
             <span className="st-card-code">{fromCode}</span>
@@ -678,7 +811,6 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
           </div>
         </div>
 
-        {/* ── Info grid ── */}
         <div className="st-card-info">
           <div className="st-info-item">
             <span className="st-info-label">DATE</span>
@@ -708,29 +840,43 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
       </div>
 
       {showEdit && (
-        <EditModal ticket={ticket} onClose={() => setShowEdit(false)}
-          onSaved={updatedBody => { onEdited(updatedBody); onToast(`Ticket #${updatedBody.id} updated successfully.`, "success"); }} />
+        <EditModal
+          ticket={{ ...ticket, state: currentState }}
+          onClose={() => setShowEdit(false)}
+          onSaved={updatedBody => {
+            const newState = normalizeState(updatedBody.state);
+            setCurrentState(newState);
+            onEdited({ ...updatedBody, state: newState });
+            onToast(`Ticket #${updatedBody.id} updated successfully.`, "success");
+          }}
+        />
       )}
+
       {showConfirm && (
-        <ConfirmDeleteModal ticketId={ticket.id} onConfirm={handleDeleteConfirmed} onCancel={() => setShowConfirm(false)} />
+        <ConfirmDeleteModal
+          ticketId={ticket.id}
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirm(false)}
+        />
       )}
     </>
   );
 }
 
-const PAGE_SIZE   = 9;
+/* ── ShowTrainTickets (main page) ── */
+const PAGE_SIZE     = 9;
 const EMPTY_FILTERS = { trainCompany: "", date: "", fromLocationId: "", toLocationId: "" };
 
 export default function ShowTrainTickets() {
-  const [tickets,     setTickets]     = useState([]);
-  const [totalCount,  setTotalCount]  = useState(0);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
-  const [page,        setPage]        = useState(1);
-  const [totalPages,  setTotalPages]  = useState(1);
-  const [locations,   setLocations]   = useState([]);
+  const [tickets,      setTickets]      = useState([]);
+  const [totalCount,   setTotalCount]   = useState(0);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
+  const [page,         setPage]         = useState(1);
+  const [totalPages,   setTotalPages]   = useState(1);
+  const [locations,    setLocations]    = useState([]);
   const [activeTicket, setActiveTicket] = useState(null);
-  const [toast,       setToast]       = useState(null);
+  const [toast,        setToast]        = useState(null);
 
   const role = getUserRole();
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -821,11 +967,21 @@ export default function ShowTrainTickets() {
                 ticket={t}
                 role={role}
                 onClick={() => setActiveTicket(t)}
-                onDeleted={id => { setTickets(prev => prev.filter(tk => tk.id !== id)); setTotalCount(c => c - 1); }}
+                onDeleted={id => {
+                  setTickets(prev => prev.filter(tk => tk.id !== id));
+                  setTotalCount(c => c - 1);
+                }}
                 onEdited={updatedBody => {
                   setTickets(prev => prev.map(tk =>
                     tk.id === updatedBody.id
-                      ? { ...tk, trainCompany: updatedBody.trainCompany, trainNumber: updatedBody.trainNumber, vagonNumber: updatedBody.vagonNumber }
+                      ? {
+                          ...tk,
+                          trainCompany: updatedBody.trainCompany,
+                          trainNumber:  updatedBody.trainNumber,
+                          vagonNumber:  updatedBody.vagonNumber,
+                          dueDate:      updatedBody.dueDate,
+                          state:        normalizeState(updatedBody.state),
+                        }
                       : tk
                   ));
                 }}
