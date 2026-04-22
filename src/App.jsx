@@ -27,6 +27,7 @@ import TrainBooking from "./BookTrainTicket/bookTrainT";
 import AllMyTrainTickets from "./MyTrainTicket/myTrainT";
 import PaymentModal from "./PymetModal/pyMod";
 import Footer from "./Footer/footerP";
+import MessagePage from "./Message/message";
 
 function App() {    
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="/email" element={<Emailcode />} />
             <Route path="/forgot-pass" element={<ForgotPassword />} />
             <Route path="/about" element={<About />} />
+            <Route path="/message" element={<MessagePage/>}/>
 
             {/* ========== USER ========== */}
             <Route path="/select-ticket" element={<SelectTicket />} />

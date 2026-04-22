@@ -50,9 +50,8 @@ const Header = () => {
     navigate("/");
   };
 
-   const logout = () => { localStorage.clear(); window.location.href = "/"; };
+  const logout = () => { localStorage.clear(); window.location.href = "/"; };
 
-  // Backend "Admin", "Company", "Customer" string qaytarır
   const isCustomer = userRole === "Customer";
   const isCompany  = userRole === "Company";
   const isAdmin    = userRole === "Admin";
@@ -74,7 +73,6 @@ const Header = () => {
       {/* Navbar */}
       <nav className={`navbar ${isOpen ? "active" : ""}`}>
 
-
         <span onClick={() => handleNavigation("/")} className="nav-link">Home</span>
         <span onClick={() => handleNavigation("/about")} className="nav-link">About</span>
 
@@ -88,6 +86,26 @@ const Header = () => {
               {(isAdmin || isCompany) && (
                 <button className="signin-btn create-exec-color" onClick={() => handleNavigation("/Show-Ticket")}>
                   Show Tickets
+                </button>
+              )}
+
+              {/* Messages — Admin və Company üçün */}
+              {(isAdmin || isCompany) && (
+                <button className="messages-btn" onClick={() => handleNavigation("/message")}>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  Messages
                 </button>
               )}
 

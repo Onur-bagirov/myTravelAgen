@@ -4,9 +4,10 @@ import "./footerP.css";
 export default function Footer() {
   return (
     <footer className="footer">
-
       <div className="footer-top">
         <div className="footer-inner">
+
+          {/* Brand */}
           <div className="footer-brand">
             <a href="/" className="footer-logo">
               Travel<span>Agen</span>
@@ -34,6 +35,8 @@ export default function Footer() {
               </a>
             </div>
           </div>
+
+          {/* Quick Links */}
           <div className="footer-col">
             <h4 className="footer-col-title">Quick Links</h4>
             <ul className="footer-links">
@@ -44,6 +47,8 @@ export default function Footer() {
               <li>My Profile</li>
             </ul>
           </div>
+
+          {/* Services */}
           <div className="footer-col">
             <h4 className="footer-col-title">Services</h4>
             <ul className="footer-links">
@@ -54,6 +59,8 @@ export default function Footer() {
               <li>Priority Boarding</li>
             </ul>
           </div>
+
+          {/* Contact */}
           <div className="footer-col footer-contact">
             <h4 className="footer-col-title">Contact Us</h4>
             <ul className="footer-contact-list">
@@ -95,10 +102,45 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Message CTA */}
+          <div className="footer-message-col">
+            <h4 className="footer-col-title">Bizimlə Əlaqə</h4>
+            <p className="footer-msg-desc">
+              Sualınız, təklifiniz və ya şikayətiniz var? Admin və ya Executive komandamıza birbaşa mesaj göndərin.
+            </p>
+            <a href="/message" className="footer-msg-cta">
+              <span className="footer-msg-cta-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </span>
+              <span className="footer-msg-cta-text">
+                <span className="footer-msg-cta-title">Mesaj Göndər</span>
+                <span className="footer-msg-cta-sub">Mesaj səhifəsinə keç →</span>
+              </span>
+            </a>
+            <div className="footer-msg-features">
+              <div className="footer-msg-feat">
+                <span className="footer-msg-feat-dot admin" />
+                Admin dəstəyi
+              </div>
+              <div className="footer-msg-feat">
+                <span className="footer-msg-feat-dot exec" />
+                Executive komanda
+              </div>
+              <div className="footer-msg-feat">
+                <span className="footer-msg-feat-dot reply" />
+                Cavab bildirişi
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
+
       <div className="footer-divider" />
-      
+
       <div className="footer-bottom">
         <div className="footer-bottom-inner">
           <span className="footer-bottom-copy">
@@ -111,7 +153,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-
     </footer>
   );
 }
