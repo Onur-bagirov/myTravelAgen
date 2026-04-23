@@ -173,9 +173,7 @@ export default function MessagePage() {
 
   useEffect(() => {
     messages.forEach((m) => {
-      const pid = m.senderProfilePicture
-        ? null
-        : m.senderId;
+      const pid = m.senderProfilePicture ? null : m.senderId;
       if (pid) fetchUserPhoto(pid);
     });
   }, [messages, fetchUserPhoto]);
@@ -338,8 +336,10 @@ export default function MessagePage() {
 
       <div className="mp-main">
         <div className="mp-topbar">
-          <div className={`mp-topbar-av${isStaff ? " staff" : ""}${!isStaff && myPhoto ? " has-photo" : ""}`}
-            style={!isStaff && myPhoto ? { background: "none", padding: 0, overflow: "hidden" } : {}}>
+          <div
+            className={`mp-topbar-av${isStaff ? " staff" : ""}`}
+            style={!isStaff && myPhoto ? { background: "none", padding: 0, overflow: "hidden" } : {}}
+          >
             {!isStaff && myPhoto
               ? <img src={myPhoto} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" }} />
               : isStaff ? (isAdmin ? "A" : "C") : initials(currentUser.name)}
@@ -382,8 +382,10 @@ export default function MessagePage() {
                           ? toAbs(msg.senderProfilePicture)
                           : photoCache[msg.senderId];
                         return (
-                          <div className={`mp-msg-av${isStaff ? " staff" : ""}${pic ? " has-photo" : ""}`}
-                            style={pic ? { background: "none", padding: 0, overflow: "hidden" } : {}}>
+                          <div
+                            className={`mp-msg-av${isStaff ? " staff" : ""}`}
+                            style={pic ? { background: "none", padding: 0, overflow: "hidden" } : {}}
+                          >
                             {pic
                               ? <img src={pic} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" }} />
                               : initials(msg.senderFullName || "?")}
@@ -458,8 +460,12 @@ export default function MessagePage() {
 
                         {replyId === msg.id && (
                           <div className="mp-inline-form">
-                            <textarea className="mp-inline-ta" placeholder="Type your reply..."
-                              value={inlineText} onChange={e => setInlineText(e.target.value)} />
+                            <textarea
+                              className="mp-inline-ta"
+                              placeholder="Type your reply..."
+                              value={inlineText}
+                              onChange={e => setInlineText(e.target.value)}
+                            />
                             <div className="mp-inline-btns">
                               <button className="mp-btn-ok" onClick={() => handleReply(msg.id)}>Send Reply</button>
                               <button className="mp-btn-cancel" onClick={() => { setReplyId(null); setInlineText(""); }}>Cancel</button>
@@ -469,8 +475,11 @@ export default function MessagePage() {
 
                         {editId === msg.id && (
                           <div className="mp-inline-form">
-                            <textarea className="mp-inline-ta"
-                              value={inlineText} onChange={e => setInlineText(e.target.value)} />
+                            <textarea
+                              className="mp-inline-ta"
+                              value={inlineText}
+                              onChange={e => setInlineText(e.target.value)}
+                            />
                             <div className="mp-inline-btns">
                               <button className="mp-btn-ok" onClick={() => handleUpdate(msg.id)}>Save</button>
                               <button className="mp-btn-cancel" onClick={() => { setEditId(null); setInlineText(""); }}>Cancel</button>
@@ -480,8 +489,10 @@ export default function MessagePage() {
                       </div>
 
                       {isMe && (
-                        <div className={`mp-msg-av mine${myPhoto ? " has-photo" : ""}`}
-                          style={myPhoto ? { background: "none", padding: 0, overflow: "hidden" } : {}}>
+                        <div
+                          className="mp-msg-av mine"
+                          style={myPhoto ? { background: "none", padding: 0, overflow: "hidden" } : {}}
+                        >
                           {myPhoto
                             ? <img src={myPhoto} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" }} />
                             : initials(currentUser.name)}
@@ -524,30 +535,58 @@ export default function MessagePage() {
           ) : (
             <>
               <div className="mp-target-row">
-                <button className={`mp-target-btn${composeTo ? " sel" : ""}`} onClick={() => setComposeTo(true)}>
-                  🛡 To Admin
+                <button
+                  className={`mp-target-btn${composeTo ? " sel" : ""}`}
+                  onClick={() => setComposeTo(true)}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                  To Admin
                 </button>
-                <button className={`mp-target-btn${!composeTo ? " sel" : ""}`} onClick={() => setComposeTo(false)}>
-                  🏢 To Company
+                <button
+                  className={`mp-target-btn${!composeTo ? " sel" : ""}`}
+                  onClick={() => setComposeTo(false)}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                    <line x1="12" y1="12" x2="12" y2="16"/>
+                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                  To Company
                 </button>
               </div>
+
               <div className="mp-char-hint">
                 <span className={`mp-char-txt${charCls ? " " + charCls : ""}`}>
                   {text.length} / {MAX_LEN}
                 </span>
               </div>
+
               <div className="mp-input-row">
                 <textarea
                   className={`mp-textarea${charCls === "over" ? " over" : ""}`}
                   placeholder="Write your message..."
                   value={text}
-                  onChange={e => setText(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                   rows={1}
+                  onChange={e => setText(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                 />
-                <button className="mp-send-btn" onClick={handleSend} disabled={sending || charCls === "over"}>
-                  {sending ? <span className="mp-spinner" /> : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <button
+                  className="mp-send-btn"
+                  onClick={handleSend}
+                  disabled={sending || charCls === "over"}
+                >
+                  {sending ? (
+                    <span className="mp-spinner" />
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="22" y1="2" x2="11" y2="13"/>
                       <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                     </svg>

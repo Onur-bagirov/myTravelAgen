@@ -537,6 +537,7 @@
 
 .mp-pginfo { font-size: 11px; color: #3a3830; margin-left: 4px; }
 
+/* ─── Compose Area ─── */
 .mp-compose-area {
   padding: 12px 22px 16px;
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -553,11 +554,11 @@
 
 .mp-target-btn {
   flex: 1;
-  padding: 9px 10px;
+  padding: 10px 10px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   background: rgba(255,255,255,0.04);
   color: #5a5650;
@@ -565,12 +566,27 @@
   font-family: 'Inter', sans-serif;
   text-align: center;
   line-height: 1.2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.mp-target-btn svg {
+  opacity: 0.45;
+  transition: opacity 0.15s, transform 0.15s;
 }
 
 .mp-target-btn:hover {
   background: rgba(255,255,255,0.08);
   color: #9a9490;
   border-color: rgba(255,255,255,0.14);
+}
+
+.mp-target-btn:hover svg {
+  opacity: 0.7;
+  transform: scale(1.1);
 }
 
 .mp-target-btn.sel {
@@ -580,10 +596,15 @@
   box-shadow: 0 2px 10px rgba(220,60,40,0.28);
 }
 
+.mp-target-btn.sel svg {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
 .mp-char-hint {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .mp-char-txt {
@@ -596,10 +617,16 @@
 .mp-char-txt.warn { color: #f59e0b; }
 .mp-char-txt.over { color: #e74c3c; font-weight: 600; }
 
-.mp-input-row { display: flex; gap: 8px; align-items: flex-end; }
+/* ─── FIXED: Input row — textarea + send button perfectly aligned ─── */
+.mp-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
 
 .mp-textarea {
   flex: 1;
+  min-width: 0;
   padding: 11px 15px;
   border-radius: 13px;
   background: rgba(255,255,255,0.05);
@@ -611,6 +638,11 @@
   font-family: 'Inter', sans-serif;
   line-height: 1.5;
   transition: border-color 0.15s;
+  /* Single row height: font-size(14) * line-height(1.5) + padding(11+11) = 43px */
+  min-height: 44px;
+  max-height: 160px;
+  overflow-y: auto;
+  display: block;
 }
 
 .mp-textarea::placeholder { color: #3a3830; }
@@ -618,9 +650,11 @@
 .mp-textarea.over { border-color: rgba(220,60,40,0.60); }
 
 .mp-send-btn {
+  flex-shrink: 0;
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  padding: 0;
+  border-radius: 13px;
   border: none;
   background: linear-gradient(135deg, #c0392b, #e74c3c);
   color: #fff;
@@ -628,13 +662,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   box-shadow: 0 3px 12px rgba(220,60,40,0.30);
   transition: all 0.15s;
+  align-self: flex-end;
+}
+
+.mp-send-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .mp-send-btn:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
 .mp-send-btn:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(220,60,40,0.40); }
+.mp-send-btn:not(:disabled):active { transform: translateY(0); }
 
 .mp-no-compose {
   display: flex;
@@ -696,37 +738,16 @@
     width: 260px;
   }
 
-  .mp-sidebar.open {
-    transform: translateX(0);
-  }
+  .mp-sidebar.open { transform: translateX(0); }
+  .mp-sidebar-overlay.open { display: block; }
+  .mp-mobile-toggle { display: flex; }
 
-  .mp-sidebar-overlay.open {
-    display: block;
-  }
+  .mp-topbar { padding-left: 58px; }
+  .mp-messages-wrap { padding: 14px 14px 8px; }
+  .mp-msg-row { max-width: 85%; }
 
-  .mp-mobile-toggle {
-    display: flex;
-  }
-
-  .mp-topbar {
-    padding-left: 58px;
-  }
-
-  .mp-messages-wrap {
-    padding: 14px 14px 8px;
-  }
-
-  .mp-msg-row {
-    max-width: 85%;
-  }
-
-  .mp-compose-area {
-    padding: 10px 14px 14px;
-  }
-
-  .mp-pagination {
-    padding: 8px 14px;
-  }
+  .mp-compose-area { padding: 10px 14px 14px; }
+  .mp-pagination { padding: 8px 14px; }
 
   .mp-toast {
     bottom: 14px;
@@ -737,11 +758,7 @@
 }
 
 @media (max-width: 480px) {
-  .mp-target-btn {
-    font-size: 12px;
-    padding: 8px 6px;
-  }
-
+  .mp-target-btn { font-size: 12px; padding: 8px 6px; }
   .mp-topbar-title { font-size: 13px; }
   .mp-btext { font-size: 13px; }
 }
