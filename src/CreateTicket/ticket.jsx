@@ -670,8 +670,7 @@ export default function CreatePlaneTicket() {
                   loading={locLoading} error={errors.toLocationId} touched={touched.toLocationId}
                 />
               </div>
-
-              {/* ── Classes & Seats — multi-group (train-style) ── */}
+              
               <SectionTitle icon="💺" text="Classes & Seats" />
 
               {seatGroups.map((g, idx) => (

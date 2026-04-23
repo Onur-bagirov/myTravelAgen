@@ -919,7 +919,6 @@ export default function ShowPlaneTicket() {
           <div className="spt-state">
             <span className="spt-empty-icon">✈️</span>
             <p>No tickets found.</p>
-            <button className="spt-create-btn" onClick={() => navigate("/create-plane-ticket")}>＋ Create First Ticket</button>
           </div>
         )}
         {!loading && !error && tickets.length > 0 && (

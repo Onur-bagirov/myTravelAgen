@@ -2,7 +2,8 @@ import { useState, useCallback } from "react";
 import "./CreateExecutive.css";
 
 const API_BASE = "http://localhost:5251/api";
-const getToken = () => localStorage.getItem("auth_token") ?? "";
+
+const getToken = () => localStorage.getItem("userToken") ?? "";
 
 const WORDS = [
   "alma","arpa","atlas","azer","baki","bulud","burun","cavid",

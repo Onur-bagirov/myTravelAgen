@@ -31,6 +31,14 @@ function fmtTime(str) {
   return parts[1].slice(0, 5);
 }
 
+function getNowLocal() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}
+
 const DropdownContext = createContext(null);
 
 function DropdownProvider({ children }) {
@@ -333,14 +341,15 @@ export default function CreateTrainTicket({ onCreated }) {
     { variantId: "", rowCount: 5, seatsPerRow: 4 },
   ]);
 
-  const [loading, setLoading]           = useState(false);
-  const [serverError, setServerError]   = useState(null);
-  const [isGenerated, setIsGenerated]   = useState(false);
-  const [createdTicket, setCreatedTicket] = useState(null);
-  const [snapshotForm, setSnapshotForm] = useState(null);
+  const [loading, setLoading]               = useState(false);
+  const [serverError, setServerError]       = useState(null);
+  const [dateError, setDateError]           = useState("");   // new state for date validation
+  const [isGenerated, setIsGenerated]       = useState(false);
+  const [createdTicket, setCreatedTicket]   = useState(null);
+  const [snapshotForm, setSnapshotForm]     = useState(null);
   const [snapshotGroups, setSnapshotGroups] = useState([]);
-  const [fromName, setFromName]         = useState("");
-  const [toName, setToName]             = useState("");
+  const [fromName, setFromName]             = useState("");
+  const [toName, setToName]                 = useState("");
 
   useEffect(() => {
     setLocLoading(true);
@@ -366,6 +375,17 @@ export default function CreateTrainTicket({ onCreated }) {
   const handleForm = e => {
     const { name, value, type } = e.target;
     setForm(p => ({ ...p, [name]: type === "number" ? Number(value) : value }));
+
+    // validate date on change
+    if (name === "dueDate") {
+      if (!value) {
+        setDateError("Departure date and time is required.");
+      } else if (value < getNowLocal()) {
+        setDateError("Departure date cannot be in the past.");
+      } else {
+        setDateError("");
+      }
+    }
   };
 
   const handleGroup = (idx, field, val) =>
@@ -387,7 +407,17 @@ export default function CreateTrainTicket({ onCreated }) {
     e.preventDefault();
     setServerError(null);
 
-    if (!form.trainCompany.trim() || !form.fromId || !form.toId || !form.dueDate) {
+    // validate date on submit
+    if (!form.dueDate) {
+      setDateError("Departure date and time is required.");
+      return;
+    }
+    if (form.dueDate < getNowLocal()) {
+      setDateError("Departure date cannot be in the past.");
+      return;
+    }
+
+    if (!form.trainCompany.trim() || !form.fromId || !form.toId) {
       setServerError("Please fill in all required fields.");
       return;
     }
@@ -437,6 +467,7 @@ export default function CreateTrainTicket({ onCreated }) {
     setSnapshotForm(null);
     setSnapshotGroups([]);
     setServerError(null);
+    setDateError("");
     setFromName("");
     setToName("");
     setForm({ trainCompany: "", trainNumber: "", vagonNumber: 1, dueDate: "", fromId: "", toId: "" });
@@ -461,8 +492,6 @@ export default function CreateTrainTicket({ onCreated }) {
 
           <div className="ct-success-wrap">
             <div className="ct-boarding-pass">
-
-              {/* Left side */}
               <div className="ct-pass-left">
                 <div className="ct-pass-header">
                   <div>
@@ -508,6 +537,7 @@ export default function CreateTrainTicket({ onCreated }) {
                   ))}
                 </div>
               </div>
+
               <div className="ct-perforation">
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="ct-perf-dot"/>
@@ -537,7 +567,6 @@ export default function CreateTrainTicket({ onCreated }) {
                   ))}
                 </div>
               </div>
-
             </div>
 
             <div className="ct-actions">
@@ -566,7 +595,7 @@ export default function CreateTrainTicket({ onCreated }) {
 
           {serverError && <div className="ct-alert ct-alert--error">{serverError}</div>}
 
-          <form className="ct-form" onSubmit={handleSubmit}>
+          <form className="ct-form" onSubmit={handleSubmit} noValidate>
 
             <section className="ct-section">
               <h2 className="ct-section-title">🚂 Train Details</h2>
@@ -579,10 +608,29 @@ export default function CreateTrainTicket({ onCreated }) {
                   <label>Train No</label>
                   <input name="trainNumber" value={form.trainNumber} onChange={handleForm} placeholder="e.g. T-100" />
                 </div>
-                <div className="ct-field">
+
+                {/* Departure date field with custom error */}
+                <div className={`ct-field${dateError ? " ct-field--error" : ""}`}>
                   <label>Departure Date & Time</label>
-                  <input name="dueDate" type="datetime-local" value={form.dueDate} onChange={handleForm} required />
+                  <input
+                    name="dueDate"
+                    type="datetime-local"
+                    value={form.dueDate}
+                    onChange={handleForm}
+                    min={getNowLocal()}
+                  />
+                  {dateError && (
+                    <span className="ct-field-error">
+                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                        <circle cx="6" cy="6" r="5.3" stroke="#ff4d4d" strokeWidth="1.2"/>
+                        <path d="M6 3.6v2.8" stroke="#ff4d4d" strokeWidth="1.3" strokeLinecap="round"/>
+                        <circle cx="6" cy="8.4" r="0.6" fill="#ff4d4d"/>
+                      </svg>
+                      {dateError}
+                    </span>
+                  )}
                 </div>
+
                 <div className="ct-field">
                   <label>Wagon No</label>
                   <input name="vagonNumber" type="number" min={1} value={form.vagonNumber} onChange={handleForm} />
