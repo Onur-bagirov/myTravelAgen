@@ -5,7 +5,7 @@
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.4)), 
-            url("/MainScreen.png") no-repeat center center/cover;
+                url("/MainScreen.png") no-repeat center center/cover;
     background-attachment: fixed; 
     background-color: #05050a; 
     color: #fff;
