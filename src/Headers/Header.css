@@ -1,14 +1,11 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ── Body offset for fixed header ── */
 body {
     padding-top: 60px;
     transition: padding-top 0.4s ease;
 }
 
-body.scrolled {
-    padding-top: 70px;
-}
+body.scrolled { padding-top: 70px; }
 
 .header {
     position: fixed;
@@ -70,25 +67,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .nav-link:hover { color: white !important; }
 .nav-link:hover::after { width: 100%; }
 
-
-.create-ticket-link {
-    color: #fcd34d !important;
-    font-size: 14px !important;
-    font-weight: 600;
-    padding: 10px 20px;
-    border-radius: 25px;
-    border: 1px solid rgba(252,211,77,0.3);
-    background: rgba(252,211,77,0.07);
-    transition: all 0.3s ease;
-}
-.create-ticket-link:hover {
-    color: white !important;
-    background: rgba(252,211,77,0.15);
-    border-color: rgba(252,211,77,0.6);
-    box-shadow: 0 4px 15px rgba(252,211,77,0.2);
-    transform: translateY(-2px);
-}
-
 .signin-btn {
     background: rgba(255,255,255,0.05);
     color: white;
@@ -102,13 +80,8 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     transition: color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.signin-btn:not(.logout-color)::before {
-    background: rgba(200, 200, 200, 0.2);
-}
-
-.signin-btn:not(.logout-color):hover::before {
-    transform: scaleX(1);
-}
+.signin-btn:not(.logout-color)::before { background: rgba(200,200,200,0.2); }
+.signin-btn:not(.logout-color):hover::before { transform: scaleX(1); }
 .signin-btn span { position: relative; z-index: 1; color: inherit; font-family: inherit; font-size: inherit; }
 .signin-btn span:hover { color: inherit; transform: none; }
 .signin-btn:hover::before { transform: scaleX(1); }
@@ -118,127 +91,48 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .logout-color { border-color: rgba(255,77,77,0.4) !important; }
 .logout-color::before { background: rgba(255,77,77,0.15) !important; }
 .logout-color:hover { color: #ff6b6b !important; }
-.logout-color:hover::before { transform: scaleX(1); }
 
-
+.myprofile-btn {
+    background: rgba(255,255,255,0.05);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 10px 22px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
 .myprofile-btn span { position: relative; z-index: 1; color: inherit; font-family: inherit; font-size: inherit; }
 .myprofile-btn span:hover { color: inherit; transform: none; }
 .myprofile-btn:hover::before { transform: scaleX(1); }
 .myprofile-btn:hover { color: black; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
 .myprofile-btn:active { transform: translateY(0) scale(0.97); }
 
-.myprofile-color { 
-    border-color: rgba(16, 185, 129, 0.4) !important; 
-}
+.myprofile-color { border-color: rgba(16,185,129,0.4) !important; }
+.myprofile-color::before { background: rgba(16,185,129,0.15) !important; }
+.myprofile-color:hover { color: #10b981 !important; }
+.myprofile-color:hover::before { transform: scaleX(1); }
 
-.myprofile-color::before { 
-    background: rgba(16, 185, 129, 0.15) !important; 
+.create-exec-color {
+    border-color: rgba(252,211,77,0.4) !important;
+    background: rgba(252,211,77,0.05) !important;
 }
-
-.create-exec-color { 
-    border-color: rgba(252, 211, 77, 0.4) !important; 
-    background: rgba(252, 211, 77, 0.05) !important;
-}
-
-.create-exec-color::before { 
+.create-exec-color::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(252, 211, 77, 0.15) !important; 
+    background: rgba(252,211,77,0.15) !important;
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.3s ease;
     z-index: 0;
 }
+.create-exec-color:hover { color: #fcd34d !important; border-color: #fcd34d !important; box-shadow: 0 6px 20px rgba(252,211,77,0.2) !important; }
+.create-exec-color:hover::before { transform: scaleX(1); }
+.create-exec-color span { color: inherit !important; position: relative; z-index: 1; transform: none !important; text-shadow: none !important; }
 
-.create-exec-color:hover { 
-    color: #fcd34d !important; 
-    border-color: #fcd34d !important;
-    box-shadow: 0 6px 20px rgba(252, 211, 77, 0.2) !important;
-}
-
-.create-exec-color:hover::before { 
-    transform: scaleX(1); 
-}
-
-.create-exec-color span {
-    color: inherit !important;
-    position: relative;
-    z-index: 1;
-    transform: none !important;
-    text-shadow: none !important;
-}
-
-.myprofile-color:hover { 
-    color: #10b981 !important; 
-}
-
-.myprofile-color:hover::before { 
-    transform: scaleX(1); 
-}
-
-/* ── Messages Button ── */
-.messages-btn {
-    background: rgba(99, 102, 241, 0.05);
-    color: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(99, 102, 241, 0.35);
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 14px;
-    font-family: inherit;
-    transition: color 0.3s, border-color 0.3s, transform 0.3s, box-shadow 0.3s;
-}
-
-.messages-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25));
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 25px;
-    z-index: 0;
-}
-
-.messages-btn svg {
-    position: relative;
-    z-index: 1;
-    transition: transform 0.3s ease;
-}
-
-.messages-btn:hover::before { transform: scaleX(1); }
-
-.messages-btn:hover {
-    color: white;
-    border-color: rgba(99, 102, 241, 0.7);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
-}
-
-.messages-btn:hover svg {
-    transform: scale(1.15) rotate(-5deg);
-}
-
-.messages-btn:active { transform: scale(0.97); }
-
-.messages-btn span {
-    position: relative;
-    z-index: 1;
-    color: inherit !important;
-    font-family: inherit !important;
-    font-size: inherit !important;
-    transform: none !important;
-}
-
-/* ── Buy Button ── */
 .buy-btn {
     background: linear-gradient(45deg, #ff4d4d, #ff1a1a);
     color: white;
@@ -287,7 +181,6 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .MyTickets-btn:hover { color: white; border-color: rgba(99,102,241,0.6); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.25); }
 .MyTickets-btn:active { transform: scale(0.97); }
 
-/* ── Seat Map ── */
 .seatmap-btn {
     background: rgba(255,255,255,0.05);
     color: rgba(255,255,255,0.85);
@@ -315,57 +208,95 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
 .seatmap-btn:hover { color: white; border-color: rgba(16,185,129,0.5); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.2); }
 .seatmap-btn:active { transform: scale(0.97); }
 
-.myprofile-btn {
-    background: rgba(255,255,255,0.05);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 10px 22px;
-    border-radius: 25px;
+/* ── Messages Button ── */
+.messages-btn {
+    background: rgba(99,102,241,0.05);
+    color: rgba(255,255,255,0.85);
+    border: 1px solid rgba(99,102,241,0.35);
+    padding: 7px 14px;
+    border-radius: 20px;
     font-weight: 600;
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    font-family: inherit;
+    transition: color 0.3s, border-color 0.3s, transform 0.3s, box-shadow 0.3s;
 }
 
-.myprofile-btn:not(.myprofile-color)::before {
-    background: rgba(200, 200, 200, 0.2); 
+.messages-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    border-radius: 25px;
+    z-index: 0;
 }
 
-.myprofile-btn:not(.myprofile-color):hover::before {
-    transform: scaleX(1);
+.messages-btn:hover::before { transform: scaleX(1); }
+.messages-btn:hover { color: white; border-color: rgba(99,102,241,0.7); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(99,102,241,0.25); }
+.messages-btn:hover svg { transform: scale(1.15) rotate(-5deg); }
+.messages-btn:active { transform: scale(0.97); }
+
+.messages-btn span {
+    position: relative;
+    z-index: 1;
+    color: inherit !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    transform: none !important;
 }
 
-@keyframes avatarSpin {
-    from { filter: hue-rotate(0deg); }
-    to   { filter: hue-rotate(360deg); }
+.msg-btn-inner {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    position: relative;
+    z-index: 1;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    body {
-        padding-top: 60px;
-    }
-
-    .user-profile-container {
-        width: 200px;
-        justify-content: center;
-    }
+.msg-btn-inner svg {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
 
-@keyframes avatarSpin {
-    from { filter: hue-rotate(0deg); }
-    to   { filter: hue-rotate(360deg); }
-}
-@keyframes avatarSpinFast {
-    from { filter: hue-rotate(0deg); }
-    to   { filter: hue-rotate(360deg); }
-}
-@keyframes avatarPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(220,39,67,0.4); }
-    50%       { box-shadow: 0 0 0 5px rgba(220,39,67,0); }
+/* ── Unread badge ── */
+.msg-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 20px;
+    background: #ff4d4d;
+    color: #fff !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    font-family: inherit !important;
+    line-height: 1;
+    letter-spacing: 0;
+    transform: none !important;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.15), 0 2px 6px rgba(255,77,77,0.5);
+    animation: badge-pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    flex-shrink: 0;
 }
 
+@keyframes badge-pop {
+    0%   { transform: scale(0); }
+    60%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+.msg-badge:hover {
+    color: #fff !important;
+    transform: none !important;
+}
 
 .avatar-inner {
     width: 100%;
@@ -394,11 +325,8 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     transform: none !important;
     transition: text-shadow 0.3s ease;
 }
-.user-profile-btn:hover .avatar-initials {
-    text-shadow: 0 0 12px rgba(255,255,255,0.9), 0 0 20px rgba(188,24,136,0.6);
-}
+.user-profile-btn:hover .avatar-initials { text-shadow: 0 0 12px rgba(255,255,255,0.9), 0 0 20px rgba(188,24,136,0.6); }
 .avatar-initials:hover { transform: none !important; color: white !important; }
-
 
 .menu-icon { display: none; flex-direction: column; gap: 6px; cursor: pointer; }
 .bar {
@@ -408,8 +336,18 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
     transition: 0.4s cubic-bezier(0.68,-0.6,0.32,1.6);
 }
 
+@keyframes avatarSpin     { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+@keyframes avatarSpinFast { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+@keyframes avatarPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,39,67,0.4); }
+    50%       { box-shadow: 0 0 0 5px rgba(220,39,67,0); }
+}
+
 @media (max-width: 768px) {
+    body { padding-top: 60px; }
+
     .menu-icon { display: flex; }
+
     .navbar {
         position: fixed;
         top: 0; right: -100%;
@@ -422,8 +360,17 @@ span:hover { cursor: pointer; color: white; transform: scale(1.1); }
         transition: 0.6s cubic-bezier(0.77,0,0.175,1);
     }
     .navbar.active { right: 0; }
+
     .nav-buttons { flex-direction: column; width: 100%; gap: 20px; }
-    .signin-btn, .buy-btn, .MyTickets-btn, .seatmap-btn, .messages-btn { width: 200px; text-align: center; justify-content: center; }
+
+    .signin-btn,
+    .buy-btn,
+    .MyTickets-btn,
+    .seatmap-btn,
+    .messages-btn { width: 200px; text-align: center; justify-content: center; }
+
     .avatar-ring { width: 38px; height: 38px; }
     .user-profile-btn::after { display: none; }
+
+    .user-profile-container { width: 200px; justify-content: center; }
 }

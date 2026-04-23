@@ -1,13 +1,29 @@
 import React from "react";
 import "./footerP.css";
 
+const useIsLoggedIn = () => {
+  try {
+    const token = localStorage.getItem("userToken");
+    if (!token) return false;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const role =
+      payload["role"] ??
+      payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
+      "";
+    return role === "Customer";
+  } catch {
+    return false;
+  }
+};
+
 export default function Footer() {
+  const isUser = useIsLoggedIn();
+
   return (
     <footer className="footer">
       <div className="footer-top">
         <div className="footer-inner">
 
-          {/* Brand */}
           <div className="footer-brand">
             <a href="/" className="footer-logo">
               Travel<span>Agen</span>
@@ -36,7 +52,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div className="footer-col">
             <h4 className="footer-col-title">Quick Links</h4>
             <ul className="footer-links">
@@ -48,7 +63,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Services */}
           <div className="footer-col">
             <h4 className="footer-col-title">Services</h4>
             <ul className="footer-links">
@@ -60,8 +74,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
-          <div className="footer-col footer-contact">
+          <div className="footer-col footer-contact-col">
             <h4 className="footer-col-title">Contact Us</h4>
             <ul className="footer-contact-list">
               <li className="footer-contact-item">
@@ -99,39 +112,40 @@ export default function Footer() {
                   <span className="footer-contact-val">travelagen2026@gmail.com</span>
                 </span>
               </li>
+
+              {isUser && (
+                <a href="/message" className="footer-contact-item footer-contact-msg-link">
+                  <span className="footer-contact-icon">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </span>
+                  <span className="footer-contact-text">
+                    <span className="footer-contact-label">Message</span>
+                    <span className="footer-contact-val">Send us a message →</span>
+                  </span>
+                </a>
+              )}
             </ul>
           </div>
 
-          {/* Message CTA */}
-          <div className="footer-message-col">
-            <h4 className="footer-col-title">Bizimlə Əlaqə</h4>
-            <p className="footer-msg-desc">
-              Sualınız, təklifiniz və ya şikayətiniz var? Admin və ya Executive komandamıza birbaşa mesaj göndərin.
+          <div className="footer-col footer-message-col">
+            <h4 className="footer-col-title">Get in Touch</h4>
+            <p className="footer-get-in-touch-desc">
+              Have a question, suggestion or complaint? Reach out to our Admin or Executive team directly.
             </p>
-            <a href="/message" className="footer-msg-cta">
-              <span className="footer-msg-cta-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-              </span>
-              <span className="footer-msg-cta-text">
-                <span className="footer-msg-cta-title">Mesaj Göndər</span>
-                <span className="footer-msg-cta-sub">Mesaj səhifəsinə keç →</span>
-              </span>
-            </a>
             <div className="footer-msg-features">
               <div className="footer-msg-feat">
                 <span className="footer-msg-feat-dot admin" />
-                Admin dəstəyi
+                Admin support
               </div>
               <div className="footer-msg-feat">
                 <span className="footer-msg-feat-dot exec" />
-                Executive komanda
+                Executive team
               </div>
               <div className="footer-msg-feat">
                 <span className="footer-msg-feat-dot reply" />
-                Cavab bildirişi
+                Reply notifications
               </div>
             </div>
           </div>
