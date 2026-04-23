@@ -61,13 +61,10 @@ const ForgotPassword = () => {
         return;
       }
 
-      // Backend returns { data: { success: bool, message: string } }
       if (result?.data?.success === true) {
-        // ✅ Email exists in DB — go to step 2
         setInfoMessage(result.data.message || "A reset code has been sent to your email address.");
         setStep(2);
       } else {
-        // ❌ Email NOT in DB — stay on step 1, show error
         setError(result?.data?.message || "No account found with this email address.");
       }
 

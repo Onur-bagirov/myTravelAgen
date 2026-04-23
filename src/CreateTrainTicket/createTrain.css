@@ -208,8 +208,6 @@
   box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
 }
 
-/* ── createTrain.css-in SONUNA əlavə et ── */
-
 .ct-field--error input[type="datetime-local"] {
   border-color: #ff4d4d !important;
   box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.15);

@@ -376,7 +376,6 @@ export default function CreateTrainTicket({ onCreated }) {
     const { name, value, type } = e.target;
     setForm(p => ({ ...p, [name]: type === "number" ? Number(value) : value }));
 
-    // validate date on change
     if (name === "dueDate") {
       if (!value) {
         setDateError("Departure date and time is required.");
@@ -407,7 +406,6 @@ export default function CreateTrainTicket({ onCreated }) {
     e.preventDefault();
     setServerError(null);
 
-    // validate date on submit
     if (!form.dueDate) {
       setDateError("Departure date and time is required.");
       return;
@@ -609,7 +607,6 @@ export default function CreateTrainTicket({ onCreated }) {
                   <input name="trainNumber" value={form.trainNumber} onChange={handleForm} placeholder="e.g. T-100" />
                 </div>
 
-                {/* Departure date field with custom error */}
                 <div className={`ct-field${dateError ? " ct-field--error" : ""}`}>
                   <label>Departure Date & Time</label>
                   <input
