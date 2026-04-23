@@ -13,7 +13,7 @@ const validate = (formData) => {
     errs.email = "Please enter the correct email format (e.g. user@mail.com)";
   }
   if (!formData.password) {
-    errs.password = "Password cannot be empty !";
+    errs.password = "Password cannot be empty!";
   } else if (formData.password.length < 6) {
     errs.password = "Password must be at least 6 characters long";
   }
@@ -38,11 +38,13 @@ const SignIn = () => {
   };
 
   const handleBlur = (e) => {
-    const { name } = e.target;
-    const errs = validate(formData);
-    if (errs[name]) {
-      setFieldErrors((prev) => ({ ...prev, [name]: errs[name] }));
-    }
+    const { name, value } = e.target;
+    const currentData = { ...formData, [name]: value };
+    const errs = validate(currentData);
+    setFieldErrors((prev) => ({
+      ...prev,
+      [name]: errs[name] || "",
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -58,6 +60,7 @@ const SignIn = () => {
     setLoading(true);
     try {
       const res = await axios.post("http://localhost:5251/api/Auth/login", formData);
+
       if (res.data && res.data.data) {
         const { token, role, email, firstName, lastName } = res.data.data;
         localStorage.setItem("userToken", token);
@@ -67,18 +70,22 @@ const SignIn = () => {
         localStorage.setItem("userLastName", lastName);
         navigate("/User-Profile");
         window.location.reload();
+      } else {
+        setServerError("The email or password is incorrect. Please try again.");
       }
     } catch (err) {
       if (err.response) {
-        if (err.response.status === 401 || err.response.status === 400) {
-          setServerError("The email or password is incorrect. Please try again");
-        } else if (err.response.data?.message) {
-          setServerError(err.response.data.message);
+        const status = err.response.status;
+        const msg = err.response.data?.message;
+        if (status === 401 || status === 400) {
+          setServerError(msg || "The email or password is incorrect. Please try again.");
+        } else if (msg) {
+          setServerError(msg);
         } else {
-          setServerError("An error occurred on the server");
+          setServerError("An error occurred on the server.");
         }
       } else {
-        setServerError("Server connection failed. Please try again later");
+        setServerError("Server connection failed. Please try again later.");
       }
     } finally {
       setLoading(false);
@@ -94,19 +101,10 @@ const SignIn = () => {
           <p>Please enter your details to continue</p>
         </div>
 
+        {/* Server error — ForgotPassword-dakı kimi tam blok */}
         {serverError && (
-          <div style={{
-            backgroundColor: "#fff0f0",
-            color: "#d32f2f",
-            padding: "10px",
-            borderRadius: "6px",
-            marginBottom: "15px",
-            border: "1px solid #ffcccc",
-            textAlign: "center",
-            fontSize: "14px",
-            fontWeight: "500",
-          }}>
-            ⚠️ {serverError}
+          <div className="signin-error-box">
+            ⚠ {serverError}
           </div>
         )}
 
@@ -123,10 +121,9 @@ const SignIn = () => {
               className={fieldErrors.email ? "input-error" : ""}
               autoComplete="email"
             />
+            {/* Field error — input altında kiçik xəta */}
             {fieldErrors.email && (
-              <span style={{ color: "#d32f2f", fontSize: 12, marginTop: 4, display: "block", fontWeight: 500 }}>
-                ⚠ {fieldErrors.email}
-              </span>
+              <span className="signin-field-error">⚠ {fieldErrors.email}</span>
             )}
           </div>
 
@@ -143,9 +140,7 @@ const SignIn = () => {
               autoComplete="current-password"
             />
             {fieldErrors.password && (
-              <span style={{ color: "#d32f2f", fontSize: 12, marginTop: 4, display: "block", fontWeight: 500 }}>
-                ⚠ {fieldErrors.password}
-              </span>
+              <span className="signin-field-error">⚠ {fieldErrors.password}</span>
             )}
           </div>
 
@@ -155,11 +150,7 @@ const SignIn = () => {
             </span>
           </div>
 
-          <button
-            type="submit"
-            className="signin-main-btn"
-            disabled={loading}
-          >
+          <button type="submit" className="signin-main-btn" disabled={loading}>
             {loading ? "Checking..." : "Sign In"}
           </button>
         </form>
