@@ -279,6 +279,38 @@
   border-color: rgba(255, 77, 77, 0.35);
 }
 
+/* ✅ BOOKED CARD — şəkildəki kimi mavi çərçivə + xəfif overlay */
+.st-card--booked {
+  border-color: rgba(126, 184, 247, 0.4);
+  background: rgba(126, 184, 247, 0.04);
+}
+
+.st-card--booked::before {
+  background: linear-gradient(135deg, rgba(126,184,247,0.06), transparent 60%);
+}
+
+.st-card--booked:hover {
+  border-color: rgba(126, 184, 247, 0.6);
+  box-shadow: 0 12px 40px rgba(126, 184, 247, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ── BOOKED overlay stamp ── */
+.st-card--booked::after {
+  content: "BOOKED";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-20deg);
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: rgba(126, 184, 247, 0.07);
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
 .st-card-header {
   display: flex;
   align-items: center;
@@ -291,6 +323,11 @@
   font-weight: 800;
   color: #ff7070;
   letter-spacing: 0.04em;
+}
+
+/* Booked card-da company rəngi fərqli */
+.st-card--booked .st-card-company {
+  color: #7eb8f7;
 }
 
 .st-card-status {
@@ -374,10 +411,20 @@
   flex-shrink: 0;
 }
 
+/* Booked card-da route dot rəngi */
+.st-card--booked .st-card-route-dot {
+  background: rgba(126, 184, 247, 0.5);
+}
+
 .st-card-route-dash {
   flex: 1;
   height: 1px;
   background: linear-gradient(90deg, rgba(255,77,77,0.4), rgba(255,77,77,0.1));
+}
+
+/* Booked card-da route dash rəngi */
+.st-card--booked .st-card-route-dash {
+  background: linear-gradient(90deg, rgba(126,184,247,0.4), rgba(126,184,247,0.1));
 }
 
 .st-card-train-icon {
@@ -428,6 +475,7 @@
 .st-info-val--ok    { color: #6ee7b7; }
 .st-info-val--warn  { color: #f9cb28; }
 
+/* ── Seat Map button ── */
 .st-seatmap-btn {
   width: 100%;
   background: rgba(255, 77, 77, 0.1);
@@ -445,6 +493,26 @@
 .st-seatmap-btn:hover {
   background: rgba(255, 77, 77, 0.2);
   transform: translateY(-1px);
+}
+
+/* ✅ BOOKED düymə stili — şəkildəki kimi mavi, disabled */
+.st-seatmap-btn--booked {
+  background: rgba(126, 184, 247, 0.08);
+  border-color: rgba(126, 184, 247, 0.3);
+  color: #7eb8f7;
+  cursor: not-allowed;
+  opacity: 0.75;
+  letter-spacing: 0.08em;
+}
+
+.st-seatmap-btn--booked:hover {
+  background: rgba(126, 184, 247, 0.08);
+  transform: none;
+}
+
+.st-seatmap-btn:disabled {
+  cursor: not-allowed;
+  transform: none;
 }
 
 .st-error-banner {
@@ -858,7 +926,7 @@
   font-weight: 500;
 }
 
-/* ── Datetime field — YENİ ── */
+/* ── Datetime field ── */
 .st-datetime-wrap {
   display: flex;
   align-items: center;

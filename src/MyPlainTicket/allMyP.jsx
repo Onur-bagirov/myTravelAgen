@@ -45,10 +45,11 @@ function countdown(d) {
   return `${days} days left`;
 }
 function isExpired(t) { return new Date(t.dueDate) < new Date(); }
+
 function finalPrice(t) {
-  const base = Number(t.price || 0);
-  return (t.discount > 0 && t.discount < 1 ? base * t.discount : base).toFixed(2);
+  return Number(t.price || 0).toFixed(2);
 }
+
 function hasScheduleChange(oldT, newT) {
   if (!oldT || !newT) return false;
   return new Date(oldT.dueDate).getTime() !== new Date(newT.dueDate).getTime();
@@ -84,8 +85,9 @@ function ScheduleChangeBanner({ oldDate, newDate, onDismiss }) {
 function ReturnModal({ ticket, onConfirm, onCancel, loading }) {
   const hoursLeft  = (new Date(ticket.dueDate) - new Date()) / 3_600_000;
   const refundRate = hoursLeft >= 24 ? 1.0 : 0.5;
-  const paidPrice  = Number(ticket.price || 0);
-  const refundAmt  = (paidPrice * refundRate).toFixed(2);
+
+  const paidPrice = Number(ticket.price || 0);
+  const refundAmt = (paidPrice * refundRate).toFixed(2);
 
   return (
     <div className="bp-modal-overlay" onClick={() => !loading && onCancel()}>
@@ -156,7 +158,6 @@ function TicketCard({ t, idx, onReturn, userName, scheduleChange, onDismissChang
   const stKey    = exp && t.state === "Booked" ? "Expired" : t.state;
   const st       = STATE_MAP[stKey] ?? { cls: "pill-used", label: t.state };
   const cd       = countdown(t.dueDate);
-  const hasDsc   = t.discount > 0 && t.discount < 1;
   const varName  = t.variant?.name ?? "Biznez";
   const canReturn = !exp && t.state === "Booked";
 
@@ -332,9 +333,6 @@ function TicketCard({ t, idx, onReturn, userName, scheduleChange, onDismissChang
           </div>
           <div className="bp-sb-price">
             <span className="bp-sb-label">Price</span>
-            {hasDsc && (
-              <span className="bp-sb-orig">{Number(t.price).toFixed(2)} ₼</span>
-            )}
             <span className="bp-sb-amount">
               {finalPrice(t)}<span className="bp-sb-cur"> ₼</span>
             </span>

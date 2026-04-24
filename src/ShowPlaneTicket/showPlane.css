@@ -897,8 +897,8 @@
 }
 
 .seat--occupied {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.1);
+  background: rgba(255, 77, 77, 0.08);
+  border-color: rgba(255, 77, 77, 0.25);
 }
 
 .seat-label {
@@ -914,7 +914,15 @@
   background: var(--accent, rgba(255,77,77,0.6));
 }
 
-.seat--occupied .seat-dot { background: rgba(255,255,255,0.2); }
+/* ── BOOKED label on occupied seats ── */
+.seat-booked-label {
+  font-size: 7px;
+  font-weight: 900;
+  color: rgba(255, 77, 77, 0.85);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
 
 .seatmap-loading,
 .seatmap-empty {

@@ -147,7 +147,6 @@ function extractVariants(ticket) {
   return [...names];
 }
 
-/* ── LocationSelect ── */
 function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -234,7 +233,6 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   );
 }
 
-/* ── ConfirmDeleteModal ── */
 function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   return (
     <div className="modal-overlay" onClick={onCancel}>
@@ -254,7 +252,6 @@ function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   );
 }
 
-/* ── Toast ── */
 function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
@@ -269,7 +266,6 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
-/* ── EditModal ── */
 function EditModal({ ticket, onClose, onSaved }) {
   const currentStateName = normalizeState(ticket.state);
 
@@ -335,7 +331,6 @@ function EditModal({ ticket, onClose, onSaved }) {
       const newDueDate = new Date(form.dueDate).toISOString();
 
       const body = {
-        // 🔍 Backend bu dəyərlərlə ticket qrupunu tapır
         airline:   ticket.airline,
         plane:     ticket.plane,
         gate:      ticket.gate,
@@ -346,7 +341,6 @@ function EditModal({ ticket, onClose, onSaved }) {
         toId:      ticket.toId,
         variantId: ticket.variantId ?? null,
 
-        // ✏️ Yeni dəyərlər
         newAirline:   form.airline.trim(),
         newGate:      form.gate.trim(),
         newMeal:      form.meal.trim() || "Standard",
@@ -355,7 +349,6 @@ function EditModal({ ticket, onClose, onSaved }) {
         newDueDate:   newDueDate,
       };
 
-      // ✅ /{id} YOX — PUT /PlaneTicket
       const res = await fetch(`${BASE_URL}/PlaneTicket`, {
         method: "PUT",
         headers: authHeaders(),
@@ -465,7 +458,6 @@ function EditModal({ ticket, onClose, onSaved }) {
   );
 }
 
-/* ── SeatButton ── */
 function SeatButton({ seat }) {
   const meta = getVariantMeta(seat.variantName);
   return (
@@ -476,13 +468,15 @@ function SeatButton({ seat }) {
         aria-label={`${seat.name} - ${seat.variantName} - ${seat.isOccupied ? "Occupied" : "Available"}`}
       >
         <span className="seat-label">{seat.name}</span>
-        <span className="seat-dot" />
+        {seat.isOccupied
+          ? <span className="seat-booked-label">BOOKED</span>
+          : <span className="seat-dot" />
+        }
       </button>
     </div>
   );
 }
 
-/* ── SeatMapModal ── */
 function SeatMapModal({ ticket, onClose }) {
   const [seats,   setSeats]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -591,7 +585,6 @@ function SeatMapModal({ ticket, onClose }) {
   );
 }
 
-/* ── VariantBadgeRow ── */
 function VariantBadgeRow({ ticket }) {
   const [variantNames, setVariantNames] = useState(() => extractVariants(ticket));
 
@@ -623,7 +616,6 @@ function VariantBadgeRow({ ticket }) {
   );
 }
 
-/* ── TicketCard ── */
 function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, onToast }) {
   const [showSeats,    setShowSeats]    = useState(false);
   const [showEdit,     setShowEdit]     = useState(false);
@@ -767,7 +759,6 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
   );
 }
 
-/* ── ShowPlaneTicket (main page) ── */
 export default function ShowPlaneTicket() {
   const navigate = useNavigate();
   const role     = getUserRole();

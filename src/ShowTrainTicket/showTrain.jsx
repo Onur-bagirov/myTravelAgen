@@ -139,7 +139,6 @@ function getCountryMeta(countryName = "") {
   return COUNTRY_DATA[key] || { code: countryName.slice(0, 2).toUpperCase(), flag: "🌐" };
 }
 
-/* ── VariantBadgeRow ── */
 function VariantBadgeRow({ ticketId }) {
   const [variantNames, setVariantNames] = useState([]);
 
@@ -182,7 +181,6 @@ function VariantBadgeRow({ ticketId }) {
   );
 }
 
-/* ── LocationSelect ── */
 function LocationSelect({ label, value, onChange, locations, placeholder = "— All Locations —" }) {
   const [open, setOpen]       = useState(false);
   const [search, setSearch]   = useState("");
@@ -273,7 +271,6 @@ function LocationSelect({ label, value, onChange, locations, placeholder = "— 
   );
 }
 
-/* ── Toast ── */
 function Toast({ message, type = "success", onClose }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
@@ -289,7 +286,6 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
-/* ── ConfirmDeleteModal ── */
 function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   return (
     <div className="st-modal-overlay" onClick={onCancel}>
@@ -309,7 +305,6 @@ function ConfirmDeleteModal({ ticketId, onConfirm, onCancel }) {
   );
 }
 
-/* ── EditModal ── */
 function EditModal({ ticket, onClose, onSaved }) {
   const currentStateName = normalizeState(ticket.state);
 
@@ -386,12 +381,7 @@ function EditModal({ ticket, onClose, onSaved }) {
     setValidationErrors({});
     setSaving(true);
     try {
-      // ✅ FIX 1: datetime-local input "YYYY-MM-DDTHH:MM" formatında lokal vaxt verir.
-      // new Date().toISOString() bunu UTC-ə çevirir → Bakıda (UTC+4) 4 saat fərq yaranır
-      // və backend fərqli tarix kimi qəbul edir. Sadəcə ":00" əlavə edib göndəririk.
       const dueDateValue = form.dueDate ? form.dueDate + ":00" : null;
-
-      // ✅ FIX 2: Backend int (nullable deyil) gözləyir, null göndərəndə 0 olsun
       const vagonValue = (form.vagonNumber !== "" && form.vagonNumber !== null)
         ? parseInt(form.vagonNumber)
         : 0;
@@ -432,7 +422,6 @@ function EditModal({ ticket, onClose, onSaved }) {
         {error && <div className="st-error-banner">⚠ {error}</div>}
 
         <div className="st-edit-form">
-          {/* Train Company */}
           <div className="st-edit-field">
             <label>Train Company <span className="st-edit-required">*</span></label>
             <input name="trainCompany" value={form.trainCompany} onChange={handleChange} placeholder="e.g. ADY"
@@ -440,7 +429,6 @@ function EditModal({ ticket, onClose, onSaved }) {
             {validationErrors.trainCompany && <span className="st-edit-field-error">{validationErrors.trainCompany}</span>}
           </div>
 
-          {/* Train Number */}
           <div className="st-edit-field">
             <label>Train Number <span className="st-edit-required">*</span></label>
             <input name="trainNumber" value={form.trainNumber} onChange={handleChange} placeholder="e.g. T-101"
@@ -448,7 +436,6 @@ function EditModal({ ticket, onClose, onSaved }) {
             {validationErrors.trainNumber && <span className="st-edit-field-error">{validationErrors.trainNumber}</span>}
           </div>
 
-          {/* Vagon Number */}
           <div className="st-edit-field">
             <label>Vagon Number</label>
             <input name="vagonNumber" type="number" min={1} value={form.vagonNumber} onChange={handleChange} placeholder="e.g. 5"
@@ -456,7 +443,6 @@ function EditModal({ ticket, onClose, onSaved }) {
             {validationErrors.vagonNumber && <span className="st-edit-field-error">{validationErrors.vagonNumber}</span>}
           </div>
 
-          {/* Departure Date & Time */}
           <div className="st-edit-field">
             <label>Departure Date & Time <span className="st-edit-required">*</span></label>
             <div className={`st-datetime-wrap${validationErrors.dueDate ? " st-datetime-wrap--error" : ""}`}>
@@ -472,7 +458,6 @@ function EditModal({ ticket, onClose, onSaved }) {
             {validationErrors.dueDate && <span className="st-edit-field-error">{validationErrors.dueDate}</span>}
           </div>
 
-          {/* State */}
           <div className="st-edit-field st-edit-field--full">
             <label>State</label>
             <div className="st-state-option-list">
@@ -507,7 +492,6 @@ function EditModal({ ticket, onClose, onSaved }) {
   );
 }
 
-/* ── SeatMap ── */
 function SeatMap({ seats, selectedSeatId, onSelect }) {
   if (!seats.length) return <p className="st-no-seats">No seats found for this ticket.</p>;
 
@@ -588,18 +572,16 @@ function SeatMap({ seats, selectedSeatId, onSelect }) {
   );
 }
 
-/* ── BookingModal ── */
-function BookingModal({ ticket, onClose }) {
+function BookingModal({ ticket, onClose, onBooked }) {
   const [seats, setSeats]               = useState([]);
   const [loadingSeats, setLoadingSeats] = useState(true);
   const [seatsError, setSeatsError]     = useState(null);
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [buying, setBuying]             = useState(false);
   const [buyError, setBuyError]         = useState(null);
-  const [success, setSuccess]           = useState(false);
   const [showPayment, setShowPayment]   = useState(false);
 
-  const totalPrice = selectedSeat ? Number(selectedSeat.variantPrice ?? 0).toFixed(2) : "—";
+  const estimatedPrice = selectedSeat ? Number(selectedSeat.variantPrice ?? 0).toFixed(2) : "—";
 
   useEffect(() => {
     if (!ticket?.id) return;
@@ -618,13 +600,17 @@ function BookingModal({ ticket, onClose }) {
     setBuying(true); setBuyError(null);
     try {
       const body = {
-        id: Number(ticket.id), userId: Number(userId),
-        dueDate: ticket.dueDate, chosenSeatId: Number(selectedSeat.id), state: 1,
+        id: Number(ticket.id),
+        userId: Number(userId),
+        dueDate: ticket.dueDate,
+        chosenSeatId: Number(selectedSeat.id),
+        state: 1,
       };
       const res     = await fetch(`${BASE_URL}/TrainTicket/fill`, { method: "PUT", headers: authHeaders(), body: JSON.stringify(body) });
       const rawText = await res.text();
       let result = null;
       try { result = rawText ? JSON.parse(rawText) : null; } catch { result = null; }
+
       if (!res.ok) {
         let errMsg = result?.message || result?.title || `Server error: ${res.status}`;
         if (result?.errors) errMsg = Object.values(result.errors).flat().join(", ");
@@ -632,39 +618,25 @@ function BookingModal({ ticket, onClose }) {
         setSelectedSeat(null);
         throw new Error(errMsg);
       }
+
       if (!result?.data) {
         setSeats(prev => prev.map(s => s.id === selectedSeat.id ? { ...s, isOccupied: true } : s));
         setSelectedSeat(null);
         throw new Error("This seat is already taken. Please choose another.");
       }
-      setSuccess(true);
-    } catch (e) { setBuyError(e.message); } finally { setBuying(false); }
+
+      const finalPrice = result.data.price ?? 0;
+      onBooked(ticket.id, finalPrice);
+      onClose();
+    } catch (e) {
+      setBuyError(e.message);
+    } finally {
+      setBuying(false);
+    }
   }
 
   const fromName = ticket.from?.split(",")[0] ?? "—";
   const toName   = ticket.to?.split(",")[0]   ?? "—";
-
-  if (success) return (
-    <div className="st-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="st-modal">
-        <button className="st-modal-close" onClick={onClose}>✕</button>
-        <div className="st-modal-company">{ticket.trainCompany}</div>
-        <div className="st-modal-route">
-          <span>{fromName}</span>
-          <span className="st-modal-train-icon">🚆</span>
-          <span>{toName}</span>
-        </div>
-        <div className="st-success-body">
-          <div className="st-success-icon">✅</div>
-          <h2 className="st-success-title">Ticket Booked!</h2>
-          <p className="st-success-sub">{fromName} → {toName}</p>
-          <p className="st-success-sub" style={{ fontSize: 14 }}>
-            Seat: <strong style={{ color: "#fff" }}>{selectedSeat?.name}</strong>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <>
@@ -688,24 +660,27 @@ function BookingModal({ ticket, onClose }) {
           ) : (
             <SeatMap seats={seats} selectedSeatId={selectedSeat?.id} onSelect={setSelectedSeat} />
           )}
+
           {selectedSeat && (
             <div className="st-selected-banner">
               💺 Selected: <strong>{selectedSeat.name}</strong>
               &nbsp;|&nbsp; Class: <strong>{selectedSeat.variantName}</strong>
-              &nbsp;|&nbsp; Total: <strong>{totalPrice} ₼</strong>
+              &nbsp;|&nbsp; Est. price: <strong>~{estimatedPrice} ₼</strong>
+              <span className="st-price-note"> (final price calculated at checkout)</span>
             </div>
           )}
+
           {buyError && <div className="st-error-banner">{buyError}</div>}
           {selectedSeat && (
             <button className="st-book-btn" disabled={buying} onClick={() => setShowPayment(true)}>
-              {buying ? "Processing..." : `🎫 Book Ticket · ${totalPrice} ₼`}
+              {buying ? "Processing..." : `🎫 Book Ticket · ~${estimatedPrice} ₼`}
             </button>
           )}
         </div>
       </div>
       {showPayment && (
         <PaymentModal
-          amount={totalPrice}
+          amount={estimatedPrice}
           loading={buying}
           onCancel={() => setShowPayment(false)}
           onConfirm={() => { setShowPayment(false); handleBuy(); }}
@@ -715,7 +690,6 @@ function BookingModal({ ticket, onClose }) {
   );
 }
 
-/* ── TicketCard ── */
 function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const [showEdit,    setShowEdit]    = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -723,14 +697,21 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
 
   const [currentState, setCurrentState] = useState(() => normalizeState(ticket.state));
 
+  const [displayedPrice, setDisplayedPrice] = useState(ticket.price ?? ticket.minPrice ?? null);
+
   useEffect(() => {
     setCurrentState(normalizeState(ticket.state));
   }, [ticket.state]);
+
+  useEffect(() => {
+    setDisplayedPrice(ticket.price ?? ticket.minPrice ?? null);
+  }, [ticket.price, ticket.minPrice]);
 
   const adminMode   = isAdmin(role);
   const companyMode = isCompany(role);
 
   const sb = stateBadge(currentState);
+  const isBooked = currentState.toLowerCase() === "booked";
 
   const seats      = ticket.availableSeats;
   const seatsClass = seats <= 5 ? "st-info-val--low" : seats <= 15 ? "st-info-val--warn" : "st-info-val--ok";
@@ -740,12 +721,12 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const fromFull = ticket.from?.split(",")[0] ?? "";
   const toFull   = ticket.to?.split(",")[0]   ?? "";
 
-  const displayPrice =
-    ticket.minPrice && Number(ticket.minPrice) > 0
-      ? `from ${Number(ticket.minPrice).toFixed(2)} ₼`
-      : ticket.price && Number(ticket.price) > 0
-        ? `${ticket.price} ₼`
-        : "—";
+  const priceLabel =
+    displayedPrice && Number(displayedPrice) > 0
+      ? (isBooked
+          ? `${Number(displayedPrice).toFixed(2)} ₼`          
+          : `from ${Number(displayedPrice).toFixed(2)} ₼`)    
+      : "—";
 
   const handleDeleteConfirmed = async () => {
     setShowConfirm(false);
@@ -767,7 +748,7 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
 
   return (
     <>
-      <div className="st-card">
+      <div className={`st-card${isBooked ? " st-card--booked" : ""}`}>
         <div className="st-card-header">
           <div className="st-card-company">{ticket.trainCompany}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -828,7 +809,7 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
         <div className="st-card-info st-card-info--2col">
           <div className="st-info-item">
             <span className="st-info-label">PRICE</span>
-            <span className="st-info-val st-info-val--price">{displayPrice}</span>
+            <span className="st-info-val st-info-val--price">{priceLabel}</span>
           </div>
           <div className="st-info-item">
             <span className="st-info-label">SEATS</span>
@@ -836,7 +817,13 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
           </div>
         </div>
 
-        <button className="st-seatmap-btn" onClick={onClick}>💺 Seat Map</button>
+        <button
+          className={`st-seatmap-btn${isBooked ? " st-seatmap-btn--booked" : ""}`}
+          onClick={isBooked ? undefined : onClick}
+          disabled={isBooked}
+        >
+          {isBooked ? "🔒 Booked" : "💺 Seat Map"}
+        </button>
       </div>
 
       {showEdit && (
@@ -862,8 +849,6 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
     </>
   );
 }
-
-/* ── ShowTrainTickets (main page) ── */
 const PAGE_SIZE     = 9;
 const EMPTY_FILTERS = { trainCompany: "", date: "", fromLocationId: "", toLocationId: "" };
 
@@ -913,6 +898,22 @@ export default function ShowTrainTickets() {
 
   const handleReset  = () => { setFilters(EMPTY_FILTERS); setPage(1); };
   const handleSearch = () => { setPage(1); fetchTickets(1); };
+
+  const handleBooked = (ticketId, finalPrice) => {
+    setTickets(prev =>
+      prev.map(tk =>
+        tk.id === ticketId
+          ? { ...tk, state: "Booked", price: finalPrice }
+          : tk
+      )
+    );
+    showToast(
+      finalPrice
+        ? `🎉 Ticket booked! Total paid: ${Number(finalPrice).toFixed(2)} ₼`
+        : "🎉 Ticket booked successfully!",
+      "success"
+    );
+  };
 
   return (
     <div className="st-page">
@@ -999,7 +1000,13 @@ export default function ShowTrainTickets() {
         )}
       </div>
 
-      {activeTicket && <BookingModal ticket={activeTicket} onClose={() => setActiveTicket(null)} />}
+      {activeTicket && (
+        <BookingModal
+          ticket={activeTicket}
+          onClose={() => setActiveTicket(null)}
+          onBooked={handleBooked}
+        />
+      )}
     </div>
   );
 }
