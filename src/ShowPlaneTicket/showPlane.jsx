@@ -638,9 +638,9 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
     setCurrentState(normalizeState(ticket.state));
   }, [ticket.state]);
 
-  const isAdmin   = role === "Admin";
-  const isCompany = role === "Company";
-  const sb        = stateBadge(currentState);
+  // ✅ Yalnız Admin edit və delete edə bilər
+  const isAdmin = role === "Admin";
+  const sb      = stateBadge(currentState);
 
   const handleDeleteConfirmed = async () => {
     setShowConfirm(false);
@@ -664,14 +664,13 @@ function TicketCard({ ticket, isNew, role, onDeleted, onEdited, onStateChanged, 
 
         <div className="spt-card-topbar">
           <div className="spt-card-airline">{ticket.airline}</div>
-          {(isAdmin || isCompany) && (
+          {/* ✅ Yalnız Admin görür */}
+          {isAdmin && (
             <div className="spt-card-actions">
               <button className="spt-action-btn spt-action-btn--edit" onClick={() => setShowEdit(true)} title="Edit Ticket">✏️</button>
-              {isAdmin && (
-                <button className="spt-action-btn spt-action-btn--delete" onClick={() => setShowConfirm(true)} disabled={deleting} title="Delete Ticket">
-                  {deleting ? "…" : "🗑️"}
-                </button>
-              )}
+              <button className="spt-action-btn spt-action-btn--delete" onClick={() => setShowConfirm(true)} disabled={deleting} title="Delete Ticket">
+                {deleting ? "…" : "🗑️"}
+              </button>
             </div>
           )}
         </div>

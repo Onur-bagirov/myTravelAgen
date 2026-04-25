@@ -708,7 +708,6 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   }, [ticket.price, ticket.minPrice]);
 
   const adminMode   = isAdmin(role);
-  const companyMode = isCompany(role);
 
   const sb = stateBadge(currentState);
   const isBooked = currentState.toLowerCase() === "booked";
@@ -724,8 +723,8 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
   const priceLabel =
     displayedPrice && Number(displayedPrice) > 0
       ? (isBooked
-          ? `${Number(displayedPrice).toFixed(2)} ₼`          
-          : `from ${Number(displayedPrice).toFixed(2)} ₼`)    
+          ? `${Number(displayedPrice).toFixed(2)} ₼`
+          : `from ${Number(displayedPrice).toFixed(2)} ₼`)
       : "—";
 
   const handleDeleteConfirmed = async () => {
@@ -752,7 +751,7 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
         <div className="st-card-header">
           <div className="st-card-company">{ticket.trainCompany}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {(adminMode || companyMode) && (
+            {adminMode && (
               <button className="st-action-btn st-action-btn--edit"
                 onClick={e => { e.stopPropagation(); setShowEdit(true); }} title="Edit Ticket">✏️</button>
             )}
@@ -849,6 +848,7 @@ function TicketCard({ ticket, onClick, onDeleted, onEdited, onToast, role }) {
     </>
   );
 }
+
 const PAGE_SIZE     = 9;
 const EMPTY_FILTERS = { trainCompany: "", date: "", fromLocationId: "", toLocationId: "" };
 
